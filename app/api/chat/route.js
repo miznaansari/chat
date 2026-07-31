@@ -66,16 +66,14 @@ export async function POST(req) {
 
     // Build multi-character system instruction for Gemini API
     const charactersList =
-      chatSession.sessionCharacters.length > 0
+      chatSession.sessionCharacters && chatSession.sessionCharacters.length > 0
         ? chatSession.sessionCharacters
           .map(
             (char, idx) =>
               `${idx + 1}. [${char.name}]\nPersona & Backstory: ${char.persona}`
           )
           .join("\n\n")
-        : chatSession.characterName
-          ? `1. [${chatSession.characterName}]\nPersona: ${chatSession.characterDesc}`
-          : "No character profiles defined.";
+        : "No character profiles defined.";
 
     const systemInstruction = `You are roleplaying a scene with MULTIPLE CHARACTERS in the following roleplay story scenario:
 
