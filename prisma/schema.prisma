@@ -21,11 +21,11 @@ model UserSession {
   id        String   @id @default(cuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  token     String   @unique
+  token     String   @db.Text
   isExpire  Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  @@index([token, isExpire])
+  @@index([userId, isExpire])
 }
 
 model ChatCharacter {

@@ -976,13 +976,32 @@ export default function ChatView({
         )}
 
         {loading && (
-          <div className="flex gap-4 max-w-3xl mx-auto justify-start">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-md animate-pulse">
-              <Users className="w-4 h-4" />
+          <div className="flex gap-4 max-w-3xl mx-auto justify-start animate-in fade-in duration-200">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-md shadow-purple-500/20">
+              <Sparkles className="w-4 h-4 text-white animate-pulse" />
             </div>
-            <div className="p-4 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-400 text-sm flex items-center gap-2">
-              <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
-              <span>Generating multi-character responses...</span>
+            <div className="p-3.5 px-4 rounded-2xl bg-neutral-900/90 border border-neutral-800 text-neutral-300 text-sm flex items-center gap-3 shadow-lg rounded-tl-xs">
+              {/* Bouncing 3-Dot Typing Animation */}
+              <div className="flex items-center gap-1.5 px-1 py-1">
+                <span
+                  className="w-2 h-2 rounded-full bg-blue-400 animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                />
+                <span
+                  className="w-2 h-2 rounded-full bg-purple-400 animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <span
+                  className="w-2 h-2 rounded-full bg-pink-400 animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                />
+              </div>
+
+              <span className="text-xs text-neutral-400 font-medium tracking-wide">
+                {sessionChars.length > 0
+                  ? `${sessionChars.map((c) => c.name).join(" & ")} are typing...`
+                  : "Generating response..."}
+              </span>
             </div>
           </div>
         )}
