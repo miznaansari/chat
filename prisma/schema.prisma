@@ -1,0 +1,65 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id         String          @id @default(cuid())
+  name       String          @unique
+  password   String
+  sessions   UserSession[]
+  characters ChatCharacter[]
+  chats      ChatSession[]
+  createdAt  DateTime        @default(now())
+}
+
+model UserSession {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  isExpire  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model ChatCharacter {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String        @db.Text
+  avatar      String?
+  chats       ChatSession[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model ChatSession {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  characterId   String?
+  character     ChatCharacter? @relation(fields: [characterId], references: [id], onDelete: SetNull)
+  title         String
+  characterName String
+  characterDesc String         @db.Text
+  selectedModel String         @default("gemini-3.6-flash-lite")
+  messages      ChatMessage[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+
+model ChatMessage {
+  id               String      @id @default(cuid())
+  chatSessionId    String
+  chatSession      ChatSession @relation(fields: [chatSessionId], references: [id], onDelete: Cascade)
+  role             String      // "user" | "model"
+  content          String      @db.Text
+  includeInContext Boolean     @default(true)
+  tokenEstimate    Int         @default(0)
+  createdAt        DateTime    @default(now())
+}
