@@ -157,6 +157,22 @@ export default function ChatView({
   const [showContextInfo, setShowContextInfo] = useState(false);
 
   const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  // Auto-expand textarea height as user types
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
+    }
+  }, [inputPrompt]);
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage(e);
+    }
+  };
 
   useEffect(() => {
     if (activeChat) {
@@ -577,30 +593,32 @@ export default function ChatView({
       </div>
 
       {/* Floating Bottom Input Capsule Bar */}
-      <div className="p-4 md:px-8 max-w-4xl mx-auto w-full z-10">
+      <div className="p-3 md:px-8 max-w-4xl mx-auto w-full z-10">
         <form
           onSubmit={handleSendMessage}
-          className="relative bg-neutral-900 border border-neutral-800 rounded-full px-4 py-2.5 shadow-2xl flex items-center gap-3 focus-within:border-neutral-700 transition-all"
+          className="relative bg-neutral-900 border border-neutral-800 rounded-2xl md:rounded-3xl p-2 px-3.5 shadow-2xl flex items-end gap-2.5 focus-within:border-neutral-700 transition-all"
         >
           <button
             type="button"
             onClick={onOpenNewModal}
-            className="w-8 h-8 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors shrink-0"
+            className="w-8 h-8 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors shrink-0 mb-1"
             title="New Chat Session"
           >
             <Plus className="w-5 h-5" />
           </button>
 
-          <input
-            type="text"
+          <textarea
+            ref={textareaRef}
+            rows={1}
             value={inputPrompt}
             onChange={(e) => setInputPrompt(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder={`Speak to ${sessionChars.map((c) => c.name).join(", ")}...`}
-            className="flex-1 bg-transparent text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none"
+            className="flex-1 bg-transparent text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none max-h-40 min-h-[38px] py-2 leading-relaxed"
             disabled={loading}
           />
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 mb-1">
             <button
               type="button"
               className="w-8 h-8 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
@@ -613,14 +631,14 @@ export default function ChatView({
               type="submit"
               disabled={!inputPrompt.trim() || loading}
               className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-colors disabled:opacity-40 disabled:hover:bg-blue-600"
-              title="Send Message"
+              title="Send Message (Press Enter, Shift+Enter for new line)"
             >
               <Send className="w-4 h-4" />
             </button>
           </div>
         </form>
         <p className="text-[11px] text-center text-neutral-500 mt-2">
-          Supports HTML <u>underline</u>, **bold**, *italics*, tables, & single-quoted 'thoughts'.
+          Press <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Shift + Enter</kbd> for new line. Supports **bold**, *italics*, & 'thoughts'.
         </p>
       </div>
 
