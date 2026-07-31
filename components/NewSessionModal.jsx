@@ -1,86 +1,73 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { X, Sparkles, UserCheck, Plus, Bot, ChevronRight, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { X, Sparkles, Plus, Trash2, Bot, ChevronRight, Loader2, Users } from "lucide-react";
 
 export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
-  const [activeTab, setActiveTab] = useState("new"); // "new" | "saved"
-  const [savedCharacters, setSavedCharacters] = useState([]);
-  const [selectedCharacterId, setSelectedCharacterId] = useState(null);
+  const [sessionTitle, setSessionTitle] = useState("");
+  const [story, setStory] = useState("");
+  const [selectedModel, setSelectedModel] = useState("gemini-3.5-flash-lite");
 
-  // Form State
-  const [characterName, setCharacterName] = useState("");
-  const [characterDesc, setCharacterDesc] = useState("");
-  const [saveAsPreset, setSaveAsPreset] = useState(true);
-  const [selectedModel, setSelectedModel] = useState("gemini-3.5-flash-lite"); // "gemini-3.5-flash-lite" | "gemini-3.1-flash-lite"
+  // Dynamic Multi-Character List
+  const [characters, setCharacters] = useState([
+    { id: 1, name: "Char1", persona: "Friendly AI guide who speaks concisely." },
+    { id: 2, name: "Char2", persona: "Mysterious character who answers in riddles." },
+  ]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch saved characters on modal open
-  useEffect(() => {
-    if (isOpen) {
-      fetchCharacters();
-    }
-  }, [isOpen]);
-
-  const fetchCharacters = async () => {
-    try {
-      const res = await fetch("/api/characters");
-      if (res.ok) {
-        const data = await res.json();
-        setSavedCharacters(data.characters || []);
-      }
-    } catch (err) {
-      console.error("Failed to load saved characters", err);
-    }
+  const handleAddCharacter = () => {
+    setCharacters((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        name: `Char${prev.length + 1}`,
+        persona: "Describe character persona, tone, and backstory...",
+      },
+    ]);
   };
 
-  const handleSelectSavedCharacter = (char) => {
-    setSelectedCharacterId(char.id);
-    setCharacterName(char.name);
-    setCharacterDesc(char.description);
+  const handleRemoveCharacter = (id) => {
+    if (characters.length <= 1) {
+      setError("At least one character is required for the session.");
+      return;
+    }
+    setCharacters((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const handleCharacterChange = (id, field, value) => {
+    setCharacters((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, [field]: value } : c))
+    );
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!characterName.trim() || !characterDesc.trim()) {
-      setError("Character Name and Description are required");
-      return;
+    // Validation
+    for (let i = 0; i < characters.length; i++) {
+      if (!characters[i].name.trim() || !characters[i].persona.trim()) {
+        setError(`Character #${i + 1} requires a valid Name and Persona.`);
+        return;
+      }
     }
 
     setLoading(true);
 
     try {
-      let charId = selectedCharacterId;
-
-      // If user wants to save a new character as preset
-      if (activeTab === "new" && saveAsPreset) {
-        const charRes = await fetch("/api/characters", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name: characterName,
-            description: characterDesc,
-          }),
-        });
-        if (charRes.ok) {
-          const charData = await charRes.json();
-          charId = charData.character.id;
-        }
-      }
-
-      // Create new chat session
       const res = await fetch("/api/chats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          characterId: charId,
-          characterName: characterName.trim(),
-          characterDesc: characterDesc.trim(),
+          title: sessionTitle.trim() || `Roleplay: ${characters.map((c) => c.name).join(", ")}`,
+          story: story.trim() || "An interactive roleplay scenario.",
+          characters: characters.map((c) => ({
+            name: c.name.trim(),
+            persona: c.persona.trim(),
+          })),
           selectedModel,
-          title: `Chat with ${characterName}`,
         }),
       });
 
@@ -90,10 +77,6 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
         throw new Error(data.error || "Failed to create session");
       }
 
-      // Reset & close
-      setCharacterName("");
-      setCharacterDesc("");
-      setSelectedCharacterId(null);
       onSessionCreated(data.chatSession);
       onClose();
     } catch (err) {
@@ -106,17 +89,17 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        {/* Modal Header */}
+        <div className="flex items-center justify-between pb-4 border-b border-neutral-800 shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-              <Bot className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+              <Users className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-white">Create Roleplay Character Session</h2>
-              <p className="text-xs text-neutral-400">Configure your character persona & Gemini model</p>
+              <h2 className="text-lg font-semibold text-white">Create Multi-Character Roleplay Session</h2>
+              <p className="text-xs text-neutral-400">Add multiple characters & scenario background for Gemini</p>
             </div>
           </div>
           <button
@@ -127,103 +110,118 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
           </button>
         </div>
 
-        {/* Tab Selection */}
-        <div className="flex bg-neutral-950 p-1 rounded-xl my-4 border border-neutral-800 text-xs font-medium">
-          <button
-            type="button"
-            onClick={() => setActiveTab("new")}
-            className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${activeTab === "new"
-                ? "bg-neutral-800 text-white shadow-sm"
-                : "text-neutral-400 hover:text-neutral-200"
-              }`}
-          >
-            <Plus className="w-3.5 h-3.5" />
-            <span>New Character</span>
-          </button>
-          {savedCharacters.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setActiveTab("saved")}
-              className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${activeTab === "saved"
-                  ? "bg-neutral-800 text-white shadow-sm"
-                  : "text-neutral-400 hover:text-neutral-200"
-                }`}
-            >
-              <UserCheck className="w-3.5 h-3.5" />
-              <span>Saved Characters ({savedCharacters.length})</span>
-            </button>
-          )}
-        </div>
-
         {error && (
-          <div className="mb-4 p-3 rounded-xl bg-red-950/70 border border-red-800 text-red-300 text-xs">
+          <div className="mt-4 p-3 rounded-xl bg-red-950/70 border border-red-800 text-red-300 text-xs shrink-0">
             {error}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {activeTab === "saved" && (
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              <label className="block text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                Select Saved Character
-              </label>
-              {savedCharacters.map((char) => (
-                <div
-                  key={char.id}
-                  onClick={() => handleSelectSavedCharacter(char)}
-                  className={`p-3 rounded-xl border cursor-pointer transition-all ${selectedCharacterId === char.id
-                      ? "bg-blue-950/40 border-blue-500 text-white"
-                      : "bg-neutral-950 border-neutral-800 text-neutral-300 hover:border-neutral-700"
-                    }`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-semibold text-sm">[{char.name}]</span>
-                    {selectedCharacterId === char.id && (
-                      <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded-full font-medium">
-                        Selected
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-neutral-400 line-clamp-2 mt-1">
-                    {char.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 py-4 pr-1">
+          {/* Session Title & Scenario */}
           <div>
             <label className="block text-xs font-medium text-neutral-400 mb-1 uppercase tracking-wider">
-              Character Name
+              Session Title
             </label>
             <input
               type="text"
-              required
-              placeholder="e.g. [char1] or Sherlock Holmes"
-              value={characterName}
-              onChange={(e) => setCharacterName(e.target.value)}
+              placeholder="e.g. Victorian Mystery / Sci-Fi Mission"
+              value={sessionTitle}
+              onChange={(e) => setSessionTitle(e.target.value)}
               className="w-full bg-neutral-950 border border-neutral-800 rounded-xl py-2.5 px-3.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
           <div>
             <label className="block text-xs font-medium text-neutral-400 mb-1 uppercase tracking-wider">
-              Character Persona & Description
+              Scenario / Story Setting Background
             </label>
             <textarea
-              required
-              rows={3}
-              placeholder="Describe character role, personality, speaking style, backstory..."
-              value={characterDesc}
-              onChange={(e) => setCharacterDesc(e.target.value)}
+              rows={2}
+              placeholder="Describe the setting, plot context, or world rules for all characters..."
+              value={story}
+              onChange={(e) => setStory(e.target.value)}
               className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
             />
           </div>
 
-          {/* Model Selector - Only 3.6 Flash Lite and 3.1 Flash Lite */}
-          <div>
+          {/* Multiple Characters Section */}
+          <div className="space-y-3 pt-2 border-t border-neutral-800">
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-semibold text-blue-400 uppercase tracking-wider">
+                Session Characters ({characters.length})
+              </label>
+              <button
+                type="button"
+                onClick={handleAddCharacter}
+                className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Character</span>
+              </button>
+            </div>
+
+            {characters.map((char, index) => (
+              <div
+                key={char.id}
+                className="bg-neutral-950 border border-neutral-800/80 rounded-2xl p-4 space-y-3 relative group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-neutral-300">
+                    Character #{index + 1}
+                  </span>
+                  {characters.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCharacter(char.id)}
+                      className="text-neutral-500 hover:text-red-400 p-1 transition-colors"
+                      title="Remove Character"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-medium text-neutral-400 mb-1">
+                      Character Tag Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Sherlock"
+                      value={char.name}
+                      onChange={(e) =>
+                        handleCharacterChange(char.id, "name", e.target.value)
+                      }
+                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="block text-[11px] font-medium text-neutral-400 mb-1">
+                      Character Persona & Speaking Style
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Smart, observational detective who speaks formally."
+                      value={char.persona}
+                      onChange={(e) =>
+                        handleCharacterChange(char.id, "persona", e.target.value)
+                      }
+                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Model Selector */}
+          <div className="pt-2 border-t border-neutral-800">
             <label className="block text-xs font-medium text-neutral-400 mb-1.5 uppercase tracking-wider">
-              Gemini AI Model
+              Gemini Model
             </label>
             <div className="grid grid-cols-2 gap-2.5">
               <button
@@ -238,7 +236,7 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
                   <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                   <span>3.6 Flash Lite</span>
                 </div>
-                <p className="text-[11px] text-neutral-400 mt-1">High speed & latest capabilities</p>
+                <p className="text-[11px] text-neutral-400 mt-1">High speed multi-character</p>
               </button>
 
               <button
@@ -258,20 +256,8 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
             </div>
           </div>
 
-          {activeTab === "new" && (
-            <label className="flex items-center gap-2 cursor-pointer pt-1 text-xs text-neutral-300">
-              <input
-                type="checkbox"
-                checked={saveAsPreset}
-                onChange={(e) => setSaveAsPreset(e.target.checked)}
-                className="w-4 h-4 accent-blue-600 rounded bg-neutral-950 border-neutral-800"
-              />
-              <span>Save character in character store for future sessions</span>
-            </label>
-          )}
-
           {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-800">
+          <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-800 shrink-0">
             <button
               type="button"
               onClick={onClose}
@@ -288,7 +274,7 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
                 <>
-                  <span>Start Roleplay Session</span>
+                  <span>Launch Multi-Character Session</span>
                   <ChevronRight className="w-4 h-4" />
                 </>
               )}

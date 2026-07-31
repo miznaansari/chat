@@ -19,9 +19,12 @@ export async function POST(req) {
       );
     }
 
-    // Retrieve chat session with ownership verification
+    // Retrieve chat session with ownership verification and sessionCharacters
     const chatSession = await prisma.chatSession.findUnique({
       where: { id: chatSessionId },
+      include: {
+        sessionCharacters: true,
+      },
     });
 
     if (!chatSession) {
@@ -32,7 +35,6 @@ export async function POST(req) {
       return NextResponse.json({ error: "Forbidden: Access denied" }, { status: 403 });
     }
 
-    // Check Gemini API key
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
       return NextResponse.json(
@@ -50,7 +52,7 @@ export async function POST(req) {
       orderBy: { createdAt: "asc" },
     });
 
-    // Save current user message into database first
+    // Save current user message into database
     const userMessageTokenEstimate = Math.ceil(prompt.length / 4);
     const userMsg = await prisma.chatMessage.create({
       data: {
@@ -62,8 +64,31 @@ export async function POST(req) {
       },
     });
 
-    // System instruction defining character roleplay behavior
-    const systemInstruction = `You are roleplaying as ${chatSession.characterName}.\n\nCharacter Persona & Description:\n${chatSession.characterDesc}\n\nMaintain this roleplay character identity strictly in all your responses. Stay in character at all times.`;
+    // Build multi-character system instruction for Gemini API
+    const charactersList =
+      chatSession.sessionCharacters.length > 0
+        ? chatSession.sessionCharacters
+          .map(
+            (char, idx) =>
+              `${idx + 1}. [${char.name}]\nPersona: ${char.persona}`
+          )
+          .join("\n\n")
+        : "No character profiles defined.";
+
+    const systemInstruction = `You are roleplaying a scene with MULTIPLE CHARACTERS in the following roleplay story scenario:
+
+=== SCENARIO / STORY SETTING ===
+${chatSession.story || "Interactive roleplay scenario."}
+
+=== ACTIVE CHARACTERS IN THIS SCENE ===
+${charactersList}
+
+=== CRITICAL RESPONSE FORMATTING RULES ===
+1. In a SINGLE API response, respond as the characters in the scene in reaction to the user's input.
+2. Format each character's response clearly with their character tag:
+   [Character Name]: Speech / dialogue / actions
+3. Each character MUST speak strictly in accordance with their distinct persona, voice, and backstory.
+4. You can include dialogue from multiple characters in a single response.`;
 
     // Map context messages to Gemini contents format
     const contents = contextMessages.map((msg) => ({
@@ -77,7 +102,6 @@ export async function POST(req) {
       parts: [{ text: prompt }],
     });
 
-    // Use exact model string requested: gemini-3.5-flash-lite or gemini-3.1-flash-lite
     const modelName =
       chatSession.selectedModel === "gemini-3.1-flash-lite"
         ? "gemini-3.1-flash-lite"
@@ -91,14 +115,14 @@ export async function POST(req) {
       contents,
       config: {
         systemInstruction,
-        temperature: 0.8,
+        temperature: 0.85,
       },
     });
 
     const replyText = response.text || "No response generated.";
     const replyTokenEstimate = Math.ceil(replyText.length / 4);
 
-    // Save AI character response in database
+    // Save AI multi-character response in database
     const modelMsg = await prisma.chatMessage.create({
       data: {
         chatSessionId,
@@ -120,7 +144,7 @@ export async function POST(req) {
       modelMessage: modelMsg,
     });
   } catch (error) {
-    console.error("Gemini Roleplay Chat API Error:", error);
+    console.error("Gemini Multi-Character Chat API Error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to process chat response" },
       { status: 500 }

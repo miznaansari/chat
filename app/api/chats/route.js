@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import RequireUser from "@/lib/RequireUser";
 
-// GET user's chat sessions
+// GET user's chat sessions with multi-character details
 export async function GET(req) {
   try {
     const user = await RequireUser(req);
@@ -13,7 +13,7 @@ export async function GET(req) {
     const chats = await prisma.chatSession.findMany({
       where: { userId: user.id },
       include: {
-        character: true,
+        sessionCharacters: true,
         _count: {
           select: { messages: true },
         },
@@ -31,7 +31,7 @@ export async function GET(req) {
   }
 }
 
-// POST create new chat session with character details
+// POST create new multi-character chat session
 export async function POST(req) {
   try {
     const user = await RequireUser(req);
@@ -39,42 +39,44 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { characterId, characterName, characterDesc, selectedModel, title } =
-      await req.json();
+    const { title, story, characters, selectedModel } = await req.json();
 
-    if (!characterName || !characterDesc) {
+    if (!characters || !Array.isArray(characters) || characters.length === 0) {
       return NextResponse.json(
-        { error: "Character name and description are required" },
+        { error: "At least one character with name and persona is required" },
         { status: 400 }
       );
     }
 
-    // Default model options: gemini-3.5-flash-lite or gemini-3.1-flash-lite
     const validModel =
       selectedModel === "gemini-3.1-flash-lite"
         ? "gemini-3.1-flash-lite"
         : "gemini-3.5-flash-lite";
 
     const chatTitle =
-      title || `Chat with ${characterName}`;
+      title || `Roleplay: ${characters.map((c) => c.name).join(", ")}`;
 
     const chatSession = await prisma.chatSession.create({
       data: {
         userId: user.id,
-        characterId: characterId || null,
-        characterName,
-        characterDesc,
-        selectedModel: validModel,
         title: chatTitle,
+        story: story || "An interactive roleplay scenario.",
+        selectedModel: validModel,
+        sessionCharacters: {
+          create: characters.map((c) => ({
+            name: c.name.trim(),
+            persona: c.persona.trim(),
+          })),
+        },
       },
       include: {
-        character: true,
+        sessionCharacters: true,
       },
     });
 
     return NextResponse.json({ chatSession });
   } catch (error) {
-    console.error("Create Chat Session Error:", error);
+    console.error("Create Multi-Character Chat Session Error:", error);
     return NextResponse.json(
       { error: "Failed to create chat session" },
       { status: 500 }

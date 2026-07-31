@@ -103,10 +103,10 @@ export default function GeminiLayout({
                     <>
                       <div className="flex-1 min-w-0">
                         <div className="text-xs truncate font-semibold text-neutral-200">
-                          [{chat.characterName}]
+                          {chat.title}
                         </div>
                         <div className="text-[11px] text-neutral-500 truncate">
-                          {chat.title}
+                          {chat.sessionCharacters?.map((c) => `[${c.name}]`).join(" ") || "Characters"}
                         </div>
                       </div>
 

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import RequireUser from "@/lib/RequireUser";
 
-// GET chat session by ID
+// GET chat session with characters & messages
 export async function GET(req, { params }) {
   try {
     const user = await RequireUser(req);
@@ -15,7 +15,7 @@ export async function GET(req, { params }) {
     const chatSession = await prisma.chatSession.findUnique({
       where: { id },
       include: {
-        character: true,
+        sessionCharacters: true,
         messages: {
           orderBy: { createdAt: "asc" },
         },
@@ -26,7 +26,6 @@ export async function GET(req, { params }) {
       return NextResponse.json({ error: "Chat session not found" }, { status: 404 });
     }
 
-    // Security check: ensure chat session belongs to active user
     if (chatSession.userId !== user.id) {
       return NextResponse.json({ error: "Forbidden: Access denied" }, { status: 403 });
     }
@@ -41,7 +40,7 @@ export async function GET(req, { params }) {
   }
 }
 
-// DELETE chat session & cascade delete messages
+// DELETE chat session & cascade delete characters & messages
 export async function DELETE(req, { params }) {
   try {
     const user = await RequireUser(req);
@@ -55,21 +54,16 @@ export async function DELETE(req, { params }) {
       where: { id },
     });
 
-    if (!existingChat) {
-      return NextResponse.json({ error: "Chat session not found" }, { status: 404 });
-    }
-
-    // Security check: ensure chat session belongs to active user
-    if (existingChat.userId !== user.id) {
+    if (!existingChat || existingChat.userId !== user.id) {
       return NextResponse.json({ error: "Forbidden: Access denied" }, { status: 403 });
     }
 
-    // Deleting chat session automatically deletes associated ChatMessage records due to Prisma onDelete: Cascade
+    // Cascade delete session, characters, and messages
     await prisma.chatSession.delete({
       where: { id },
     });
 
-    return NextResponse.json({ message: "Chat session and messages deleted successfully" });
+    return NextResponse.json({ message: "Chat session deleted successfully" });
   } catch (error) {
     console.error("Delete Chat Session Error:", error);
     return NextResponse.json(
@@ -79,7 +73,7 @@ export async function DELETE(req, { params }) {
   }
 }
 
-// PATCH update chat session parameters (character name, description, model)
+// PATCH update chat session story or characters
 export async function PATCH(req, { params }) {
   try {
     const user = await RequireUser(req);
@@ -88,7 +82,7 @@ export async function PATCH(req, { params }) {
     }
 
     const { id } = await params;
-    const body = await req.json();
+    const { title, story, selectedModel, characters } = await req.json();
 
     const existingChat = await prisma.chatSession.findUnique({
       where: { id },
@@ -98,13 +92,29 @@ export async function PATCH(req, { params }) {
       return NextResponse.json({ error: "Forbidden: Access denied" }, { status: 403 });
     }
 
+    // If characters provided, replace characters
+    if (characters && Array.isArray(characters)) {
+      await prisma.sessionCharacter.deleteMany({
+        where: { chatSessionId: id },
+      });
+      await prisma.sessionCharacter.createMany({
+        data: characters.map((c) => ({
+          chatSessionId: id,
+          name: c.name.trim(),
+          persona: c.persona.trim(),
+        })),
+      });
+    }
+
     const updatedSession = await prisma.chatSession.update({
       where: { id },
       data: {
-        characterName: body.characterName ?? existingChat.characterName,
-        characterDesc: body.characterDesc ?? existingChat.characterDesc,
-        selectedModel: body.selectedModel ?? existingChat.selectedModel,
-        title: body.title ?? existingChat.title,
+        title: title ?? existingChat.title,
+        story: story ?? existingChat.story,
+        selectedModel: selectedModel ?? existingChat.selectedModel,
+      },
+      include: {
+        sessionCharacters: true,
       },
     });
 
