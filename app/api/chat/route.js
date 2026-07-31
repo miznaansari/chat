@@ -107,11 +107,11 @@ export async function POST(req) {
 
     let lengthInstruction = "";
     if (responseLength === "veryshort") {
-      lengthInstruction = `\n=== MANDATORY ULTRA-SHORT RESPONSE DIRECTIVE ===\nKeep EACH character's response EXTREMELY SHORT (Strictly MAXIMUM 1 single short sentence per character, max 15 words). Do NOT write any monologues, filler, background descriptions, or multi-sentence lines. Be lightning-fast, direct, and ultra-concise.`;
+      lengthInstruction = `\n=== MANDATORY ULTRA-SHORT RESPONSE DIRECTIVE ===\nKeep responses EXTREMELY SHORT (Strictly MAXIMUM 1 single short sentence per speech block). Be lightning-fast, direct, and ultra-concise.`;
     } else if (responseLength === "short") {
-      lengthInstruction = `\n=== MANDATORY SHORT RESPONSE DIRECTIVE ===\nKeep EACH character's dialogue and response short and concise (Maximum 1 to 2 short sentences per character). Do NOT generate long paragraphs or monologues. Be punchy and fast-paced.`;
+      lengthInstruction = `\n=== MANDATORY SHORT RESPONSE DIRECTIVE ===\nKeep character dialogue short and concise (Maximum 1 to 2 short sentences per speech block). Be punchy and fast-paced.`;
     } else if (responseLength === "detailed") {
-      lengthInstruction = `\n=== MANDATORY DETAILED RESPONSE DIRECTIVE ===\nProvide detailed, highly descriptive, and immersive roleplay responses with rich character actions, extended dialogue, and inner thoughts for each character.`;
+      lengthInstruction = `\n=== MANDATORY DETAILED RESPONSE DIRECTIVE ===\nProvide detailed, highly descriptive, and immersive roleplay responses with rich character actions, extended dialogue, and inner thoughts.`;
     }
 
     const systemInstruction = `You are roleplaying a scene with MULTIPLE CHARACTERS in the following roleplay story scenario:
@@ -119,29 +119,41 @@ export async function POST(req) {
 === SCENARIO / STORY SETTING ===
 ${chatSession.story || "Interactive roleplay scenario."}
 
-=== ACTIVE CHARACTERS IN THIS SCENE ===
+=== AVAILABLE CHARACTERS IN THIS SCENE ===
 ${charactersList}
 ${lengthInstruction}
 
-=== MANDATORY FORMATTING & THOUGHT STYLE RULES ===
-1. Respond as the characters in reaction to the user's input in a SINGLE API response.
-2. EVERY character section MUST start with their character tag on a new line:
-   [Character Name]: Spoken dialogue or actions
+=== MANDATORY DYNAMIC ROLEPLAY & CHARACTER PARTICIPATION RULES ===
+1. DYNAMIC SITUATION-BASED RESPONSE (CRITICAL):
+   - Do NOT force every character to reply in every turn!
+   - Characters should ONLY speak or act if they are present, awake, active, and relevant to the current situation.
+   - If a character has gone to sleep, left the room, is unconscious, or has no reason to speak, that character MUST REMAIN SILENT.
+   - If a character is sleeping or away, you may optionally include a short scene narrative note (e.g., *(Character Name is sleeping in the other room)*), or omit them entirely.
 
-3. LINE BREAKS & MARKDOWN TABLES:
-   - Use double line breaks (new lines) between character responses, narrative descriptions, and Markdown tables.
-   - When presenting choices or options, format them in a proper Markdown table with newlines before and after:
-   | Option | Choice / Action | Description |
-   | :--- | :--- | :--- |
-   | **1.** | **Action 1** | Details 1 |
+2. MULTIPLE MESSAGES / CONSECUTIVE BLOCKS PER CHARACTER:
+   - A single character is NOT restricted to only 1 message block per turn.
+   - A character can send 2, 3, or more consecutive message blocks if their thought or sentence naturally spans across multiple parts!
+   - Example format for a character sending consecutive messages:
+     [Character 1]: Mujhe na bahar jana hai... 🚶‍♂️
 
-4. RICH STYLING & EMOJIS:
+     [Character 1]: Kyunki outdoor me bohot sara kaam baki hai! 🏢
+
+     [Character 2]: Okay, dhyan se jana! 👍
+
+3. FORMATTING & TAGGING RULES:
+   - EVERY character speech block MUST start on a new line with their exact tag:
+     [Character Name]: Spoken dialogue or actions
+   - Always put a double line break (blank line) between consecutive character tags or speech blocks.
+
+4. RICH EXPRESSIVE STYLING:
    - Include situation-appropriate Emojis naturally when relevant to the scene.
-   - Use **bold** for actions/emphasis.
+   - Use **bold** for actions or emphasis.
    - Use *italics* for vocal tone or whisperings.
    - Use *thought: "character thought"* for character inner thoughts.
+   - Use Markdown tables when presenting choices or options.
 
-5. Each character MUST speak strictly in accordance with their distinct persona and speaking style.`;
+5. PERSONA & SCENE CONTINUITY:
+   - Each character MUST strictly adhere to their persona, tone, and active status in the ongoing scene history.`;
 
     // Map context messages to Gemini contents format
     const contents = contextMessages.map((msg) => ({

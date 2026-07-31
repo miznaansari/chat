@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
-import crypto from "crypto";
+import { createAuthToken } from "@/lib/jwt";
 
 export async function POST(req) {
   try {
@@ -39,8 +39,9 @@ export async function POST(req) {
       data: { isExpire: true },
     });
 
-    // Create new session token
-    const token = crypto.randomBytes(32).toString("hex");
+    // Create signed JWT token
+    const token = await createAuthToken({ userId: user.id, name: user.name });
+
     await prisma.userSession.create({
       data: {
         userId: user.id,
@@ -55,6 +56,7 @@ export async function POST(req) {
 
     const response = NextResponse.json({
       message: "Logged in successfully",
+      token,
       user: { id: user.id, name: user.name },
     });
 

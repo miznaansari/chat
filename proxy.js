@@ -1,22 +1,34 @@
 import { NextResponse } from "next/server";
+import { verifyAuthToken } from "@/lib/jwt";
 
 /**
- * Next.js 16 Proxy for request authentication & route protection.
+ * Next.js 16 Proxy for request authentication & route protection using JWT.
  */
 export async function proxy(req) {
   const { pathname } = req.nextUrl;
-  const token = req.cookies.get("auth_token")?.value;
 
-  const isProtectedApi = pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/");
+  let token = req.cookies.get("auth_token")?.value;
+  if (!token) {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      token = authHeader.substring(7);
+    }
+  }
+
+  const isProtectedApi =
+    pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/");
   const isProtectedPage = pathname === "/" || pathname.startsWith("/chat");
 
+  const payload = token ? await verifyAuthToken(token) : null;
+  const isValid = Boolean(payload && payload.userId);
+
   // Redirect unauthenticated user accessing protected pages to /login
-  if (isProtectedPage && !token) {
+  if (isProtectedPage && !isValid) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   // Return 401 for unauthenticated requests to protected API endpoints
-  if (isProtectedApi && !token) {
+  if (isProtectedApi && !isValid) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
