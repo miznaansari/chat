@@ -257,6 +257,7 @@ export default function ChatView({
   };
 
   const messagesEndRef = useRef(null);
+  const latestMessageRef = useRef(null);
   const textareaRef = useRef(null);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
 
@@ -265,6 +266,23 @@ export default function ChatView({
       setIsMobileDevice(window.matchMedia("(pointer: coarse)").matches);
     }
   }, []);
+
+  // Smart auto-scroll: When AI returns a long response, scroll to the TOP of the response so user reads from line 1
+  useEffect(() => {
+    if (messages.length === 0) return;
+
+    const lastMsg = messages[messages.length - 1];
+
+    if (lastMsg?.role === "user") {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    } else {
+      if (latestMessageRef.current) {
+        latestMessageRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      } else {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+      }
+    }
+  }, [messages.length, loading]);
 
   // Auto-expand textarea height as user types
   useEffect(() => {
@@ -801,13 +819,15 @@ export default function ChatView({
             </div>
           </div>
         ) : (
-          messages.map((msg) => {
+          messages.map((msg, index) => {
             const isUser = msg.role === "user";
+            const isLatestMsg = index === messages.length - 1;
             const charBlocks = !isUser ? parseCharacterSpeechBlocks(msg.content) : [];
 
             return (
               <div
                 key={msg.id}
+                ref={isLatestMsg ? latestMessageRef : null}
                 className={`flex gap-4 max-w-3xl mx-auto group ${isUser ? "justify-end" : "justify-start"
                   }`}
               >
