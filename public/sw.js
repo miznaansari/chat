@@ -1,7 +1,5 @@
-const CACHE_NAME = "gemini-rp-cache-v1";
+const CACHE_NAME = "gemini-rp-cache-v2";
 const STATIC_ASSETS = [
-  "/",
-  "/login",
   "/manifest.json",
   "/icon-192.png",
   "/icon-512.png",
@@ -36,6 +34,18 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Never serve cached HTML page navigations (e.g., / or /login) - always fetch live from network
+  if (
+    event.request.mode === "navigate" ||
+    (event.request.headers.get("accept") &&
+      event.request.headers.get("accept").includes("text/html"))
+  ) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       if (cachedResponse) {
@@ -54,3 +64,4 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+

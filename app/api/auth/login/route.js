@@ -49,6 +49,10 @@ export async function POST(req) {
       },
     });
 
+    const isHttps =
+      req.headers.get("x-forwarded-proto") === "https" ||
+      req.nextUrl?.protocol === "https:";
+
     const response = NextResponse.json({
       message: "Logged in successfully",
       user: { id: user.id, name: user.name },
@@ -56,7 +60,7 @@ export async function POST(req) {
 
     response.cookies.set("auth_token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: isHttps,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",

@@ -376,11 +376,10 @@ export default function ChatView({
         <div className="flex items-center gap-1.5 md:gap-3 shrink-0">
           <button
             onClick={() => setShowContextInfo(!showContextInfo)}
-            className={`text-xs px-2 md:px-3 py-1 rounded-full border flex items-center gap-1 md:gap-1.5 transition-all ${
-              showContextInfo
+            className={`text-xs px-2 md:px-3 py-1 rounded-full border flex items-center gap-1 md:gap-1.5 transition-all ${showContextInfo
                 ? "bg-blue-950/60 border-blue-500 text-blue-300"
                 : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-neutral-200"
-            }`}
+              }`}
             title="Context Window Status"
           >
             <Layers className="w-3.5 h-3.5 text-blue-400 shrink-0" />
@@ -469,9 +468,8 @@ export default function ChatView({
             return (
               <div
                 key={msg.id}
-                className={`flex gap-4 max-w-3xl mx-auto group ${
-                  isUser ? "justify-end" : "justify-start"
-                }`}
+                className={`flex gap-4 max-w-3xl mx-auto group ${isUser ? "justify-end" : "justify-start"
+                  }`}
               >
                 {!isUser && (
                   <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-md">
@@ -497,11 +495,10 @@ export default function ChatView({
 
                       <button
                         onClick={() => handleToggleContext(msg.id, msg.includeInContext)}
-                        className={`p-1 rounded transition-colors ${
-                          msg.includeInContext
+                        className={`p-1 rounded transition-colors ${msg.includeInContext
                             ? "text-neutral-500 hover:text-blue-400 hover:bg-neutral-900"
                             : "text-amber-400 hover:text-amber-300 bg-amber-950/40"
-                        }`}
+                          }`}
                         title={
                           msg.includeInContext
                             ? "Included in Context - Click to Exclude"
@@ -520,9 +517,8 @@ export default function ChatView({
                   {/* Message Body */}
                   {isUser ? (
                     <div
-                      className={`p-4 rounded-2xl text-sm leading-relaxed bg-neutral-800 text-neutral-100 rounded-tr-xs ${
-                        !msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
-                      }`}
+                      className={`p-4 rounded-2xl text-sm leading-relaxed bg-neutral-800 text-neutral-100 rounded-tr-xs ${!msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
+                        }`}
                     >
                       <FormattedMessageContent content={msg.content} />
                     </div>
@@ -534,9 +530,8 @@ export default function ChatView({
                         return (
                           <div
                             key={bIdx}
-                            className={`p-4 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-xs shadow-md ${
-                              !msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
-                            }`}
+                            className={`p-4 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-xs shadow-md ${!msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
+                              }`}
                           >
                             {block.charName && (
                               <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-neutral-800/60">

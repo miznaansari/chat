@@ -228,8 +228,8 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
                 type="button"
                 onClick={() => setSelectedModel("gemini-3.5-flash-lite")}
                 className={`p-3 rounded-xl border text-left transition-all ${selectedModel === "gemini-3.5-flash-lite"
-                    ? "bg-blue-950/40 border-blue-500 text-white"
-                    : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                  ? "bg-blue-950/40 border-blue-500 text-white"
+                  : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
                   }`}
               >
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
@@ -243,8 +243,8 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
                 type="button"
                 onClick={() => setSelectedModel("gemini-3.1-flash-lite")}
                 className={`p-3 rounded-xl border text-left transition-all ${selectedModel === "gemini-3.1-flash-lite"
-                    ? "bg-blue-950/40 border-blue-500 text-white"
-                    : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                  ? "bg-blue-950/40 border-blue-500 text-white"
+                  : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
                   }`}
               >
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
