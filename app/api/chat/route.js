@@ -77,11 +77,11 @@ export async function POST(req) {
       parts: [{ text: prompt }],
     });
 
-    // Use exact model string requested: gemini-3.6-flash-lite or gemini-3.1-flash-lite
+    // Use exact model string requested: gemini-3.5-flash-lite or gemini-3.1-flash-lite
     const modelName =
       chatSession.selectedModel === "gemini-3.1-flash-lite"
         ? "gemini-3.1-flash-lite"
-        : "gemini-3.6-flash-lite";
+        : "gemini-3.5-flash-lite";
 
     const ai = new GoogleGenAI({ apiKey });
 

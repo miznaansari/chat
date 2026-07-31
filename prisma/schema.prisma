@@ -47,7 +47,7 @@ model ChatSession {
   title         String
   characterName String
   characterDesc String         @db.Text
-  selectedModel String         @default("gemini-3.6-flash-lite")
+  selectedModel String         @default("gemini-3.5-flash-lite")
   messages      ChatMessage[]
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt

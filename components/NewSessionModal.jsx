@@ -12,7 +12,7 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
   const [characterName, setCharacterName] = useState("");
   const [characterDesc, setCharacterDesc] = useState("");
   const [saveAsPreset, setSaveAsPreset] = useState(true);
-  const [selectedModel, setSelectedModel] = useState("gemini-3.6-flash-lite"); // "gemini-3.6-flash-lite" | "gemini-3.1-flash-lite"
+  const [selectedModel, setSelectedModel] = useState("gemini-3.5-flash-lite"); // "gemini-3.5-flash-lite" | "gemini-3.1-flash-lite"
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -132,11 +132,10 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
           <button
             type="button"
             onClick={() => setActiveTab("new")}
-            className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-              activeTab === "new"
+            className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${activeTab === "new"
                 ? "bg-neutral-800 text-white shadow-sm"
                 : "text-neutral-400 hover:text-neutral-200"
-            }`}
+              }`}
           >
             <Plus className="w-3.5 h-3.5" />
             <span>New Character</span>
@@ -145,11 +144,10 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
             <button
               type="button"
               onClick={() => setActiveTab("saved")}
-              className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${
-                activeTab === "saved"
+              className={`flex-1 py-2 rounded-lg transition-all flex items-center justify-center gap-1.5 ${activeTab === "saved"
                   ? "bg-neutral-800 text-white shadow-sm"
                   : "text-neutral-400 hover:text-neutral-200"
-              }`}
+                }`}
             >
               <UserCheck className="w-3.5 h-3.5" />
               <span>Saved Characters ({savedCharacters.length})</span>
@@ -173,11 +171,10 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
                 <div
                   key={char.id}
                   onClick={() => handleSelectSavedCharacter(char)}
-                  className={`p-3 rounded-xl border cursor-pointer transition-all ${
-                    selectedCharacterId === char.id
+                  className={`p-3 rounded-xl border cursor-pointer transition-all ${selectedCharacterId === char.id
                       ? "bg-blue-950/40 border-blue-500 text-white"
                       : "bg-neutral-950 border-neutral-800 text-neutral-300 hover:border-neutral-700"
-                  }`}
+                    }`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-semibold text-sm">[{char.name}]</span>
@@ -231,12 +228,11 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
             <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
-                onClick={() => setSelectedModel("gemini-3.6-flash-lite")}
-                className={`p-3 rounded-xl border text-left transition-all ${
-                  selectedModel === "gemini-3.6-flash-lite"
+                onClick={() => setSelectedModel("gemini-3.5-flash-lite")}
+                className={`p-3 rounded-xl border text-left transition-all ${selectedModel === "gemini-3.5-flash-lite"
                     ? "bg-blue-950/40 border-blue-500 text-white"
                     : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
                   <Sparkles className="w-3.5 h-3.5 text-blue-400" />
@@ -248,11 +244,10 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
               <button
                 type="button"
                 onClick={() => setSelectedModel("gemini-3.1-flash-lite")}
-                className={`p-3 rounded-xl border text-left transition-all ${
-                  selectedModel === "gemini-3.1-flash-lite"
+                className={`p-3 rounded-xl border text-left transition-all ${selectedModel === "gemini-3.1-flash-lite"
                     ? "bg-blue-950/40 border-blue-500 text-white"
                     : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
-                }`}
+                  }`}
               >
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
                   <Sparkles className="w-3.5 h-3.5 text-purple-400" />

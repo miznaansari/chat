@@ -49,11 +49,11 @@ export async function POST(req) {
       );
     }
 
-    // Default model options: gemini-3.6-flash-lite or gemini-3.1-flash-lite
+    // Default model options: gemini-3.5-flash-lite or gemini-3.1-flash-lite
     const validModel =
       selectedModel === "gemini-3.1-flash-lite"
         ? "gemini-3.1-flash-lite"
-        : "gemini-3.6-flash-lite";
+        : "gemini-3.5-flash-lite";
 
     const chatTitle =
       title || `Chat with ${characterName}`;
