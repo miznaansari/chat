@@ -153,8 +153,8 @@ export default function GeminiLayout({
                         <div className="text-xs truncate font-semibold text-neutral-200">
                           {chat.title}
                         </div>
-                        <div className="text-[11px] text-neutral-500 truncate">
-                          {chat.sessionCharacters?.map((c) => `[${c.name}]`).join(" ") || "Characters"}
+                        <div className="text-[11px] text-neutral-500 truncate capitalize">
+                          {chat.sessionCharacters?.map((c) => c.name).join(", ") || "Characters"}
                         </div>
                       </div>
 

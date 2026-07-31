@@ -454,9 +454,9 @@ export default function ChatView({
               {sessionChars.map((char) => (
                 <span
                   key={char.id || char.name}
-                  className="inline-flex items-center gap-1 bg-neutral-900 border border-neutral-800 rounded-full px-3 py-1 text-xs text-blue-400 font-semibold"
+                  className="inline-flex items-center gap-1 bg-neutral-900 border border-neutral-800 rounded-full px-3 py-1 text-xs text-blue-400 font-semibold capitalize"
                 >
-                  [{char.name}]
+                  {char.name}
                 </span>
               ))}
             </div>
