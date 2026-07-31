@@ -106,8 +106,10 @@ export async function POST(req) {
         : "No character profiles defined.";
 
     let lengthInstruction = "";
-    if (responseLength === "short") {
-      lengthInstruction = `\n=== MANDATORY SHORT RESPONSE DIRECTIVE ===\nKeep EACH character's dialogue and response EXTREMELY SHORT AND CONCISE (Maximum 1 to 3 sentences per character). Do NOT generate long paragraphs or monologues. Be punchy, direct, and fast-paced.`;
+    if (responseLength === "veryshort") {
+      lengthInstruction = `\n=== MANDATORY ULTRA-SHORT RESPONSE DIRECTIVE ===\nKeep EACH character's response EXTREMELY SHORT (Strictly MAXIMUM 1 single short sentence per character, max 15 words). Do NOT write any monologues, filler, background descriptions, or multi-sentence lines. Be lightning-fast, direct, and ultra-concise.`;
+    } else if (responseLength === "short") {
+      lengthInstruction = `\n=== MANDATORY SHORT RESPONSE DIRECTIVE ===\nKeep EACH character's dialogue and response short and concise (Maximum 1 to 2 short sentences per character). Do NOT generate long paragraphs or monologues. Be punchy and fast-paced.`;
     } else if (responseLength === "detailed") {
       lengthInstruction = `\n=== MANDATORY DETAILED RESPONSE DIRECTIVE ===\nProvide detailed, highly descriptive, and immersive roleplay responses with rich character actions, extended dialogue, and inner thoughts for each character.`;
     }

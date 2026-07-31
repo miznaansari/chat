@@ -196,6 +196,31 @@ export default function ChatView({
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [responseLength, setResponseLength] = useState("normal"); // "short" | "normal" | "detailed"
+
+  // Load saved response length mode from localStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedLength = localStorage.getItem("gemini_response_length");
+        if (savedLength && ["veryshort", "short", "normal", "detailed"].includes(savedLength)) {
+          setResponseLength(savedLength);
+        }
+      } catch (e) {
+        console.error("Error reading saved response length", e);
+      }
+    }
+  }, []);
+
+  const handleSetResponseLength = (newLength) => {
+    setResponseLength(newLength);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("gemini_response_length", newLength);
+      } catch (e) {
+        console.error("Error saving response length", e);
+      }
+    }
+  };
   const [showStoryModal, setShowStoryModal] = useState(false);
   const [storyEdit, setStoryEdit] = useState("");
   const [charactersEdit, setCharactersEdit] = useState([]);
@@ -524,20 +549,33 @@ export default function ChatView({
           {/* Desktop Response Length Pill Selector */}
           <div className="hidden sm:flex items-center bg-neutral-900 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
             <button
-              onClick={() => setResponseLength("short")}
+              onClick={() => handleSetResponseLength("veryshort")}
+              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
+                responseLength === "veryshort"
+                  ? "bg-red-950/80 border border-red-600/80 text-red-300 shadow-sm"
+                  : "text-neutral-400 hover:text-neutral-200"
+              }`}
+              title="Very Short Mode: Strictly 1 short sentence per character (max 15 words)"
+            >
+              <Zap className="w-3 h-3 text-red-400 shrink-0" />
+              <span>V.Short</span>
+            </button>
+
+            <button
+              onClick={() => handleSetResponseLength("short")}
               className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
                 responseLength === "short"
                   ? "bg-amber-950/80 border border-amber-600/80 text-amber-300 shadow-sm"
                   : "text-neutral-400 hover:text-neutral-200"
               }`}
-              title="Short Mode: Concise 1-3 sentences per character"
+              title="Short Mode: Concise 1-2 sentences per character"
             >
               <Zap className="w-3 h-3 text-amber-400 shrink-0" />
               <span>Short</span>
             </button>
 
             <button
-              onClick={() => setResponseLength("normal")}
+              onClick={() => handleSetResponseLength("normal")}
               className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
                 responseLength === "normal"
                   ? "bg-blue-950/80 border border-blue-600/80 text-blue-300 shadow-sm"
@@ -549,7 +587,7 @@ export default function ChatView({
             </button>
 
             <button
-              onClick={() => setResponseLength("detailed")}
+              onClick={() => handleSetResponseLength("detailed")}
               className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
                 responseLength === "detailed"
                   ? "bg-purple-950/80 border border-purple-600/80 text-purple-300 shadow-sm"
@@ -629,30 +667,46 @@ export default function ChatView({
                     <span className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-1.5 font-semibold">
                       Response Length
                     </span>
-                    <div className="grid grid-cols-3 gap-1.5 bg-neutral-950 p-1 rounded-xl border border-neutral-800">
+                    <div className="grid grid-cols-4 gap-1 bg-neutral-950 p-1 rounded-xl border border-neutral-800 text-center">
                       <button
                         type="button"
                         onClick={() => {
-                          setResponseLength("short");
+                          handleSetResponseLength("veryshort");
                           setShowMobileMenu(false);
                         }}
-                        className={`py-2 px-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
+                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${
+                          responseLength === "veryshort"
+                            ? "bg-red-950/90 text-red-300 border border-red-600/80 shadow"
+                            : "text-neutral-400 hover:text-white"
+                        }`}
+                      >
+                        <Zap className="w-3 h-3 text-red-400 shrink-0" />
+                        <span>V.Short</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleSetResponseLength("short");
+                          setShowMobileMenu(false);
+                        }}
+                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${
                           responseLength === "short"
                             ? "bg-amber-950/90 text-amber-300 border border-amber-600/80 shadow"
                             : "text-neutral-400 hover:text-white"
                         }`}
                       >
-                        <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <Zap className="w-3 h-3 text-amber-400 shrink-0" />
                         <span>Short</span>
                       </button>
 
                       <button
                         type="button"
                         onClick={() => {
-                          setResponseLength("normal");
+                          handleSetResponseLength("normal");
                           setShowMobileMenu(false);
                         }}
-                        className={`py-2 px-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
+                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${
                           responseLength === "normal"
                             ? "bg-blue-950/90 text-blue-300 border border-blue-600/80 shadow"
                             : "text-neutral-400 hover:text-white"
@@ -664,16 +718,16 @@ export default function ChatView({
                       <button
                         type="button"
                         onClick={() => {
-                          setResponseLength("detailed");
+                          handleSetResponseLength("detailed");
                           setShowMobileMenu(false);
                         }}
-                        className={`py-2 px-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
+                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${
                           responseLength === "detailed"
                             ? "bg-purple-950/90 text-purple-300 border border-purple-600/80 shadow"
                             : "text-neutral-400 hover:text-white"
                         }`}
                       >
-                        <BookOpen className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                        <BookOpen className="w-3 h-3 text-purple-400 shrink-0" />
                         <span>Detail</span>
                       </button>
                     </div>

@@ -24,6 +24,8 @@ model UserSession {
   token     String   @unique
   isExpire  Boolean  @default(false)
   createdAt DateTime @default(now())
+
+  @@index([token, isExpire])
 }
 
 model ChatCharacter {
@@ -48,6 +50,8 @@ model ChatSession {
   messages          ChatMessage[]
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+
+  @@index([userId, updatedAt])
 }
 
 model SessionCharacter {
@@ -57,6 +61,8 @@ model SessionCharacter {
   name          String
   persona       String      @db.Text
   createdAt     DateTime    @default(now())
+
+  @@index([chatSessionId, createdAt])
 }
 
 model ChatMessage {
@@ -68,4 +74,7 @@ model ChatMessage {
   includeInContext Boolean     @default(true)
   tokenEstimate    Int         @default(0)
   createdAt        DateTime    @default(now())
+
+  @@index([chatSessionId, includeInContext, createdAt])
+  @@index([chatSessionId, createdAt])
 }
