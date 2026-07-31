@@ -48,7 +48,7 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { chatSessionId, prompt } = await req.json();
+    const { chatSessionId, prompt, responseLength = "normal" } = await req.json();
 
     if (!chatSessionId || !prompt || !prompt.trim()) {
       return NextResponse.json(
@@ -105,6 +105,13 @@ export async function POST(req) {
           .join("\n\n")
         : "No character profiles defined.";
 
+    let lengthInstruction = "";
+    if (responseLength === "short") {
+      lengthInstruction = `\n=== MANDATORY SHORT RESPONSE DIRECTIVE ===\nKeep EACH character's dialogue and response EXTREMELY SHORT AND CONCISE (Maximum 1 to 3 sentences per character). Do NOT generate long paragraphs or monologues. Be punchy, direct, and fast-paced.`;
+    } else if (responseLength === "detailed") {
+      lengthInstruction = `\n=== MANDATORY DETAILED RESPONSE DIRECTIVE ===\nProvide detailed, highly descriptive, and immersive roleplay responses with rich character actions, extended dialogue, and inner thoughts for each character.`;
+    }
+
     const systemInstruction = `You are roleplaying a scene with MULTIPLE CHARACTERS in the following roleplay story scenario:
 
 === SCENARIO / STORY SETTING ===
@@ -112,21 +119,24 @@ ${chatSession.story || "Interactive roleplay scenario."}
 
 === ACTIVE CHARACTERS IN THIS SCENE ===
 ${charactersList}
+${lengthInstruction}
 
 === MANDATORY FORMATTING & THOUGHT STYLE RULES ===
-1. Respond as the characters in the scene in reaction to the user's input in a SINGLE API response.
-2. Format each character's speech clearly with their character tag:
+1. Respond as the characters in reaction to the user's input in a SINGLE API response.
+2. EVERY character section MUST start with their character tag on a new line:
    [Character Name]: Spoken dialogue or actions
 
-3. RICH MARKDOWN STYLING:
-   - Use **bold** (**action** or **emphasis**) for key character actions/gestures.
-   - Use *italics* (*tone*) for vocal tone or whisperings.
-   - Use <u>underline</u> (<u>text</u>) or Markdown for secret/important clues.
-   - Use Markdown Tables (| Col1 | Col2 |) and Numbered Point Sequences (1., 2., 3.) when presenting choices or structured lists.
+3. LINE BREAKS & MARKDOWN TABLES:
+   - Use double line breaks (new lines) between character responses, narrative descriptions, and Markdown tables.
+   - When presenting choices or options, format them in a proper Markdown table with newlines before and after:
+   | Option | Choice / Action | Description |
+   | :--- | :--- | :--- |
+   | **1.** | **Action 1** | Details 1 |
 
-4. INNER THOUGHTS FORMATTING:
-   - Enclose character inner thoughts strictly in single quotes 'character thought' or *(thought: '...')*.
-   - Example: [Sherlock]: "I see the clue." 'Does Watson realize what this implies?' *smiles subtly*
+4. RICH STYLING:
+   - Use **bold** for actions/emphasis.
+   - Use *italics* for vocal tone or whisperings.
+   - Use *thought: "character thought"* for character inner thoughts.
 
 5. Each character MUST speak strictly in accordance with their distinct persona and speaking style.`;
 
