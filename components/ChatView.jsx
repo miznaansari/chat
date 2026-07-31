@@ -62,6 +62,57 @@ function parseCharacterSpeechBlocks(rawText) {
   return blocks;
 }
 
+// Circular SVG progress ring gauge component
+function ContextCircularGauge({ percentage, size = 36, strokeWidth = 3.5, label = "" }) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  // Ensure minimal visible stroke if percentage > 0
+  const validPercentage = Math.max(percentage, percentage > 0 ? 0.8 : 0);
+  const strokeDashoffset = circumference - (validPercentage / 100) * circumference;
+
+  const colorClass =
+    percentage > 90
+      ? "text-rose-500"
+      : percentage > 70
+      ? "text-amber-400"
+      : "text-blue-400";
+
+  return (
+    <div className="relative inline-flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
+      <svg className="w-full h-full -rotate-90 transform" viewBox={`0 0 ${size} ${size}`}>
+        {/* Track Circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          className="text-neutral-800"
+          fill="transparent"
+        />
+        {/* Dynamic Progress Ring */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          className={`${colorClass} transition-all duration-500 ease-out`}
+          fill="transparent"
+        />
+      </svg>
+      {label && (
+        <span className="absolute inset-0 flex flex-col items-center justify-center text-center">
+          {label}
+        </span>
+      )}
+    </div>
+  );
+}
+
 // Color palette for character avatars & badges
 const charColors = [
   "from-blue-600 to-indigo-600 border-blue-500/40 text-blue-300 bg-blue-950/40",
@@ -212,12 +263,15 @@ export default function ChatView({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // Context token calculation
+  // Context token calculation & limits
+  const MAX_CONTEXT_TOKENS = 1048576; // 1,048,576 tokens for Gemini 3.5 & 3.1 Flash-Lite (1M Context)
   const includedMessages = messages.filter((m) => m.includeInContext);
   const totalTokens = includedMessages.reduce(
     (acc, m) => acc + (m.tokenEstimate || Math.ceil(m.content.length / 4)),
     0
   );
+  const tokensRemaining = Math.max(0, MAX_CONTEXT_TOKENS - totalTokens);
+  const usagePercentage = Math.min(100, (totalTokens / MAX_CONTEXT_TOKENS) * 100);
 
   const handleSendMessage = async (e) => {
     e?.preventDefault();
@@ -401,17 +455,18 @@ export default function ChatView({
         <div className="flex items-center gap-1.5 md:gap-3 shrink-0">
           <button
             onClick={() => setShowContextInfo(!showContextInfo)}
-            className={`text-xs px-2 md:px-3 py-1 rounded-full border flex items-center gap-1 md:gap-1.5 transition-all ${showContextInfo
-                ? "bg-blue-950/60 border-blue-500 text-blue-300"
+            className={`text-xs px-2.5 md:px-3 py-1.5 rounded-full border flex items-center gap-2 transition-all ${
+              showContextInfo
+                ? "bg-blue-950/60 border-blue-500 text-blue-300 shadow-md shadow-blue-500/10"
                 : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-neutral-200"
-              }`}
-            title="Context Window Status"
+            }`}
+            title="Context Window Status & Limits"
           >
-            <Layers className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-            <span className="hidden sm:inline">Context:</span>
-            <span>~{totalTokens}t</span>
-            <span className="hidden md:inline-block text-[10px] bg-neutral-800 px-1.5 py-0.2 rounded-full text-neutral-300">
-              {includedMessages.length}/{messages.length} msgs
+            <ContextCircularGauge percentage={usagePercentage} size={20} strokeWidth={2.5} />
+            <span className="hidden sm:inline font-medium">Context:</span>
+            <span className="font-semibold text-white">~{totalTokens > 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens}t</span>
+            <span className="text-[10px] bg-emerald-950/80 border border-emerald-800/80 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-semibold">
+              {((100 - usagePercentage)).toFixed(0)}% free
             </span>
           </button>
 
@@ -425,20 +480,80 @@ export default function ChatView({
         </div>
       </div>
 
-      {/* Context Window Explanation Banner */}
+      {/* Context Window Detailed Circular Gauge & Dashboard Banner */}
       {showContextInfo && (
-        <div className="bg-neutral-900 border-b border-neutral-800 p-3 px-6 text-xs text-neutral-300 flex items-start gap-3 animate-in slide-in-from-top-2">
-          <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
-          <div className="flex-1">
-            <span className="font-semibold text-white">Context Window Management: </span>
-            Every message with an active eye icon (<Eye className="w-3 h-3 inline text-blue-400" />) is included in Gemini's prompt memory history (~{totalTokens} tokens). Click any message's eye icon to toggle it off and exclude it from context history!
+        <div className="bg-neutral-900/95 border-b border-neutral-800 p-4 px-4 md:px-6 text-xs text-neutral-300 animate-in slide-in-from-top-2 backdrop-blur-md z-20">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-2">
+                <Brain className="w-4.5 h-4.5 text-blue-400 shrink-0" />
+                <span className="font-semibold text-white text-sm">
+                  Gemini Context Capacity ({activeChat.selectedModel || "gemini-3.5-flash-lite"})
+                </span>
+              </div>
+              <button
+                onClick={() => setShowContextInfo(false)}
+                className="text-neutral-500 hover:text-white p-1 rounded hover:bg-neutral-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Circular Ring Hero + Metrics Grid */}
+            <div className="flex flex-col sm:flex-row items-center gap-4 bg-neutral-950/80 border border-neutral-800 p-3.5 rounded-2xl">
+              {/* Main Circular Progress Ring */}
+              <div className="flex items-center gap-3 px-2 border-b sm:border-b-0 sm:border-r border-neutral-800 pb-3 sm:pb-0 sm:pr-6 shrink-0">
+                <ContextCircularGauge
+                  percentage={usagePercentage}
+                  size={72}
+                  strokeWidth={6}
+                  label={
+                    <>
+                      <span className="text-xs font-bold text-white font-mono leading-none">
+                        {((100 - usagePercentage)).toFixed(0)}%
+                      </span>
+                      <span className="text-[9px] font-semibold text-emerald-400 uppercase tracking-tighter mt-0.5">
+                        Free
+                      </span>
+                    </>
+                  }
+                />
+                <div>
+                  <span className="text-xs font-bold text-white block">Context Ring Gauge</span>
+                  <span className="text-[11px] text-neutral-400 block">
+                    {usagePercentage < 0.01 && totalTokens > 0 ? "< 0.01%" : `${usagePercentage.toFixed(2)}%`} used
+                  </span>
+                </div>
+              </div>
+
+              {/* Context Metrics Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 flex-1 w-full">
+                <div className="bg-neutral-900 border border-neutral-800/80 p-2.5 rounded-xl">
+                  <span className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-0.5">Used Context</span>
+                  <span className="text-xs font-bold text-blue-400">~{totalTokens.toLocaleString()} t</span>
+                </div>
+
+                <div className="bg-neutral-900 border border-neutral-800/80 p-2.5 rounded-xl">
+                  <span className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-0.5">Remaining Space</span>
+                  <span className="text-xs font-bold text-emerald-400">~{tokensRemaining.toLocaleString()} t</span>
+                </div>
+
+                <div className="bg-neutral-900 border border-neutral-800/80 p-2.5 rounded-xl">
+                  <span className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-0.5">Max Limit</span>
+                  <span className="text-xs font-bold text-purple-400">1,048,576 t</span>
+                </div>
+
+                <div className="bg-neutral-900 border border-neutral-800/80 p-2.5 rounded-xl">
+                  <span className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-0.5">Active History</span>
+                  <span className="text-xs font-bold text-neutral-200">{includedMessages.length} / {messages.length} msgs</span>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-neutral-400 leading-relaxed">
+              💡 <strong>Context window:</strong> Gemini Flash Lite supports <strong>1,048,576 tokens</strong> (~1M tokens). Every message with an active eye icon (<Eye className="w-3.5 h-3.5 inline text-blue-400" />) is fed into prompt memory. Click the eye icon on any older message to exclude it and free up memory space.
+            </p>
           </div>
-          <button
-            onClick={() => setShowContextInfo(false)}
-            className="text-neutral-500 hover:text-white"
-          >
-            <X className="w-3 h-3" />
-          </button>
         </div>
       )}
 

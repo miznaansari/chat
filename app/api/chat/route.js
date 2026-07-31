@@ -3,6 +3,44 @@ import { GoogleGenAI } from "@google/genai";
 import prisma from "@/lib/prisma";
 import RequireUser from "@/lib/RequireUser";
 
+// Helper to call Gemini API with automatic fallback to FALLBACK_GEMINI_API_KEY if primary key fails
+async function generateGeminiContentWithFallback({ modelName, contents, systemInstruction, temperature = 0.85 }) {
+  const primaryKey = process.env.GEMINI_API_KEY;
+  const fallbackKey = process.env.FALLBACK_GEMINI_API_KEY;
+
+  if (!primaryKey && !fallbackKey) {
+    throw new Error("Neither GEMINI_API_KEY nor FALLBACK_GEMINI_API_KEY is configured in server environment (.env)");
+  }
+
+  const keysToTry = [];
+  if (primaryKey) keysToTry.push({ key: primaryKey, label: "primary (GEMINI_API_KEY)" });
+  if (fallbackKey && fallbackKey !== primaryKey) {
+    keysToTry.push({ key: fallbackKey, label: "fallback (FALLBACK_GEMINI_API_KEY)" });
+  }
+
+  let lastError = null;
+
+  for (const { key, label } of keysToTry) {
+    try {
+      const ai = new GoogleGenAI({ apiKey: key });
+      const response = await ai.models.generateContent({
+        model: modelName,
+        contents,
+        config: {
+          systemInstruction,
+          temperature,
+        },
+      });
+      return response;
+    } catch (err) {
+      console.warn(`Gemini API call failed using ${label}:`, err?.message || err);
+      lastError = err;
+    }
+  }
+
+  throw lastError || new Error("All configured Gemini API keys failed.");
+}
+
 export async function POST(req) {
   try {
     const user = await RequireUser(req);
@@ -33,14 +71,6 @@ export async function POST(req) {
 
     if (chatSession.userId !== user.id) {
       return NextResponse.json({ error: "Forbidden: Access denied" }, { status: 403 });
-    }
-
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "GEMINI_API_KEY is not configured in server environment (.env)" },
-        { status: 500 }
-      );
     }
 
     // Fetch messages flagged to be INCLUDED in context history (includeInContext === true)
@@ -117,16 +147,12 @@ ${charactersList}
         ? "gemini-3.1-flash-lite"
         : "gemini-3.5-flash-lite";
 
-    const ai = new GoogleGenAI({ apiKey });
-
-    // Call Gemini API
-    const response = await ai.models.generateContent({
-      model: modelName,
+    // Call Gemini API with automatic API key fallback mechanism
+    const response = await generateGeminiContentWithFallback({
+      modelName,
       contents,
-      config: {
-        systemInstruction,
-        temperature: 0.85,
-      },
+      systemInstruction,
+      temperature: 0.85,
     });
 
     const replyText = response.text || "No response generated.";
