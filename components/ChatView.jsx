@@ -22,6 +22,8 @@ import {
   Brain,
   Zap,
   BookOpen,
+  Bookmark,
+  MoreVertical,
 } from "lucide-react";
 
 // Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
@@ -198,6 +200,60 @@ export default function ChatView({
   const [storyEdit, setStoryEdit] = useState("");
   const [charactersEdit, setCharactersEdit] = useState([]);
   const [showContextInfo, setShowContextInfo] = useState(false);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+
+  // Quick Snippets & Instant Paste state
+  const [showSnippetsMenu, setShowSnippetsMenu] = useState(false);
+  const [snippets, setSnippets] = useState([]);
+  const [newSnippetInput, setNewSnippetInput] = useState("");
+  const [showAddSnippetInput, setShowAddSnippetInput] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("gemini_chat_snippets");
+        if (saved) {
+          setSnippets(JSON.parse(saved));
+        } else {
+          setSnippets([]);
+        }
+      } catch (e) {
+        setSnippets([]);
+      }
+    }
+  }, []);
+
+  const handleAddSnippet = (e) => {
+    e.preventDefault();
+    if (!newSnippetInput.trim()) return;
+    const updated = [...snippets, newSnippetInput.trim()];
+    setSnippets(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("gemini_chat_snippets", JSON.stringify(updated));
+    }
+    setNewSnippetInput("");
+    setShowAddSnippetInput(false);
+  };
+
+  const handleDeleteSnippet = (indexToDelete, e) => {
+    e.stopPropagation();
+    const updated = snippets.filter((_, idx) => idx !== indexToDelete);
+    setSnippets(updated);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("gemini_chat_snippets", JSON.stringify(updated));
+    }
+  };
+
+  const handleInsertSnippet = (snippetText) => {
+    setInputPrompt((prev) => {
+      if (!prev) return snippetText;
+      return /\s$/.test(prev) ? `${prev}${snippetText}` : `${prev} ${snippetText}`;
+    });
+    setShowSnippetsMenu(false);
+    if (textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  };
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -446,8 +502,8 @@ export default function ChatView({
 
         {/* Right Actions */}
         <div className="flex items-center gap-1.5 md:gap-2.5 shrink-0">
-          {/* Response Length Pill Selector */}
-          <div className="flex items-center bg-neutral-900 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
+          {/* Desktop Response Length Pill Selector */}
+          <div className="hidden sm:flex items-center bg-neutral-900 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
             <button
               onClick={() => setResponseLength("short")}
               className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
@@ -483,13 +539,14 @@ export default function ChatView({
               title="Detailed Mode: Rich immersive character descriptions"
             >
               <BookOpen className="w-3 h-3 text-purple-400 shrink-0" />
-              <span className="hidden sm:inline">Detailed</span>
+              <span>Detailed</span>
             </button>
           </div>
 
+          {/* Context Window Status Gauge */}
           <button
             onClick={() => setShowContextInfo(!showContextInfo)}
-            className={`text-xs px-2.5 md:px-3 py-1.5 rounded-full border flex items-center gap-2 transition-all ${
+            className={`text-xs px-2 md:px-3 py-1.5 rounded-full border flex items-center gap-1.5 transition-all ${
               showContextInfo
                 ? "bg-blue-950/60 border-blue-500 text-blue-300 shadow-md shadow-blue-500/10"
                 : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-neutral-200"
@@ -498,19 +555,127 @@ export default function ChatView({
           >
             <ContextCircularGauge percentage={usagePercentage} size={20} strokeWidth={2.5} />
             <span className="hidden sm:inline font-medium">Context:</span>
-            <span className="font-semibold text-white">~{totalTokens > 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens}t</span>
-            <span className="text-[10px] bg-emerald-950/80 border border-emerald-800/80 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-semibold">
+            <span className="font-semibold text-white text-[11px] md:text-xs">~{totalTokens > 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens}t</span>
+            <span className="hidden sm:inline-block text-[10px] bg-emerald-950/80 border border-emerald-800/80 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-semibold">
               {((100 - usagePercentage)).toFixed(0)}% free
             </span>
           </button>
 
+          {/* Desktop Delete Button */}
           <button
             onClick={() => onDeleteChat(activeChat.id)}
-            className="p-1.5 md:p-2 text-neutral-400 hover:text-red-400 hover:bg-neutral-900 rounded-lg transition-colors shrink-0"
+            className="hidden sm:flex p-1.5 md:p-2 text-neutral-400 hover:text-red-400 hover:bg-neutral-900 rounded-lg transition-colors shrink-0"
             title="Delete Chat Session"
           >
             <Trash2 className="w-4 h-4" />
           </button>
+
+          {/* Mobile 3-Dots Options Button */}
+          <div className="flex sm:hidden">
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className={`p-1.5 rounded-xl border transition-colors ${
+                showMobileMenu
+                  ? "bg-neutral-800 border-neutral-700 text-white"
+                  : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white"
+              }`}
+              title="More Options"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+
+            {/* Mobile Options Modal / Floating Sheet with Fixed Viewport Positioning */}
+            {showMobileMenu && (
+              <div
+                className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-start justify-end p-3 pt-14 animate-in fade-in duration-150"
+                onClick={() => setShowMobileMenu(false)}
+              >
+                <div
+                  className="w-72 max-w-[calc(100vw-24px)] bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-4 space-y-3 animate-in slide-in-from-top-2 duration-150"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="flex items-center justify-between pb-2 border-b border-neutral-800 text-xs font-semibold text-white">
+                    <span>Chat Session Options</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowMobileMenu(false)}
+                      className="text-neutral-400 hover:text-white p-1 rounded hover:bg-neutral-800"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  {/* Response Length Selector */}
+                  <div>
+                    <span className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-1.5 font-semibold">
+                      Response Length
+                    </span>
+                    <div className="grid grid-cols-3 gap-1.5 bg-neutral-950 p-1 rounded-xl border border-neutral-800">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResponseLength("short");
+                          setShowMobileMenu(false);
+                        }}
+                        className={`py-2 px-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
+                          responseLength === "short"
+                            ? "bg-amber-950/90 text-amber-300 border border-amber-600/80 shadow"
+                            : "text-neutral-400 hover:text-white"
+                        }`}
+                      >
+                        <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                        <span>Short</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResponseLength("normal");
+                          setShowMobileMenu(false);
+                        }}
+                        className={`py-2 px-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
+                          responseLength === "normal"
+                            ? "bg-blue-950/90 text-blue-300 border border-blue-600/80 shadow"
+                            : "text-neutral-400 hover:text-white"
+                        }`}
+                      >
+                        <span>Normal</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setResponseLength("detailed");
+                          setShowMobileMenu(false);
+                        }}
+                        className={`py-2 px-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all ${
+                          responseLength === "detailed"
+                            ? "bg-purple-950/90 text-purple-300 border border-purple-600/80 shadow"
+                            : "text-neutral-400 hover:text-white"
+                        }`}
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                        <span>Detail</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Delete Session Option */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMobileMenu(false);
+                      onDeleteChat(activeChat.id);
+                    }}
+                    className="w-full mt-1 p-2.5 rounded-xl bg-red-950/40 hover:bg-red-950/80 border border-red-800/60 text-red-300 text-xs font-semibold flex items-center gap-2 transition-colors text-left"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-400 shrink-0" />
+                    <span>Delete Chat Session</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -756,14 +921,136 @@ export default function ChatView({
           onSubmit={handleSendMessage}
           className="relative bg-neutral-900 border border-neutral-800 rounded-2xl md:rounded-3xl p-2 px-3.5 shadow-2xl flex items-end gap-2.5 focus-within:border-neutral-700 transition-all"
         >
-          <button
-            type="button"
-            onClick={onOpenNewModal}
-            className="w-8 h-8 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors shrink-0 mb-1"
-            title="New Chat Session"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
+          {/* Quick Snippets & Instant Paste Button + Popover Menu */}
+          <div className="relative shrink-0 mb-1">
+            <button
+              type="button"
+              onClick={() => setShowSnippetsMenu(!showSnippetsMenu)}
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                showSnippetsMenu
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 rotate-45"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+              }`}
+              title="Instant Paste Snippets & Menu"
+            >
+              <Plus className="w-5 h-5 transition-transform" />
+            </button>
+
+            {/* Quick Snippets & Presets Popover Menu */}
+            {showSnippetsMenu && (
+              <div className="absolute bottom-11 left-0 z-50 w-72 sm:w-80 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-3 animate-in slide-in-from-bottom-2 fade-in duration-150">
+                <div className="flex items-center justify-between pb-2 border-b border-neutral-800 mb-2">
+                  <div className="flex items-center gap-1.5 text-white font-semibold text-xs">
+                    <Bookmark className="w-3.5 h-3.5 text-blue-400" />
+                    <span>Instant Paste & Actions</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSnippetsMenu(false)}
+                    className="text-neutral-500 hover:text-white p-0.5 rounded"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+
+                {/* Create New Roleplay Chat Option */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowSnippetsMenu(false);
+                    onOpenNewModal();
+                  }}
+                  className="w-full mb-2 p-2 rounded-xl bg-blue-950/50 hover:bg-blue-900/60 border border-blue-800/60 text-blue-200 text-xs font-semibold flex items-center gap-2 transition-colors text-left"
+                >
+                  <Plus className="w-4 h-4 text-blue-400 shrink-0" />
+                  <span>Create New Chat Session</span>
+                </button>
+
+                {/* Quick Character Tags (if available) */}
+                {sessionChars.length > 0 && (
+                  <div className="mb-2.5">
+                    <span className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-1 font-semibold">
+                      Quick Character Tags
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {sessionChars.map((char) => (
+                        <button
+                          key={char.id || char.name}
+                          type="button"
+                          onClick={() => handleInsertSnippet(`[${char.name}]: `)}
+                          className="text-[11px] px-2 py-0.5 rounded-lg bg-neutral-950 border border-neutral-800 text-blue-300 font-semibold hover:border-blue-500 hover:text-white transition-colors"
+                          title={`Insert [${char.name}]: tag`}
+                        >
+                          [{char.name}]
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Saved Snippets List */}
+                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] text-neutral-400 uppercase tracking-wider block font-semibold">
+                      Reusable Phrases ({snippets.length})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddSnippetInput(!showAddSnippetInput)}
+                      className="text-[10px] text-blue-400 hover:underline font-semibold"
+                    >
+                      {showAddSnippetInput ? "Cancel" : "+ Add Custom"}
+                    </button>
+                  </div>
+
+                  {/* Add Custom Snippet Inline Form */}
+                  {showAddSnippetInput && (
+                    <form onSubmit={handleAddSnippet} className="flex gap-1 mb-2">
+                      <input
+                        type="text"
+                        placeholder="Type reusable phrase or name..."
+                        value={newSnippetInput}
+                        onChange={(e) => setNewSnippetInput(e.target.value)}
+                        className="flex-1 bg-neutral-950 border border-neutral-700 rounded-lg py-1 px-2 text-base sm:text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                        autoFocus
+                      />
+                      <button
+                        type="submit"
+                        disabled={!newSnippetInput.trim()}
+                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold disabled:opacity-40"
+                      >
+                        Save
+                      </button>
+                    </form>
+                  )}
+
+                  {snippets.length === 0 && !showAddSnippetInput ? (
+                    <p className="text-[11px] text-neutral-500 italic py-1.5 text-center">
+                      No custom phrases added yet. Click <strong>+ Add Custom</strong> to save phrases or names!
+                    </p>
+                  ) : (
+                    snippets.map((snip, index) => (
+                      <div
+                        key={index}
+                        onClick={() => handleInsertSnippet(snip)}
+                        className="group flex items-center justify-between p-1.5 px-2.5 rounded-lg bg-neutral-950 border border-neutral-800/80 hover:border-neutral-700 hover:bg-neutral-800/50 cursor-pointer transition-colors text-xs text-neutral-200"
+                      >
+                        <span className="truncate pr-2">{snip}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => handleDeleteSnippet(index, e)}
+                          className="text-neutral-500 hover:text-red-400 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                          title="Delete snippet"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
 
           <textarea
             ref={textareaRef}
@@ -772,7 +1059,7 @@ export default function ChatView({
             onChange={(e) => setInputPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`Speak to ${sessionChars.map((c) => c.name).join(", ")}...`}
-            className="flex-1 bg-transparent text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none max-h-40 min-h-[38px] py-2 leading-relaxed"
+            className="flex-1 bg-transparent text-base sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none max-h-40 min-h-[38px] py-2 leading-relaxed"
             disabled={loading}
           />
 

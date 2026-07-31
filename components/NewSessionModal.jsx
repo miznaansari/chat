@@ -8,10 +8,9 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
   const [story, setStory] = useState("");
   const [selectedModel, setSelectedModel] = useState("gemini-3.5-flash-lite");
 
-  // Dynamic Multi-Character List
+  // Dynamic Multi-Character List (starts clean and empty, no pre-filled text to erase)
   const [characters, setCharacters] = useState([
-    { id: 1, name: "Char1", persona: "Friendly AI guide who speaks concisely." },
-    { id: 2, name: "Char2", persona: "Mysterious character who answers in riddles." },
+    { id: 1, name: "", persona: "" },
   ]);
 
   const [loading, setLoading] = useState(false);
@@ -22,8 +21,8 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
       ...prev,
       {
         id: Date.now(),
-        name: `Char${prev.length + 1}`,
-        persona: "Describe character persona, tone, and backstory...",
+        name: "",
+        persona: "",
       },
     ]);
   };
@@ -46,12 +45,14 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
     e.preventDefault();
     setError("");
 
-    // Validation
-    for (let i = 0; i < characters.length; i++) {
-      if (!characters[i].name.trim() || !characters[i].persona.trim()) {
-        setError(`Character #${i + 1} requires a valid Name and Persona.`);
-        return;
-      }
+    // Filter characters that have non-empty name or persona
+    const activeCharacters = characters
+      .map((c) => ({ name: c.name.trim(), persona: c.persona.trim() }))
+      .filter((c) => c.name !== "" && c.persona !== "");
+
+    if (activeCharacters.length === 0) {
+      setError("Please fill in at least one character name and persona.");
+      return;
     }
 
     setLoading(true);
@@ -61,12 +62,9 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: sessionTitle.trim() || `Roleplay: ${characters.map((c) => c.name).join(", ")}`,
+          title: sessionTitle.trim() || `Roleplay: ${activeCharacters.map((c) => c.name).join(", ")}`,
           story: story.trim() || "An interactive roleplay scenario.",
-          characters: characters.map((c) => ({
-            name: c.name.trim(),
-            persona: c.persona.trim(),
-          })),
+          characters: activeCharacters,
           selectedModel,
         }),
       });
@@ -127,7 +125,7 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
               placeholder="e.g. Victorian Mystery / Sci-Fi Mission"
               value={sessionTitle}
               onChange={(e) => setSessionTitle(e.target.value)}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl py-2.5 px-3.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 transition-colors"
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl py-2.5 px-3.5 text-base sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 transition-colors"
             />
           </div>
 
@@ -140,7 +138,7 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
               placeholder="Describe the setting, plot context, or world rules for all characters..."
               value={story}
               onChange={(e) => setStory(e.target.value)}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-base sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 transition-colors resize-none"
             />
           </div>
 
@@ -194,7 +192,7 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
                       onChange={(e) =>
                         handleCharacterChange(char.id, "name", e.target.value)
                       }
-                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-base sm:text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
                     />
                   </div>
 
@@ -210,7 +208,7 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
                       onChange={(e) =>
                         handleCharacterChange(char.id, "persona", e.target.value)
                       }
-                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-base sm:text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
                     />
                   </div>
                 </div>
