@@ -133,7 +133,8 @@ ${lengthInstruction}
    | :--- | :--- | :--- |
    | **1.** | **Action 1** | Details 1 |
 
-4. RICH STYLING:
+4. RICH STYLING & EMOJIS:
+   - Include situation-appropriate Emojis naturally when relevant to the scene.
    - Use **bold** for actions/emphasis.
    - Use *italics* for vocal tone or whisperings.
    - Use *thought: "character thought"* for character inner thoughts.
