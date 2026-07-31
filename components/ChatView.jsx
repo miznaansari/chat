@@ -350,9 +350,9 @@ export default function ChatView({
                 {sessionChars.map((char) => (
                   <span
                     key={char.id || char.name}
-                    className="text-[10px] bg-neutral-800 border border-neutral-700 text-blue-300 px-1.5 py-0.5 rounded-full font-medium"
+                    className="text-xs font-semibold bg-neutral-800 border border-neutral-700 text-blue-300 px-2 py-0.5 rounded-full capitalize"
                   >
-                    [{char.name}]
+                    {char.name}
                   </span>
                 ))}
               </div>
@@ -541,9 +541,9 @@ export default function ChatView({
                             {block.charName && (
                               <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-neutral-800/60">
                                 <span
-                                  className={`text-xs font-bold px-2.5 py-0.5 rounded-full border shadow-sm ${styleClass}`}
+                                  className={`text-sm font-extrabold px-3.5 py-1 rounded-full border shadow-md tracking-wide capitalize ${styleClass}`}
                                 >
-                                  [{block.charName}]
+                                  {block.charName}
                                 </span>
                               </div>
                             )}
