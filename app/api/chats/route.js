@@ -78,7 +78,7 @@ export async function POST(req) {
   } catch (error) {
     console.error("Create Multi-Character Chat Session Error:", error);
     return NextResponse.json(
-      { error: "Failed to create chat session" },
+      { error: error.message || "Failed to create chat session" },
       { status: 500 }
     );
   }
