@@ -56,6 +56,7 @@ export async function POST(req) {
     const chatTitle =
       title || `Roleplay: ${characters.map((c) => c.name).join(", ")}`;
 
+
     const chatSession = await prisma.chatSession.create({
       data: {
         userId: user.id,
