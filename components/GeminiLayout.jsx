@@ -24,7 +24,7 @@ export default function GeminiLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false); // Default to closed on initial load for mobile friendly design
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
-  const [activeModelName, setActiveModelName] = useState("Gemini 3.6 Flash Lite");
+  const [activeModelName, setActiveModelName] = useState("Gemini 3.5 Flash Lite");
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -63,15 +63,12 @@ export default function GeminiLayout({
 
       {/* Sidebar Drawer */}
       <aside
-        className={`${
-          isMobile
-            ? `fixed inset-y-0 left-0 z-40 w-72 bg-neutral-900 border-r border-neutral-800 transition-transform duration-300 shadow-2xl ${
-                sidebarOpen ? "translate-x-0" : "-translate-x-full"
-              }`
-            : `${
-                sidebarOpen ? "w-72" : "w-16"
-              } transition-all duration-300 bg-neutral-900/90 border-r border-neutral-800/80 shrink-0 z-20`
-        } flex flex-col h-full`}
+        className={`${isMobile
+          ? `fixed inset-y-0 left-0 z-40 w-72 bg-neutral-900 border-r border-neutral-800 transition-transform duration-300 shadow-2xl ${sidebarOpen ? "translate-x-0" : "-translate-x-full"
+          }`
+          : `${sidebarOpen ? "w-72" : "w-16"
+          } transition-all duration-300 bg-neutral-900/90 border-r border-neutral-800/80 shrink-0 z-20`
+          } flex flex-col h-full`}
       >
         {/* Sidebar Header */}
         <div className="h-14 px-4 flex items-center justify-between border-b border-neutral-800/50 shrink-0">
@@ -139,11 +136,10 @@ export default function GeminiLayout({
                 <div
                   key={chat.id}
                   onClick={() => handleSelectChatMobile(chat.id)}
-                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${
-                    isActive
-                      ? "bg-neutral-800 text-white font-medium shadow-sm"
-                      : "text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-200"
-                  }`}
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${isActive
+                    ? "bg-neutral-800 text-white font-medium shadow-sm"
+                    : "text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-200"
+                    }`}
                 >
                   <MessageSquare className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-400" : "text-neutral-500"}`} />
 
@@ -236,16 +232,16 @@ export default function GeminiLayout({
                 <div className="absolute top-full left-0 mt-1 w-52 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl py-2 z-50">
                   <button
                     onClick={() => {
-                      setActiveModelName("Gemini 3.6 Flash Lite");
+                      setActiveModelName("Gemini 3.5 Flash Lite");
                       setModelDropdownOpen(false);
                     }}
                     className="w-full px-4 py-2 text-left text-xs hover:bg-neutral-800 flex items-center justify-between text-neutral-200"
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                      <span className="font-semibold">3.6 Flash Lite</span>
+                      <span className="font-semibold">3.5 Flash Lite</span>
                     </div>
-                    {activeModelName.includes("3.6") && (
+                    {activeModelName.includes("3.5") && (
                       <span className="w-2 h-2 rounded-full bg-blue-500" />
                     )}
                   </button>
