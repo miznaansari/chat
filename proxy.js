@@ -7,7 +7,6 @@ export async function proxy(req) {
   const { pathname } = req.nextUrl;
   const token = req.cookies.get("auth_token")?.value;
 
-  const isAuthPage = pathname === "/login";
   const isProtectedApi = pathname.startsWith("/api/") && !pathname.startsWith("/api/auth/");
   const isProtectedPage = pathname === "/" || pathname.startsWith("/chat");
 
@@ -19,11 +18,6 @@ export async function proxy(req) {
   // Return 401 for unauthenticated requests to protected API endpoints
   if (isProtectedApi && !token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  // Redirect authenticated user accessing /login to home page /
-  if (isAuthPage && token) {
-    return NextResponse.redirect(new URL("/", req.url));
   }
 
   return NextResponse.next();
