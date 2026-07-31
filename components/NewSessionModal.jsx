@@ -234,7 +234,7 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
               >
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
                   <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                  <span>3.6 Flash Lite</span>
+                  <span>3.5 Flash Lite</span>
                 </div>
                 <p className="text-[11px] text-neutral-400 mt-1">High speed multi-character</p>
               </button>
