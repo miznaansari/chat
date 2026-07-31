@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
 import {
   Sparkles,
   Plus,
@@ -12,14 +15,132 @@ import {
   Trash2,
   Info,
   Edit2,
-  Check,
   X,
   Loader2,
-  Cpu,
   Layers,
   Users,
-  BookOpen,
+  Brain,
 } from "lucide-react";
+
+// Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
+function parseCharacterSpeechBlocks(rawText) {
+  if (!rawText) return [];
+
+  // Match pattern like [CharacterName]:
+  const characterBlockRegex = /\[([^\]]+)\]:\s*/g;
+
+  let matches = [];
+  let match;
+  while ((match = characterBlockRegex.exec(rawText)) !== null) {
+    matches.push({
+      charName: match[1].trim(),
+      index: match.index,
+      length: match[0].length,
+    });
+  }
+
+  // If no character tags matched, return as single raw block
+  if (matches.length === 0) {
+    return [{ charName: null, speech: rawText.trim() }];
+  }
+
+  const blocks = [];
+  for (let i = 0; i < matches.length; i++) {
+    const currentChar = matches[i].charName;
+    const speechStart = matches[i].index + matches[i].length;
+    const speechEnd = i + 1 < matches.length ? matches[i + 1].index : rawText.length;
+    const speechText = rawText.substring(speechStart, speechEnd).trim();
+
+    if (speechText) {
+      blocks.push({
+        charName: currentChar,
+        speech: speechText,
+      });
+    }
+  }
+
+  return blocks;
+}
+
+// Color palette for character avatars & badges
+const charColors = [
+  "from-blue-600 to-indigo-600 border-blue-500/40 text-blue-300 bg-blue-950/40",
+  "from-purple-600 to-pink-600 border-purple-500/40 text-purple-300 bg-purple-950/40",
+  "from-emerald-600 to-teal-600 border-emerald-500/40 text-emerald-300 bg-emerald-950/40",
+  "from-amber-600 to-orange-600 border-amber-500/40 text-amber-300 bg-amber-950/40",
+  "from-rose-600 to-red-600 border-rose-500/40 text-rose-300 bg-rose-950/40",
+];
+
+function getCharStyle(charName) {
+  if (!charName) return charColors[0];
+  let hash = 0;
+  for (let i = 0; i < charName.length; i++) {
+    hash = charName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % charColors.length;
+  return charColors[index];
+}
+
+// Component to render message text with Markdown, HTML <u> underline, & Thought highlighting
+function FormattedMessageContent({ content }) {
+  if (!content) return null;
+
+  // Process text to convert single-quoted thoughts into styled thought badges
+  const renderFormattedText = (text) => {
+    // Regex matching text enclosed in single quotes 'thought'
+    const parts = text.split(/('[\s\S]*?')/g);
+
+    return parts.map((part, index) => {
+      if (part.startsWith("'") && part.endsWith("'") && part.length > 2) {
+        const thoughtContent = part.slice(1, -1);
+        return (
+          <span
+            key={index}
+            className="inline-flex items-center gap-1 mx-1 my-0.5 px-2.5 py-1 rounded-lg bg-purple-950/80 border border-purple-700/80 text-purple-200 text-xs italic shadow-sm"
+            title="Inner Thought"
+          >
+            <Brain className="w-3.5 h-3.5 text-purple-400 shrink-0 inline" />
+            <span>'{thoughtContent}'</span>
+          </span>
+        );
+      }
+      return (
+        <ReactMarkdown
+          key={index}
+          remarkPlugins={[remarkGfm]}
+          rehypePlugins={[rehypeRaw]}
+          components={{
+            p: ({ children }) => <span className="inline leading-relaxed">{children}</span>,
+            strong: ({ children }) => <strong className="font-bold text-white px-0.5">{children}</strong>,
+            em: ({ children }) => <em className="italic text-neutral-300">{children}</em>,
+            u: ({ children }) => (
+              <u className="underline underline-offset-4 text-blue-300 decoration-blue-400 font-semibold px-0.5">
+                {children}
+              </u>
+            ),
+            ol: ({ children }) => <ol className="list-decimal list-inside space-y-1 my-2 text-neutral-200">{children}</ol>,
+            ul: ({ children }) => <ul className="list-disc list-inside space-y-1 my-2 text-neutral-200">{children}</ul>,
+            li: ({ children }) => <li className="my-0.5">{children}</li>,
+            table: ({ children }) => (
+              <div className="overflow-x-auto my-3 border border-neutral-800 rounded-xl">
+                <table className="min-w-full divide-y divide-neutral-800 text-xs text-neutral-200">
+                  {children}
+                </table>
+              </div>
+            ),
+            thead: ({ children }) => <thead className="bg-neutral-900">{children}</thead>,
+            th: ({ children }) => <th className="px-3 py-2 text-left font-semibold text-neutral-300 uppercase tracking-wider">{children}</th>,
+            td: ({ children }) => <td className="px-3 py-2 border-t border-neutral-800/60">{children}</td>,
+          }}
+        >
+          {part}
+        </ReactMarkdown>
+      );
+    });
+  };
+
+  return <div className="space-y-1">{renderFormattedText(content)}</div>;
+}
 
 export default function ChatView({
   activeChat,
@@ -81,7 +202,6 @@ export default function ChatView({
     setInputPrompt("");
     setLoading(true);
 
-    // Optimistic user message preview
     const tempUserMsg = {
       id: "temp-" + Date.now(),
       role: "user",
@@ -213,24 +333,24 @@ export default function ChatView({
   return (
     <div className="flex-1 flex flex-col h-full bg-neutral-950 text-neutral-100 overflow-hidden relative">
       {/* Top Multi-Character Session Bar */}
-      <div className="h-14 border-b border-neutral-800/80 px-6 flex items-center justify-between bg-neutral-950/80 backdrop-blur-md z-10">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xs">
+      <div className="h-14 border-b border-neutral-800/80 px-3 md:px-6 flex items-center justify-between bg-neutral-950/80 backdrop-blur-md z-10 shrink-0">
+        <div className="flex items-center gap-2 md:gap-3 min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xs shrink-0">
             <Users className="w-4 h-4" />
           </div>
 
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-sm text-white truncate max-w-xs">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 md:gap-2">
+              <span className="font-semibold text-xs md:text-sm text-white truncate max-w-[110px] sm:max-w-xs">
                 {activeChat.title}
               </span>
 
               {/* Character Badges */}
-              <div className="hidden sm:flex items-center gap-1">
+              <div className="hidden sm:flex items-center gap-1 shrink-0">
                 {sessionChars.map((char) => (
                   <span
                     key={char.id || char.name}
-                    className="text-[10px] bg-neutral-800 border border-neutral-700 text-blue-300 px-2 py-0.5 rounded-full font-medium"
+                    className="text-[10px] bg-neutral-800 border border-neutral-700 text-blue-300 px-1.5 py-0.5 rounded-full font-medium"
                   >
                     [{char.name}]
                   </span>
@@ -239,40 +359,41 @@ export default function ChatView({
 
               <button
                 onClick={() => setShowStoryModal(true)}
-                className="text-neutral-400 hover:text-white p-1 rounded hover:bg-neutral-800 transition-colors"
+                className="text-neutral-400 hover:text-white p-1 rounded hover:bg-neutral-800 transition-colors shrink-0"
                 title="Edit Story & Characters"
               >
                 <Edit2 className="w-3.5 h-3.5" />
               </button>
             </div>
 
-            <p className="text-xs text-neutral-400 line-clamp-1 max-w-md">
+            <p className="text-[11px] md:text-xs text-neutral-400 line-clamp-1 max-w-[140px] sm:max-w-md">
               {activeChat.story || "Interactive roleplay scenario."}
             </p>
           </div>
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 md:gap-3 shrink-0">
           <button
             onClick={() => setShowContextInfo(!showContextInfo)}
-            className={`text-xs px-3 py-1 rounded-full border flex items-center gap-1.5 transition-all ${
+            className={`text-xs px-2 md:px-3 py-1 rounded-full border flex items-center gap-1 md:gap-1.5 transition-all ${
               showContextInfo
                 ? "bg-blue-950/60 border-blue-500 text-blue-300"
                 : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-neutral-200"
             }`}
             title="Context Window Status"
           >
-            <Layers className="w-3.5 h-3.5 text-blue-400" />
-            <span>Context: ~{totalTokens} tokens</span>
-            <span className="text-[10px] bg-neutral-800 px-1.5 py-0.2 rounded-full text-neutral-300">
+            <Layers className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+            <span className="hidden sm:inline">Context:</span>
+            <span>~{totalTokens}t</span>
+            <span className="hidden md:inline-block text-[10px] bg-neutral-800 px-1.5 py-0.2 rounded-full text-neutral-300">
               {includedMessages.length}/{messages.length} msgs
             </span>
           </button>
 
           <button
             onClick={() => onDeleteChat(activeChat.id)}
-            className="p-2 text-neutral-400 hover:text-red-400 hover:bg-neutral-900 rounded-lg transition-colors"
+            className="p-1.5 md:p-2 text-neutral-400 hover:text-red-400 hover:bg-neutral-900 rounded-lg transition-colors shrink-0"
             title="Delete Chat Session"
           >
             <Trash2 className="w-4 h-4" />
@@ -343,6 +464,8 @@ export default function ChatView({
         ) : (
           messages.map((msg) => {
             const isUser = msg.role === "user";
+            const charBlocks = !isUser ? parseCharacterSpeechBlocks(msg.content) : [];
+
             return (
               <div
                 key={msg.id}
@@ -358,11 +481,11 @@ export default function ChatView({
 
                 <div className="flex-1 max-w-2xl">
                   {/* Sender Header & Context Toggle */}
-                  <div className="flex items-center justify-between mb-1 text-[11px] text-neutral-400 px-1">
+                  <div className="flex items-center justify-between mb-1.5 text-[11px] text-neutral-400 px-1">
                     <span className="font-medium text-neutral-300">
                       {isUser
                         ? "You"
-                        : `Scene Characters (${sessionChars.map((c) => c.name).join(", ")})`}
+                        : `Scene Roleplay Dialogue (${sessionChars.map((c) => c.name).join(", ")})`}
                     </span>
 
                     <div className="flex items-center gap-2">
@@ -395,15 +518,42 @@ export default function ChatView({
                   </div>
 
                   {/* Message Body */}
-                  <div
-                    className={`p-4 rounded-2xl text-sm leading-relaxed ${
-                      isUser
-                        ? "bg-neutral-800 text-neutral-100 rounded-tr-xs"
-                        : "bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-xs"
-                    } ${!msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""}`}
-                  >
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
-                  </div>
+                  {isUser ? (
+                    <div
+                      className={`p-4 rounded-2xl text-sm leading-relaxed bg-neutral-800 text-neutral-100 rounded-tr-xs ${
+                        !msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
+                      }`}
+                    >
+                      <FormattedMessageContent content={msg.content} />
+                    </div>
+                  ) : (
+                    /* Multi-Character Speech Card Renderer */
+                    <div className="space-y-3">
+                      {charBlocks.map((block, bIdx) => {
+                        const styleClass = getCharStyle(block.charName);
+                        return (
+                          <div
+                            key={bIdx}
+                            className={`p-4 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-xs shadow-md ${
+                              !msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
+                            }`}
+                          >
+                            {block.charName && (
+                              <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-neutral-800/60">
+                                <span
+                                  className={`text-xs font-bold px-2.5 py-0.5 rounded-full border shadow-sm ${styleClass}`}
+                                >
+                                  [{block.charName}]
+                                </span>
+                              </div>
+                            )}
+
+                            <FormattedMessageContent content={block.speech} />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {isUser && (
@@ -475,16 +625,16 @@ export default function ChatView({
           </div>
         </form>
         <p className="text-[11px] text-center text-neutral-500 mt-2">
-          Gemini generates responses for all characters in a single call. Toggle eye icons to edit context.
+          Supports HTML <u>underline</u>, **bold**, *italics*, tables, & single-quoted 'thoughts'.
         </p>
       </div>
 
-      {/* Edit Story & Characters Modal */}
+      {/* Edit Story Modal */}
       {showStoryModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
-              <h3 className="font-semibold text-white text-base">Edit Scenario Story & Characters</h3>
+              <h3 className="font-semibold text-white text-base">Edit Scenario Story</h3>
               <button
                 onClick={() => setShowStoryModal(false)}
                 className="text-neutral-400 hover:text-white"

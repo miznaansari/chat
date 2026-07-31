@@ -43,6 +43,8 @@ model ChatSession {
   user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   title             String
   story             String             @default("Interactive Roleplay Scenario") @db.Text
+  characterName     String?
+  characterDesc     String?            @db.Text
   selectedModel     String             @default("gemini-3.5-flash-lite")
   sessionCharacters SessionCharacter[]
   messages          ChatMessage[]

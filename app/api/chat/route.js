@@ -70,10 +70,12 @@ export async function POST(req) {
         ? chatSession.sessionCharacters
           .map(
             (char, idx) =>
-              `${idx + 1}. [${char.name}]\nPersona: ${char.persona}`
+              `${idx + 1}. [${char.name}]\nPersona & Backstory: ${char.persona}`
           )
           .join("\n\n")
-        : "No character profiles defined.";
+        : chatSession.characterName
+          ? `1. [${chatSession.characterName}]\nPersona: ${chatSession.characterDesc}`
+          : "No character profiles defined.";
 
     const systemInstruction = `You are roleplaying a scene with MULTIPLE CHARACTERS in the following roleplay story scenario:
 
@@ -83,12 +85,22 @@ ${chatSession.story || "Interactive roleplay scenario."}
 === ACTIVE CHARACTERS IN THIS SCENE ===
 ${charactersList}
 
-=== CRITICAL RESPONSE FORMATTING RULES ===
-1. In a SINGLE API response, respond as the characters in the scene in reaction to the user's input.
-2. Format each character's response clearly with their character tag:
-   [Character Name]: Speech / dialogue / actions
-3. Each character MUST speak strictly in accordance with their distinct persona, voice, and backstory.
-4. You can include dialogue from multiple characters in a single response.`;
+=== MANDATORY FORMATTING & THOUGHT STYLE RULES ===
+1. Respond as the characters in the scene in reaction to the user's input in a SINGLE API response.
+2. Format each character's speech clearly with their character tag:
+   [Character Name]: Spoken dialogue or actions
+
+3. RICH MARKDOWN STYLING:
+   - Use **bold** (**action** or **emphasis**) for key character actions/gestures.
+   - Use *italics* (*tone*) for vocal tone or whisperings.
+   - Use <u>underline</u> (<u>text</u>) or Markdown for secret/important clues.
+   - Use Markdown Tables (| Col1 | Col2 |) and Numbered Point Sequences (1., 2., 3.) when presenting choices or structured lists.
+
+4. INNER THOUGHTS FORMATTING:
+   - Enclose character inner thoughts strictly in single quotes 'character thought' or *(thought: '...')*.
+   - Example: [Sherlock]: "I see the clue." 'Does Watson realize what this implies?' *smiles subtly*
+
+5. Each character MUST speak strictly in accordance with their distinct persona and speaking style.`;
 
     // Map context messages to Gemini contents format
     const contents = contextMessages.map((msg) => ({
