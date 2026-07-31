@@ -158,6 +158,13 @@ export default function ChatView({
 
   const messagesEndRef = useRef(null);
   const textareaRef = useRef(null);
+  const [isMobileDevice, setIsMobileDevice] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setIsMobileDevice(window.matchMedia("(pointer: coarse)").matches);
+    }
+  }, []);
 
   // Auto-expand textarea height as user types
   useEffect(() => {
@@ -168,7 +175,9 @@ export default function ChatView({
   }, [inputPrompt]);
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
+    // On desktop, Enter submits form, Shift+Enter makes new line.
+    // On mobile touch screen, Enter makes new line, Send button submits form.
+    if (!isMobileDevice && e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage(e);
     }
@@ -638,7 +647,13 @@ export default function ChatView({
           </div>
         </form>
         <p className="text-[11px] text-center text-neutral-500 mt-2">
-          Press <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Shift + Enter</kbd> for new line. Supports **bold**, *italics*, & 'thoughts'.
+          {isMobileDevice ? (
+            <span>Tap <strong>Send</strong> button to post message. <strong>Return</strong> key creates a new line.</span>
+          ) : (
+            <span>
+              Press <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Shift + Enter</kbd> for new line. Supports **bold**, *italics*, & 'thoughts'.
+            </span>
+          )}
         </p>
       </div>
 
