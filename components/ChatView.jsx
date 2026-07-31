@@ -224,7 +224,8 @@ export default function ChatView({
   }, []);
 
   const handleAddSnippet = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
     if (!newSnippetInput.trim()) return;
     const updated = [...snippets, newSnippetInput.trim()];
     setSnippets(updated);
@@ -1003,25 +1004,33 @@ export default function ChatView({
                     </button>
                   </div>
 
-                  {/* Add Custom Snippet Inline Form */}
+                  {/* Add Custom Snippet Inline Control (Non-form container to prevent outer form submission) */}
                   {showAddSnippetInput && (
-                    <form onSubmit={handleAddSnippet} className="flex gap-1 mb-2">
+                    <div className="flex gap-1 mb-2">
                       <input
                         type="text"
                         placeholder="Type reusable phrase or name..."
                         value={newSnippetInput}
                         onChange={(e) => setNewSnippetInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleAddSnippet(e);
+                          }
+                        }}
                         className="flex-1 bg-neutral-950 border border-neutral-700 rounded-lg py-1 px-2 text-base sm:text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
                         autoFocus
                       />
                       <button
-                        type="submit"
+                        type="button"
+                        onClick={handleAddSnippet}
                         disabled={!newSnippetInput.trim()}
                         className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold disabled:opacity-40"
                       >
                         Save
                       </button>
-                    </form>
+                    </div>
                   )}
 
                   {snippets.length === 0 && !showAddSnippetInput ? (
