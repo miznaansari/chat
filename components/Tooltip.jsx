@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 /**
  * Custom GenZ AI Glassmorphic Tooltip Component
@@ -16,6 +17,7 @@ export default function Tooltip({
 }) {
   const [isVisible, setIsVisible] = useState(false);
   const timeoutRef = useRef(null);
+  const { translate } = useLanguage();
 
   const handleMouseEnter = () => {
     timeoutRef.current = setTimeout(() => {
@@ -35,6 +37,8 @@ export default function Tooltip({
     right: "left-full top-1/2 -translate-y-1/2 ml-2",
   };
 
+  const translatedContent = translate ? translate(content) : content;
+
   return (
     <div
       className={`relative inline-flex items-center ${className}`}
@@ -52,7 +56,7 @@ export default function Tooltip({
         >
           <div className="bg-neutral-950/90 border border-purple-500/40 rounded-xl px-3 py-1.5 shadow-[0_0_25px_rgba(147,51,234,0.3)] backdrop-blur-xl flex items-center gap-1.5 text-xs text-neutral-100 font-medium tracking-wide whitespace-nowrap">
             {badgeIcon && <span className="text-xs">{badgeIcon}</span>}
-            <span>{content}</span>
+            <span>{translatedContent}</span>
           </div>
         </div>
       )}

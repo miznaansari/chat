@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import Tooltip from "@/components/Tooltip";
 
+import Link from "next/link";
 import {
   Menu,
   Sparkles,
@@ -12,6 +13,7 @@ import {
   LogOut,
   ChevronDown,
   X,
+  Settings,
 } from "lucide-react";
 
 
@@ -133,9 +135,13 @@ export default function GeminiLayout({
                 <Menu className="w-5 h-5" />
               </button>
             </Tooltip>
-            <span className={`text-sm font-bold text-white tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[120px]"}`}>
-              Gemini RP
-            </span>
+            <Link href="/" className="flex items-center gap-2 min-w-0">
+              <img
+                src="/logo-landspace.png"
+                alt="NextAiChat Logo"
+                className={`h-28 w-auto object-contain transition-all duration-300 origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[140px]"}`}
+              />
+            </Link>
           </div>
 
           <Tooltip content="New Chat Session" position="bottom" badgeIcon="🎭">
@@ -164,11 +170,10 @@ export default function GeminiLayout({
 
               <SquarePen className="w-4 h-4 text-purple-400 shrink-0" />
               <span
-                className={`transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${
-                  !sidebarOpen
-                    ? "md:opacity-0 md:max-w-0 md:pointer-events-none"
-                    : "md:opacity-100 md:max-w-[180px]"
-                }`}
+                className={`transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen
+                  ? "md:opacity-0 md:max-w-0 md:pointer-events-none"
+                  : "md:opacity-100 md:max-w-[180px]"
+                  }`}
               >
                 New Roleplay Chat
               </span>
@@ -194,11 +199,10 @@ export default function GeminiLayout({
                 <div
                   key={chat.id}
                   onClick={() => handleSelectChatMobile(chat.id)}
-                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] justify-start ${
-                    isActive
-                      ? "bg-purple-950/60 border border-purple-800/60 text-white font-medium shadow-sm"
-                      : "text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200"
-                  }`}
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] justify-start ${isActive
+                    ? "bg-purple-950/60 border border-purple-800/60 text-white font-medium shadow-sm"
+                    : "text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200"
+                    }`}
                   title={chat.title}
                 >
                   <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${isActive ? "text-purple-400" : "text-neutral-500"}`} />
@@ -249,14 +253,25 @@ export default function GeminiLayout({
               </div>
             </div>
 
-            <Tooltip content="Sign Out Account" position="right" badgeIcon="🔒">
-              <button
-                onClick={onLogout}
-                className={`p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </Tooltip>
+            <div className="flex items-center gap-1">
+              <Tooltip content="Settings & Account" position="top" badgeIcon="⚙️">
+                <Link
+                  href="/setting"
+                  className={`p-1.5 text-neutral-400 hover:text-purple-400 hover:bg-neutral-800 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
+                >
+                  <Settings className="w-4 h-4" />
+                </Link>
+              </Tooltip>
+
+              <Tooltip content="Sign Out Account" position="right" badgeIcon="🔒">
+                <button
+                  onClick={onLogout}
+                  className={`p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </Tooltip>
+            </div>
 
           </div>
         </div>
@@ -279,6 +294,8 @@ export default function GeminiLayout({
             >
               <Menu className="w-5 h-5" />
             </button>
+
+
 
             {/* Top Left Gemini Model Dropdown */}
             <div className="relative z-50" ref={modelDropdownRef}>
@@ -332,12 +349,24 @@ export default function GeminiLayout({
             </div>
           </div>
 
-          {/* User Initial Circle in Header */}
-          <div
-            className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-inner shrink-0 cursor-default"
-            title={`Logged in as ${user?.name || "User"}`}
-          >
-            {user?.name?.[0]?.toUpperCase() || "M"}
+          {/* Header Right Actions */}
+          <div className="flex items-center gap-2">
+            <Tooltip content="Settings & Account" position="bottom" badgeIcon="⚙️">
+              <Link
+                href="/setting"
+                className="p-2 text-neutral-400 hover:text-white rounded-full hover:bg-neutral-900 transition-colors cursor-pointer"
+              >
+                <Settings className="w-4.5 h-4.5" />
+              </Link>
+            </Tooltip>
+
+            {/* User Initial Circle in Header */}
+            <div
+              className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-inner shrink-0 cursor-default"
+              title={`Logged in as ${user?.name || "User"}`}
+            >
+              {user?.name?.[0]?.toUpperCase() || "M"}
+            </div>
           </div>
 
         </header>

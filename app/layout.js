@@ -1,14 +1,15 @@
 import "./globals.css";
 import PwaRegister from "@/components/PwaRegister";
+import ClientProviders from "@/components/ClientProviders";
 
 export const metadata = {
-  title: "Gemini Roleplay Chat",
-  description: "Interactive AI Roleplay Chat Application powered by Gemini AI",
+  title: "NextAiChat - AI Roleplay for Study & Entertainment",
+  description: "Interactive AI Roleplay Platform based on role play for study, educational learning, entertainment, and fun interactive conversations.",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Gemini RP",
+    title: "NextAiChat",
   },
   icons: {
     icon: [
@@ -29,10 +30,10 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className="h-full antialiased dark">
+    <html lang="en" className="min-h-full antialiased dark">
       <body className="min-h-full flex flex-col bg-neutral-950 text-neutral-100 selection:bg-blue-500 selection:text-white">
         <PwaRegister />
-        {children}
+        <ClientProviders>{children}</ClientProviders>
       </body>
     </html>
   );

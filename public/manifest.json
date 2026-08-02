@@ -1,12 +1,14 @@
 {
-  "name": "Gemini Roleplay Chat",
-  "short_name": "Gemini RP",
-  "description": "Interactive AI Roleplay Chat Application powered by Gemini AI",
+  "id": "/",
+  "name": "NextAiChat - AI Roleplay for Study & Entertainment",
+  "short_name": "NextAiChat",
+  "description": "NextAiChat is an interactive AI Roleplay platform designed for study, educational simulations, entertainment, and fun interactive conversations.",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#09090b",
   "theme_color": "#09090b",
+  "categories": ["education", "entertainment", "ai", "productivity"],
   "icons": [
     {
       "src": "/icon-192.png",
@@ -31,6 +33,21 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New Roleplay Chat",
+      "short_name": "New Chat",
+      "description": "Start a new interactive AI roleplay session on NextAiChat",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192",
+          "type": "image/png"
+        }
+      ]
     }
   ]
 }
