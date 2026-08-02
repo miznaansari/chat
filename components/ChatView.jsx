@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo, memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
@@ -147,8 +147,8 @@ function getCharStyle(charName) {
   return charColors[index];
 }
 
-// Component to render message text with Markdown, HTML <u> underline, & Thought highlighting
-function FormattedMessageContent({ content }) {
+// Memoized component to render message text with Markdown
+const FormattedMessageContent = memo(function FormattedMessageContent({ content }) {
   if (!content) return null;
 
   return (
@@ -184,7 +184,120 @@ function FormattedMessageContent({ content }) {
       </ReactMarkdown>
     </div>
   );
-}
+});
+
+// Memoized Chat Message Row component to prevent re-rendering all messages on input typing
+const ChatMessageItem = memo(function ChatMessageItem({
+  msg,
+  isLatestMsg,
+  latestMessageRef,
+  sessionChars,
+  onToggleContext,
+}) {
+  const isUser = msg.role === "user";
+  const charBlocks = useMemo(
+    () => (!isUser ? parseCharacterSpeechBlocks(msg.content) : []),
+    [isUser, msg.content]
+  );
+
+  return (
+    <div
+      ref={isLatestMsg ? latestMessageRef : null}
+      className={`flex gap-4 max-w-3xl mx-auto group ${
+        isUser ? "justify-end" : "justify-start"
+      }`}
+    >
+      {!isUser && (
+        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-md">
+          <Users className="w-4 h-4" />
+        </div>
+      )}
+
+      <div className="flex-1 max-w-2xl">
+        {/* Sender Header & Context Toggle */}
+        <div className="flex items-center justify-between mb-1.5 text-[11px] text-neutral-400 px-1">
+          <span className="font-medium text-neutral-300">
+            {isUser
+              ? "You"
+              : `Scene Roleplay Dialogue (${sessionChars.map((c) => c.name).join(", ")})`}
+          </span>
+
+          <div className="flex items-center gap-2">
+            {!msg.includeInContext && (
+              <span className="text-[10px] bg-amber-950/80 border border-amber-800 text-amber-300 px-1.5 py-0.5 rounded">
+                Excluded from AI context
+              </span>
+            )}
+
+            <button
+              onClick={() => onToggleContext(msg.id, msg.includeInContext)}
+              className={`p-1 rounded transition-colors ${
+                msg.includeInContext
+                  ? "text-neutral-500 hover:text-blue-400 hover:bg-neutral-900"
+                  : "text-amber-400 hover:text-amber-300 bg-amber-950/40"
+              }`}
+              title={
+                msg.includeInContext
+                  ? "Included in Context - Click to Exclude"
+                  : "Excluded from Context - Click to Include"
+              }
+            >
+              {msg.includeInContext ? (
+                <Eye className="w-3.5 h-3.5" />
+              ) : (
+                <EyeOff className="w-3.5 h-3.5" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Message Body */}
+        {isUser ? (
+          <div
+            className={`p-4 rounded-2xl text-sm leading-relaxed bg-neutral-800 text-neutral-100 rounded-tr-xs ${
+              !msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
+            }`}
+          >
+            <FormattedMessageContent content={msg.content} />
+          </div>
+        ) : (
+          /* Multi-Character Speech Card Renderer */
+          <div className="space-y-3">
+            {charBlocks.map((block, bIdx) => {
+              const styleClass = getCharStyle(block.charName);
+              return (
+                <div
+                  key={bIdx}
+                  className={`p-4 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-xs shadow-md ${
+                    !msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
+                  }`}
+                >
+                  {block.charName && (
+                    <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-neutral-800/60">
+                      <span
+                        className={`text-sm font-extrabold px-3.5 py-1 rounded-full border shadow-md tracking-wide capitalize ${styleClass}`}
+                      >
+                        {block.charName}
+                      </span>
+                    </div>
+                  )}
+
+                  <FormattedMessageContent content={block.speech} />
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {isUser && (
+        <div className="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-200 shrink-0 text-xs font-semibold">
+          <User className="w-4 h-4" />
+        </div>
+      )}
+    </div>
+  );
+});
 
 export default function ChatView({
   activeChat,
@@ -195,9 +308,11 @@ export default function ChatView({
   const [inputPrompt, setInputPrompt] = useState("");
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [responseLength, setResponseLength] = useState("normal"); // "short" | "normal" | "detailed"
+  const [responseLength, setResponseLength] = useState("normal"); // "veryshort" | "short" | "normal" | "detailed"
+  const [chatMode, setChatMode] = useState("turn"); // "turn" | "classic"
+  const [typingCharacter, setTypingCharacter] = useState(null);
 
-  // Load saved response length mode from localStorage
+  // Load saved response length & chat mode from localStorage
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
@@ -205,11 +320,26 @@ export default function ChatView({
         if (savedLength && ["veryshort", "short", "normal", "detailed"].includes(savedLength)) {
           setResponseLength(savedLength);
         }
+        const savedMode = localStorage.getItem("gemini_chat_mode");
+        if (savedMode && ["turn", "classic"].includes(savedMode)) {
+          setChatMode(savedMode);
+        }
       } catch (e) {
-        console.error("Error reading saved response length", e);
+        console.error("Error reading saved settings", e);
       }
     }
   }, []);
+
+  const handleSetChatMode = (newMode) => {
+    setChatMode(newMode);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem("gemini_chat_mode", newMode);
+      } catch (e) {
+        console.error("Error saving chat mode", e);
+      }
+    }
+  };
 
   const handleSetResponseLength = (newLength) => {
     setResponseLength(newLength);
@@ -355,15 +485,62 @@ export default function ChatView({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  // Windowing & Performance Optimization for Large Message Histories
+  const [visibleCount, setVisibleCount] = useState(50);
+  const visibleMessages = useMemo(() => {
+    if (messages.length <= visibleCount) return messages;
+    return messages.slice(messages.length - visibleCount);
+  }, [messages, visibleCount]);
+
   // Context token calculation & limits
   const MAX_CONTEXT_TOKENS = 1048576; // 1,048,576 tokens for Gemini 3.5 & 3.1 Flash-Lite (1M Context)
-  const includedMessages = messages.filter((m) => m.includeInContext);
-  const totalTokens = includedMessages.reduce(
-    (acc, m) => acc + (m.tokenEstimate || Math.ceil(m.content.length / 4)),
-    0
-  );
-  const tokensRemaining = Math.max(0, MAX_CONTEXT_TOKENS - totalTokens);
-  const usagePercentage = Math.min(100, (totalTokens / MAX_CONTEXT_TOKENS) * 100);
+  const { totalTokens, usagePercentage } = useMemo(() => {
+    const includedMessages = messages.filter((m) => m.includeInContext);
+    const tokens = includedMessages.reduce(
+      (acc, m) => acc + (m.tokenEstimate || Math.ceil(m.content.length / 4)),
+      0
+    );
+    const usage = Math.min(100, (tokens / MAX_CONTEXT_TOKENS) * 100);
+    return { totalTokens: tokens, usagePercentage: usage };
+  }, [messages]);
+
+  // Typewriter animation helper to stream text out smoothly before triggering next character turn
+  const animateTypewriterMessage = (modelMessage) => {
+    return new Promise((resolve) => {
+      const fullContent = modelMessage.content || "";
+      if (!fullContent) {
+        resolve();
+        return;
+      }
+
+      // Append message with empty content initially
+      const emptyMsg = { ...modelMessage, content: "" };
+      setMessages((prev) => [...prev, emptyMsg]);
+
+      // Calculate typewriter step speed (slower, natural reading pace)
+      let index = 0;
+      const stepSize = Math.max(1, Math.ceil(fullContent.length / 140));
+      const intervalMs = 38;
+
+      const timer = setInterval(() => {
+        index += stepSize;
+        if (index >= fullContent.length) {
+          clearInterval(timer);
+          // Set full exact content
+          setMessages((prev) =>
+            prev.map((m) => (m.id === modelMessage.id ? { ...m, content: fullContent } : m))
+          );
+          // Extended reading pause (1200ms) after typing finishes so user can comfortably read
+          setTimeout(resolve, 1200);
+        } else {
+          const partial = fullContent.slice(0, index);
+          setMessages((prev) =>
+            prev.map((m) => (m.id === modelMessage.id ? { ...m, content: partial } : m))
+          );
+        }
+      }, intervalMs);
+    });
+  };
 
   const handleSendMessage = async (e) => {
     e?.preventDefault();
@@ -384,31 +561,116 @@ export default function ChatView({
 
     setMessages((prev) => [...prev, tempUserMsg]);
 
-    try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          chatSessionId: activeChat.id,
-          prompt: currentPrompt,
-          responseLength,
-        }),
-      });
+    if (chatMode === "turn") {
+      try {
+        setTypingCharacter("Thinking who speaks...");
+        // Initial Turn API call with user prompt
+        const res = await fetch("/api/feature/turn", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chatSessionId: activeChat.id,
+            prompt: currentPrompt,
+            responseLength,
+          }),
+        });
 
-      const data = await res.json();
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data.error || "Failed turn response");
+        }
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to send message");
+        // Replace temp user message with actual saved user message
+        setMessages((prev) =>
+          prev
+            .filter((m) => m.id !== tempUserMsg.id)
+            .concat(data.userMessage ? [data.userMessage] : [])
+        );
+
+        // Hide loading dots while character message is typing out
+        setTypingCharacter(null);
+
+        // Typewriter animation for 1st character response
+        if (data.modelMessage) {
+          await animateTypewriterMessage(data.modelMessage);
+        }
+
+        let currentNextSpeaker = data.nextSpeaker;
+        let userTurnFlag = data.isUserTurn;
+        let turnCount = 1;
+        const MAX_CONSECUTIVE_TURNS = 6;
+
+        // Turn-by-Turn loop: execute subsequent character turns
+        while (
+          !userTurnFlag &&
+          currentNextSpeaker &&
+          currentNextSpeaker !== "me" &&
+          turnCount < MAX_CONSECUTIVE_TURNS
+        ) {
+          setTypingCharacter(currentNextSpeaker);
+          // Small realistic pause before fetch
+          await new Promise((r) => setTimeout(r, 600));
+
+          const nextRes = await fetch("/api/feature/turn", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              chatSessionId: activeChat.id,
+              prompt: null,
+              responseLength,
+            }),
+          });
+
+          const nextData = await nextRes.json();
+          if (!nextRes.ok) break;
+
+          // Hide loading dots while character message is typing out
+          setTypingCharacter(null);
+
+          // Typewriter animation for next character response
+          if (nextData.modelMessage) {
+            await animateTypewriterMessage(nextData.modelMessage);
+          }
+
+          currentNextSpeaker = nextData.nextSpeaker;
+          userTurnFlag = nextData.isUserTurn;
+          turnCount++;
+        }
+      } catch (err) {
+        alert("Error in Turn-by-Turn mode: " + err.message);
+        setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
+      } finally {
+        setTypingCharacter(null);
+        setLoading(false);
       }
+    } else {
+      // Classic Mode
+      try {
+        const res = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chatSessionId: activeChat.id,
+            prompt: currentPrompt,
+            responseLength,
+          }),
+        });
 
-      setMessages((prev) =>
-        prev.filter((m) => m.id !== tempUserMsg.id).concat(data.userMessage, data.modelMessage)
-      );
-    } catch (err) {
-      alert("Error sending message: " + err.message);
-      setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
-    } finally {
-      setLoading(false);
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to send message");
+        }
+
+        setMessages((prev) =>
+          prev.filter((m) => m.id !== tempUserMsg.id).concat(data.userMessage, data.modelMessage)
+        );
+      } catch (err) {
+        alert("Error sending message: " + err.message);
+        setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -546,6 +808,35 @@ export default function ChatView({
 
         {/* Right Actions */}
         <div className="flex items-center gap-1.5 md:gap-2.5 shrink-0">
+          {/* Mode Switcher Selector */}
+          <div className="hidden md:flex items-center bg-neutral-900 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
+            <button
+              onClick={() => handleSetChatMode("turn")}
+              className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
+                chatMode === "turn"
+                  ? "bg-purple-950/80 border border-purple-600/80 text-purple-300 shadow-sm font-semibold"
+                  : "text-neutral-400 hover:text-neutral-200"
+              }`}
+              title="Dynamic Turn Mode: Gemini decides character turns sequentially with typing indicators"
+            >
+              <Sparkles className="w-3 h-3 text-purple-400 shrink-0" />
+              <span>🎭 Dynamic Turn</span>
+            </button>
+
+            <button
+              onClick={() => handleSetChatMode("classic")}
+              className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
+                chatMode === "classic"
+                  ? "bg-blue-950/80 border border-blue-600/80 text-blue-300 shadow-sm font-semibold"
+                  : "text-neutral-400 hover:text-neutral-200"
+              }`}
+              title="Classic Mode: All character responses generated together in one turn"
+            >
+              <Zap className="w-3 h-3 text-blue-400 shrink-0" />
+              <span>⚡ Classic</span>
+            </button>
+          </div>
+
           {/* Desktop Response Length Pill Selector */}
           <div className="hidden sm:flex items-center bg-neutral-900 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
             <button
@@ -660,6 +951,46 @@ export default function ChatView({
                     >
                       <X className="w-4 h-4" />
                     </button>
+                  </div>
+
+                  {/* Response Mode Selector */}
+                  <div>
+                    <span className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-1.5 font-semibold">
+                      Response Style Mode
+                    </span>
+                    <div className="grid grid-cols-2 gap-1 bg-neutral-950 p-1 rounded-xl border border-neutral-800 text-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleSetChatMode("turn");
+                          setShowMobileMenu(false);
+                        }}
+                        className={`py-2 px-2 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${
+                          chatMode === "turn"
+                            ? "bg-purple-950/90 text-purple-300 border border-purple-600/80 shadow"
+                            : "text-neutral-400 hover:text-white"
+                        }`}
+                      >
+                        <Sparkles className="w-3 h-3 text-purple-400 shrink-0" />
+                        <span>🎭 Dynamic Turn</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleSetChatMode("classic");
+                          setShowMobileMenu(false);
+                        }}
+                        className={`py-2 px-2 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${
+                          chatMode === "classic"
+                            ? "bg-blue-950/90 text-blue-300 border border-blue-600/80 shadow"
+                            : "text-neutral-400 hover:text-white"
+                        }`}
+                      >
+                        <Zap className="w-3 h-3 text-blue-400 shrink-0" />
+                        <span>⚡ Classic</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* Response Length Selector */}
@@ -873,106 +1204,33 @@ export default function ChatView({
             </div>
           </div>
         ) : (
-          messages.map((msg, index) => {
-            const isUser = msg.role === "user";
-            const isLatestMsg = index === messages.length - 1;
-            const charBlocks = !isUser ? parseCharacterSpeechBlocks(msg.content) : [];
-
-            return (
-              <div
-                key={msg.id}
-                ref={isLatestMsg ? latestMessageRef : null}
-                className={`flex gap-4 max-w-3xl mx-auto group ${isUser ? "justify-end" : "justify-start"
-                  }`}
-              >
-                {!isUser && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-md">
-                    <Users className="w-4 h-4" />
-                  </div>
-                )}
-
-                <div className="flex-1 max-w-2xl">
-                  {/* Sender Header & Context Toggle */}
-                  <div className="flex items-center justify-between mb-1.5 text-[11px] text-neutral-400 px-1">
-                    <span className="font-medium text-neutral-300">
-                      {isUser
-                        ? "You"
-                        : `Scene Roleplay Dialogue (${sessionChars.map((c) => c.name).join(", ")})`}
-                    </span>
-
-                    <div className="flex items-center gap-2">
-                      {!msg.includeInContext && (
-                        <span className="text-[10px] bg-amber-950/80 border border-amber-800 text-amber-300 px-1.5 py-0.5 rounded">
-                          Excluded from AI context
-                        </span>
-                      )}
-
-                      <button
-                        onClick={() => handleToggleContext(msg.id, msg.includeInContext)}
-                        className={`p-1 rounded transition-colors ${msg.includeInContext
-                            ? "text-neutral-500 hover:text-blue-400 hover:bg-neutral-900"
-                            : "text-amber-400 hover:text-amber-300 bg-amber-950/40"
-                          }`}
-                        title={
-                          msg.includeInContext
-                            ? "Included in Context - Click to Exclude"
-                            : "Excluded from Context - Click to Include"
-                        }
-                      >
-                        {msg.includeInContext ? (
-                          <Eye className="w-3.5 h-3.5" />
-                        ) : (
-                          <EyeOff className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Message Body */}
-                  {isUser ? (
-                    <div
-                      className={`p-4 rounded-2xl text-sm leading-relaxed bg-neutral-800 text-neutral-100 rounded-tr-xs ${!msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
-                        }`}
-                    >
-                      <FormattedMessageContent content={msg.content} />
-                    </div>
-                  ) : (
-                    /* Multi-Character Speech Card Renderer */
-                    <div className="space-y-3">
-                      {charBlocks.map((block, bIdx) => {
-                        const styleClass = getCharStyle(block.charName);
-                        return (
-                          <div
-                            key={bIdx}
-                            className={`p-4 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-xs shadow-md ${!msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
-                              }`}
-                          >
-                            {block.charName && (
-                              <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-neutral-800/60">
-                                <span
-                                  className={`text-sm font-extrabold px-3.5 py-1 rounded-full border shadow-md tracking-wide capitalize ${styleClass}`}
-                                >
-                                  {block.charName}
-                                </span>
-                              </div>
-                            )}
-
-                            <FormattedMessageContent content={block.speech} />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {isUser && (
-                  <div className="w-8 h-8 rounded-full bg-neutral-700 flex items-center justify-center text-neutral-200 shrink-0 text-xs font-semibold">
-                    <User className="w-4 h-4" />
-                  </div>
-                )}
+          <>
+            {messages.length > visibleCount && (
+              <div className="flex justify-center my-3">
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((prev) => prev + 50)}
+                  className="text-xs font-semibold px-4 py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-blue-400 hover:text-white hover:bg-neutral-800 transition-colors shadow-sm"
+                >
+                  📜 Load earlier messages ({messages.length - visibleCount} hidden)
+                </button>
               </div>
-            );
-          })
+            )}
+
+            {visibleMessages.map((msg, index) => {
+              const isLatestMsg = index === visibleMessages.length - 1;
+              return (
+                <ChatMessageItem
+                  key={msg.id}
+                  msg={msg}
+                  isLatestMsg={isLatestMsg}
+                  latestMessageRef={latestMessageRef}
+                  sessionChars={sessionChars}
+                  onToggleContext={handleToggleContext}
+                />
+              );
+            })}
+          </>
         )}
 
         {loading && (
@@ -998,7 +1256,9 @@ export default function ChatView({
               </div>
 
               <span className="text-xs text-neutral-400 font-medium tracking-wide">
-                {sessionChars.length > 0
+                {typingCharacter
+                  ? `${typingCharacter} is typing...`
+                  : sessionChars.length > 0
                   ? `${sessionChars.map((c) => c.name).join(" & ")} are typing...`
                   : "Generating response..."}
               </span>
