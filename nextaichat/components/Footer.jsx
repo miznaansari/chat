@@ -70,7 +70,7 @@ export default function Footer() {
             </li>
             <li>
               <a
-                href="http://localhost:3000"
+                href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="hover:text-white transition-colors flex items-center gap-1.5 text-cyan-300 font-semibold"

@@ -171,7 +171,7 @@ export default async function HomePage() {
           {/* Hero Action Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <a
-              href="http://localhost:3000"
+              href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.com"}
               target="_blank"
               rel="noopener noreferrer"
               className="group relative px-7 py-3.5 sm:px-8 sm:py-4 rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-extrabold text-sm sm:text-base shadow-[0_0_40px_rgba(147,51,234,0.5)] flex items-center gap-2.5 transition-all duration-300 hover:scale-105 hover:shadow-[0_0_60px_rgba(147,51,234,0.8)] cursor-pointer"
@@ -392,7 +392,7 @@ export default async function HomePage() {
           </div>
 
           <a
-            href="http://localhost:3000"
+            href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.com"}
             target="_blank"
             rel="noopener noreferrer"
             className="text-xs font-bold text-cyan-400 hover:text-cyan-300 flex items-center gap-1 transition-colors"
@@ -429,7 +429,7 @@ export default async function HomePage() {
               </div>
 
               <a
-                href="http://localhost:3000"
+                href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2 rounded-xl bg-neutral-900 hover:bg-purple-950 border border-neutral-800 hover:border-purple-600/50 text-xs text-center font-semibold text-neutral-300 hover:text-white transition-all flex items-center justify-center gap-1"

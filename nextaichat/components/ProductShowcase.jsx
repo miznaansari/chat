@@ -322,7 +322,7 @@ export default function ProductShowcase() {
               </div>
 
               <a
-                href="http://localhost:3000"
+                href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5 hover:scale-105 transition-all shrink-0"

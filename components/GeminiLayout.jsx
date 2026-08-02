@@ -109,18 +109,19 @@ export default function GeminiLayout({
       </div>
 
 
-      {/* Mobile Backdrop Overlay */}
-      {mobileOpen && (
-        <div
-          onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 bg-black/75 backdrop-blur-md z-40 md:hidden transition-opacity"
-        />
-      )}
+      {/* Mobile Backdrop Overlay (Always in DOM for instant rendering, smooth hardware transition) */}
+      <div
+        onClick={() => setMobileOpen(false)}
+        className={`fixed inset-0 bg-black/70 z-40 md:hidden transition-opacity duration-200 ease-out ${
+          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        }`}
+      />
 
       {/* Sidebar Drawer */}
       <aside
-        className={`fixed md:relative inset-y-0 left-0 z-50 flex flex-col h-full bg-neutral-950/40 backdrop-blur-xl border-r border-purple-500/20 transition-all duration-300 shrink-0 overscroll-none ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-          } ${sidebarOpen ? "w-72 md:w-72 shadow-2xl md:shadow-none" : "w-72 md:w-16"}`}
+        className={`fixed md:relative inset-y-0 left-0 z-50 flex flex-col h-full bg-neutral-950/95 md:bg-neutral-950/40 md:backdrop-blur-xl border-r border-purple-500/20 transition-transform md:transition-[width,transform] duration-200 ease-out shrink-0 overscroll-none will-change-transform ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        } ${sidebarOpen ? "w-72 md:w-72 shadow-2xl md:shadow-none" : "w-72 md:w-16"}`}
       >
 
 
@@ -130,7 +131,7 @@ export default function GeminiLayout({
             <Tooltip content="Toggle Drawer Menu" position="right" badgeIcon="⚡">
               <button
                 onClick={handleToggleSidebar}
-                className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800/60 transition-colors shrink-0"
+                className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800/60 transition-colors shrink-0 touch-manipulation cursor-pointer"
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -139,7 +140,7 @@ export default function GeminiLayout({
               <img
                 src="/logo-landspace.png"
                 alt="NextAiChat Logo"
-                className={`h-28 w-auto object-contain transition-all duration-300 origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[140px]"}`}
+                className={`h-28 w-auto object-contain transition-[opacity,max-width] duration-200 origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[140px]"}`}
               />
             </Link>
           </div>
@@ -150,7 +151,7 @@ export default function GeminiLayout({
                 onNewChat();
                 setMobileOpen(false);
               }}
-              className={`p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800/60 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
+              className={`p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800/60 transition-[opacity,max-width,padding,colors] duration-200 ease-out shrink-0 ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
             >
               <SquarePen className="w-5 h-5" />
             </button>
@@ -165,12 +166,12 @@ export default function GeminiLayout({
                 onNewChat();
                 setMobileOpen(false);
               }}
-              className="w-full bg-purple-950/40 hover:bg-purple-900/60 text-neutral-200 border border-purple-800/50 font-medium py-2.5 px-3 rounded-xl flex items-center gap-3 justify-start transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-sm cursor-pointer"
+              className="w-full bg-purple-950/40 hover:bg-purple-900/60 text-neutral-200 border border-purple-800/50 font-medium py-2.5 px-3 rounded-xl flex items-center gap-3 justify-start transition-colors duration-200 ease-out shadow-sm cursor-pointer touch-manipulation"
             >
 
               <SquarePen className="w-4 h-4 text-purple-400 shrink-0" />
               <span
-                className={`transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen
+                className={`transition-[opacity,max-width] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen
                   ? "md:opacity-0 md:max-w-0 md:pointer-events-none"
                   : "md:opacity-100 md:max-w-[180px]"
                   }`}
@@ -184,12 +185,12 @@ export default function GeminiLayout({
 
         {/* Recent Chats List */}
         <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-          <div className={`px-3 py-1.5 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:h-0 md:py-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
+          <div className={`px-3 py-1.5 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider transition-[opacity,max-width,height,padding] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:h-0 md:py-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
             Recent Roleplays
           </div>
 
           {chats.length === 0 ? (
-            <div className={`px-3 py-4 text-center text-xs text-neutral-500 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:h-0 md:py-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
+            <div className={`px-3 py-4 text-center text-xs text-neutral-500 transition-[opacity,max-width,height,padding] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:h-0 md:py-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
               No chat sessions yet. Create one to begin!
             </div>
           ) : (
@@ -199,7 +200,7 @@ export default function GeminiLayout({
                 <div
                   key={chat.id}
                   onClick={() => handleSelectChatMobile(chat.id)}
-                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] justify-start ${isActive
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors duration-150 ease-out justify-start touch-manipulation ${isActive
                     ? "bg-purple-950/60 border border-purple-800/60 text-white font-medium shadow-sm"
                     : "text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200"
                     }`}
@@ -207,7 +208,7 @@ export default function GeminiLayout({
                 >
                   <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${isActive ? "text-purple-400" : "text-neutral-500"}`} />
 
-                  <div className={`flex-1 min-w-0 flex items-center justify-between gap-2 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
+                  <div className={`flex-1 min-w-0 flex items-center justify-between gap-2 transition-[opacity,max-width] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
 
                     <div className="flex-1 min-w-0">
                       <div className="text-xs truncate font-semibold text-neutral-200">
@@ -224,7 +225,7 @@ export default function GeminiLayout({
                         e.stopPropagation();
                         onDeleteChat(chat.id);
                       }}
-                      className="opacity-90 md:opacity-0 md:group-hover:opacity-100 p-1 text-neutral-500 hover:text-red-400 hover:bg-neutral-700/60 rounded transition-all shrink-0"
+                      className="opacity-90 md:opacity-0 md:group-hover:opacity-100 p-1 text-neutral-500 hover:text-red-400 hover:bg-neutral-700/60 rounded transition-[opacity,color,background-color] shrink-0"
                       title="Delete Chat"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -245,7 +246,7 @@ export default function GeminiLayout({
                 {user?.name?.[0]?.toUpperCase() || "U"}
               </div>
 
-              <div className={`min-w-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[140px]"}`}>
+              <div className={`min-w-0 transition-[opacity,max-width] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[140px]"}`}>
                 <div className="text-xs font-semibold text-white truncate">
                   {user?.name || "User"}
                 </div>
@@ -257,7 +258,7 @@ export default function GeminiLayout({
               <Tooltip content="Settings & Account" position="top" badgeIcon="⚙️">
                 <Link
                   href="/setting"
-                  className={`p-1.5 text-neutral-400 hover:text-purple-400 hover:bg-neutral-800 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] flex items-center justify-center ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
+                  className={`p-1.5 text-neutral-400 hover:text-purple-400 hover:bg-neutral-800 rounded-lg transition-[opacity,max-width,padding,colors] duration-200 ease-out flex items-center justify-center ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
                 >
                   <Settings className="w-4 h-4" />
                 </Link>
@@ -266,7 +267,7 @@ export default function GeminiLayout({
               <Tooltip content="Sign Out Account" position="right" badgeIcon="🔒">
                 <button
                   onClick={onLogout}
-                  className={`p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
+                  className={`p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-[opacity,max-width,padding,colors] duration-200 ease-out ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
                 >
                   <LogOut className="w-4 h-4" />
                 </button>
@@ -289,7 +290,7 @@ export default function GeminiLayout({
             {/* Toggle Drawer button for Mobile Header */}
             <button
               onClick={handleToggleSidebar}
-              className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-900 transition-colors md:hidden"
+              className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-900 transition-colors md:hidden touch-manipulation cursor-pointer"
               title="Toggle Menu"
             >
               <Menu className="w-5 h-5" />
@@ -301,7 +302,7 @@ export default function GeminiLayout({
             <div className="relative z-50" ref={modelDropdownRef}>
               <button
                 onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-                className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-neutral-200 hover:bg-neutral-900 px-2.5 py-1.5 rounded-full transition-colors border border-neutral-800 md:border-transparent cursor-pointer"
+                className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-neutral-200 hover:bg-neutral-900 px-2.5 py-1.5 rounded-full transition-colors border border-neutral-800 md:border-transparent cursor-pointer touch-manipulation"
                 title="Select Gemini Generative AI Model Architecture"
               >
                 <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />

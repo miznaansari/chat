@@ -152,7 +152,7 @@ export default async function SingleBlogPostPage({ params }) {
           </p>
         </div>
         <a
-          href="http://localhost:3000"
+          href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.com"}
           target="_blank"
           rel="noopener noreferrer"
           className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-colors cursor-pointer shrink-0"

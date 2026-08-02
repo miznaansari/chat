@@ -30,6 +30,7 @@ NextAiChat allows users to simulate dynamic multi-character conversations powere
 ## Important Links
 
 - Main Website: https://nextaichat.com
+- Live Web Application: https://app.nextaichat.com
 - Comparison Matrix: https://nextaichat.com/compare
 - Official Blog: https://nextaichat.com/blog
 - Privacy Policy: https://nextaichat.com/privacy

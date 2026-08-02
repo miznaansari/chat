@@ -173,7 +173,7 @@ export default function ComparePage() {
           Start roleplaying for study or fun with zero latency and smart turn management.
         </p>
         <a
-          href="http://localhost:3000"
+          href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.com"}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 transition-colors shadow-lg"
