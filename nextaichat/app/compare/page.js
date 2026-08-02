@@ -9,13 +9,21 @@ import {
   BookOpen,
   ShieldCheck,
   ArrowRight,
-  MessageSquare,
-  Globe,
 } from "lucide-react";
 
 export const metadata = {
   title: "NextAiChat vs Character.ai - Feature Comparison Matrix",
-  description: "Detailed side-by-side feature comparison between NextAiChat and Character.ai for study, educational simulations, multi-character turn engines, and speed.",
+  description:
+    "Detailed side-by-side feature comparison matrix between NextAiChat and Character.ai for study, educational simulations, dynamic multi-character speaker turns, and response speed.",
+  alternates: {
+    canonical: "/compare",
+  },
+  openGraph: {
+    title: "NextAiChat vs Character.ai - Feature Comparison Matrix",
+    description:
+      "See why students, creators, and roleplay enthusiasts are switching from Character.ai to NextAiChat.",
+    url: "/compare",
+  },
 };
 
 export default function ComparePage() {

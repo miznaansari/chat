@@ -1,5 +1,6 @@
 import Link from "next/link";
 import prisma from "@/lib/prisma";
+import JsonLd from "@/components/JsonLd";
 import {
   Sparkles,
   Zap,
@@ -10,13 +11,21 @@ import {
   CheckCircle2,
   Compass,
   FileText,
-  Star,
-  Users,
   Eye,
-  Clock,
+  Calendar,
+  HelpCircle,
 } from "lucide-react";
 
 export const revalidate = 0; // Dynamic DB fetch
+
+export const metadata = {
+  title: "NextAiChat - #1 AI Roleplay Platform for Study & Entertainment",
+  description:
+    "Discover NextAiChat, the premier AI Roleplay platform designed for interactive study simulations, exam prep tutors, language practice, and multi-character storytelling with dynamic speaker turns.",
+  alternates: {
+    canonical: "/",
+  },
+};
 
 export default async function HomePage() {
   let blogs = [];
@@ -30,8 +39,43 @@ export default async function HomePage() {
     console.error("Home page blog fetch error:", e);
   }
 
+  // FAQ Schema.org JSON-LD for Google Rich Search Snippets
+  const faqSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "What is NextAiChat?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "NextAiChat is an advanced AI roleplay platform built for educational study simulations, tutor conversations, language practice, and multi-character entertainment stories.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How does NextAiChat compare to Character.ai?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "NextAiChat features a Dynamic Speaker Turn Engine powered by Gemini AI, zero response latency, dedicated study and exam prep personas, private encrypted sessions, and custom snippet libraries.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "Is NextAiChat suitable for study and exam prep?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Yes, NextAiChat allows students to create subject-specific AI tutors for oral exam prep, concept quizzes, historical roleplays, and foreign language conversation practice.",
+        },
+      },
+    ],
+  };
+
   return (
     <div className="flex-1 flex flex-col relative overflow-x-hidden selection:bg-purple-500 selection:text-white">
+      {/* Inject FAQ JSON-LD Structured Data */}
+      <JsonLd data={faqSchema} />
+
       {/* Background Ambient Glow Effects */}
       <div className="fixed top-0 left-1/4 w-[600px] h-[600px] bg-purple-600/15 rounded-full blur-[160px] pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-[600px] h-[600px] bg-blue-600/15 rounded-full blur-[160px] pointer-events-none" />
@@ -42,7 +86,7 @@ export default async function HomePage() {
         {/* Glow Badge */}
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 text-xs sm:text-sm font-semibold tracking-wide shadow-[0_0_25px_rgba(147,51,234,0.3)] animate-pulse">
           <Sparkles className="w-4 h-4 text-purple-400" />
-          <span>NextAiChat Platform • AI Roleplay Matrix</span>
+          <span>Next-Gen AI Roleplay Matrix</span>
         </div>
 
         {/* Hero Title */}
@@ -55,7 +99,7 @@ export default async function HomePage() {
 
         {/* Hero Subtitle */}
         <p className="text-base sm:text-lg text-neutral-300 max-w-3xl mx-auto leading-relaxed font-normal">
-          Whether you want to simulate interactive study scenarios with AI tutors, practice foreign languages, or immerse yourself in multi-character entertainment roleplays — <strong className="text-white">NextAiChat</strong> provides zero-latency dynamic conversations.
+          Simulate interactive study scenarios with AI tutors, practice foreign languages, or immerse yourself in multi-character entertainment roleplays — <strong className="text-white">NextAiChat</strong> provides zero-latency dynamic conversations.
         </p>
 
         {/* Action Buttons */}

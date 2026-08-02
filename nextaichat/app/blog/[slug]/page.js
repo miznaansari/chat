@@ -1,19 +1,39 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import prisma from "@/lib/prisma";
+import JsonLd from "@/components/JsonLd";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArrowLeft, Calendar, Eye, User, Sparkles, Share2, BookOpen } from "lucide-react";
 
 export const revalidate = 0;
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.com";
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const blog = await prisma.blogPost.findUnique({ where: { slug } });
   if (!blog) return { title: "Blog Not Found - NextAiChat" };
+
   return {
     title: `${blog.title} - NextAiChat Blog`,
     description: blog.excerpt,
+    alternates: {
+      canonical: `/blog/${blog.slug}`,
+    },
+    openGraph: {
+      title: blog.title,
+      description: blog.excerpt,
+      url: `${baseUrl}/blog/${blog.slug}`,
+      type: "article",
+      publishedTime: blog.createdAt.toISOString(),
+      authors: [blog.author],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: blog.title,
+      description: blog.excerpt,
+    },
   };
 }
 
@@ -22,13 +42,12 @@ export default async function SingleBlogPostPage({ params }) {
 
   let blog = null;
   try {
-    // Increment view count in DB for analytics
+    // Increment view count in DB for real-time analytics
     blog = await prisma.blogPost.update({
       where: { slug },
       data: { views: { increment: 1 } },
     });
   } catch (e) {
-    // Fallback find if update fails
     blog = await prisma.blogPost.findUnique({ where: { slug } });
   }
 
@@ -36,8 +55,37 @@ export default async function SingleBlogPostPage({ params }) {
     notFound();
   }
 
+  // BlogPosting Schema.org JSON-LD for Google Search Article Indexing
+  const articleSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: blog.title,
+    description: blog.excerpt,
+    datePublished: blog.createdAt.toISOString(),
+    dateModified: blog.updatedAt.toISOString(),
+    author: {
+      "@type": "Person",
+      name: blog.author,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "NextAiChat",
+      logo: {
+        "@type": "ImageObject",
+        url: `${baseUrl}/logo.png`,
+      },
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${baseUrl}/blog/${blog.slug}`,
+    },
+  };
+
   return (
     <div className="flex-1 flex flex-col relative overflow-x-hidden selection:bg-purple-500 selection:text-white py-10 px-4 sm:px-6 md:px-8 max-w-4xl mx-auto space-y-8 w-full">
+      {/* Inject Article JSON-LD Structured Data */}
+      <JsonLd data={articleSchema} />
+
       {/* Background Glows */}
       <div className="fixed top-0 left-1/4 w-[500px] h-[500px] bg-purple-600/15 rounded-full blur-[140px] pointer-events-none" />
       <div className="fixed inset-0 bg-antigravity-grid pointer-events-none opacity-40" />
