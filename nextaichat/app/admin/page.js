@@ -151,7 +151,7 @@ export default function AdminDashboardPage() {
   const topBlog = [...blogs].sort((a, b) => b.views - a.views)[0];
 
   return (
-    <div className="flex-1 flex flex-col relative overflow-x-hidden selection:bg-purple-500 selection:text-white py-10 px-4 sm:px-6 md:px-8 max-w-6xl mx-auto space-y-8 w-full">
+    <div className="flex-1 flex flex-col relative overflow-x-hidden selection:bg-purple-500 selection:text-white py-10 px-4 sm:px-6 md:px-8 max-w-[1440px] mx-auto space-y-8 w-full">
       {/* Background Glows */}
       <div className="fixed top-0 right-1/4 w-[500px] h-[500px] bg-purple-600/15 rounded-full blur-[140px] pointer-events-none" />
       <div className="fixed inset-0 bg-antigravity-grid pointer-events-none opacity-40" />
