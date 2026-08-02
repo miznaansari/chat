@@ -698,23 +698,89 @@ export default function ChatView({
     }
   };
 
+  const [optimizingFieldEdit, setOptimizingFieldEdit] = useState(null);
+
+  const handleOptimizeTextEdit = async (target, text, type = "persona") => {
+    if (!text || !text.trim()) return;
+    setOptimizingFieldEdit(target);
+
+    try {
+      const res = await fetch("/api/characters/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, type }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.optimizedText) {
+        if (target === "story") {
+          setStoryEdit(data.optimizedText);
+        } else {
+          handleCharacterEditChange(target, "persona", data.optimizedText);
+        }
+      } else {
+        alert("Failed to optimize text: " + (data.error || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Error optimizing text: " + err.message);
+    } finally {
+      setOptimizingFieldEdit(null);
+    }
+  };
+
+  const handleAddCharacterEdit = () => {
+    setCharactersEdit((prev) => [
+      ...prev,
+      {
+        id: "new-" + Date.now(),
+        name: "",
+        persona: "",
+      },
+    ]);
+  };
+
+  const handleRemoveCharacterEdit = (id) => {
+    if (charactersEdit.length <= 1) {
+      alert("At least one character is required for the roleplay session.");
+      return;
+    }
+    setCharactersEdit((prev) => prev.filter((c) => (c.id || c.name) !== id));
+  };
+
+  const handleCharacterEditChange = (id, field, value) => {
+    setCharactersEdit((prev) =>
+      prev.map((c) => ((c.id || c.name) === id ? { ...c, [field]: value } : c))
+    );
+  };
+
   const handleSaveStoryAndCharacters = async () => {
+    const activeCharacters = (charactersEdit || [])
+      .map((c) => ({ name: (c.name || "").trim(), persona: (c.persona || "").trim() }))
+      .filter((c) => c.name !== "" && c.persona !== "");
+
+    if (activeCharacters.length === 0) {
+      alert("Please fill in at least one character name and persona.");
+      return;
+    }
+
     try {
       const res = await fetch(`/api/chats/${activeChat.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          story: storyEdit,
-          characters: charactersEdit.map((c) => ({ name: c.name, persona: c.persona })),
+          story: storyEdit.trim(),
+          characters: activeCharacters,
         }),
       });
       if (res.ok) {
         const data = await res.json();
         onUpdateChat(data.chatSession);
         setShowStoryModal(false);
+      } else {
+        alert("Failed to update session details");
       }
     } catch (err) {
-      alert("Failed to update session details");
+      alert("Failed to update session details: " + err.message);
     }
   };
 
@@ -1455,42 +1521,170 @@ export default function ChatView({
         </p>
       </div>
 
-      {/* Edit Story Modal */}
+      {/* Edit Story & Characters Modal */}
       {showStoryModal && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-800">
-              <h3 className="font-semibold text-white text-base">Edit Scenario Story</h3>
+          <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-800 shrink-0">
+              <div className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-400" />
+                <h3 className="font-semibold text-white text-base">Edit Scenario Story & Characters</h3>
+              </div>
               <button
                 onClick={() => setShowStoryModal(false)}
-                className="text-neutral-400 hover:text-white"
+                className="text-neutral-400 hover:text-white p-1 rounded hover:bg-neutral-800 transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div>
-              <label className="block text-xs font-medium text-neutral-400 mb-1">
-                Story / Scenario Setting
-              </label>
-              <textarea
-                rows={3}
-                value={storyEdit}
-                onChange={(e) => setStoryEdit(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500"
-              />
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+              {/* Story Scenario Setting */}
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                    Story / Scenario Setting Background
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => handleOptimizeTextEdit("story", storyEdit, "story")}
+                    disabled={!storyEdit?.trim() || optimizingFieldEdit === "story"}
+                    className="text-[11px] font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 px-2 py-0.5 rounded-lg transition-all disabled:opacity-40"
+                    title="Improve spelling, grammar & enhance story setting with Gemini"
+                  >
+                    {optimizingFieldEdit === "story" ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+                        <span>Improving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3 text-purple-400" />
+                        <span>✨ Improve with Gemini</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <textarea
+                  rows={2}
+                  value={storyEdit}
+                  onChange={(e) => setStoryEdit(e.target.value)}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 resize-none transition-colors"
+                  placeholder="Describe scenario setting or world context..."
+                />
+              </div>
+
+              {/* Edit Session Characters */}
+              <div className="space-y-3 pt-2 border-t border-neutral-800">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-semibold text-blue-400 uppercase tracking-wider">
+                    Session Characters ({charactersEdit.length})
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleAddCharacterEdit}
+                    className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Character</span>
+                  </button>
+                </div>
+
+                {charactersEdit.map((char, index) => {
+                  const charKey = char.id || char.name || index;
+                  return (
+                    <div
+                      key={charKey}
+                      className="bg-neutral-950 border border-neutral-800/80 rounded-2xl p-4 space-y-3 relative group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-neutral-300">
+                          Character #{index + 1}
+                        </span>
+                        {charactersEdit.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCharacterEdit(charKey)}
+                            className="text-neutral-500 hover:text-red-400 p-1 transition-colors"
+                            title="Remove Character"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-[11px] font-medium text-neutral-400 mb-1">
+                            Character Tag Name
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Sherlock"
+                            value={char.name || ""}
+                            onChange={(e) =>
+                              handleCharacterEditChange(charKey, "name", e.target.value)
+                            }
+                            className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <label className="block text-[11px] font-medium text-neutral-400">
+                              Character Persona & Speaking Style
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => handleOptimizeTextEdit(charKey, char.persona, "persona")}
+                              disabled={!char.persona?.trim() || optimizingFieldEdit === charKey}
+                              className="text-[11px] font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 px-2 py-0.5 rounded-lg transition-all disabled:opacity-40"
+                              title="Improve spelling, grammar & expand persona with Gemini"
+                            >
+                              {optimizingFieldEdit === charKey ? (
+                                <>
+                                  <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+                                  <span>Improving...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="w-3 h-3 text-purple-400" />
+                                  <span>✨ Improve with Gemini</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                          <textarea
+                            rows={2}
+                            required
+                            placeholder="e.g. Smart, observational detective who speaks formally."
+                            value={char.persona || ""}
+                            onChange={(e) =>
+                              handleCharacterEditChange(charKey, "persona", e.target.value)
+                            }
+                            className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 resize-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800">
+            <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800 shrink-0">
               <button
+                type="button"
                 onClick={() => setShowStoryModal(false)}
-                className="px-4 py-2 rounded-xl text-xs text-neutral-400 hover:bg-neutral-800"
+                className="px-4 py-2 rounded-xl text-xs text-neutral-400 hover:bg-neutral-800 transition-colors"
               >
                 Cancel
               </button>
               <button
+                type="button"
                 onClick={handleSaveStoryAndCharacters}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white hover:bg-blue-500"
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white hover:bg-blue-500 transition-colors"
               >
                 Save Changes
               </button>

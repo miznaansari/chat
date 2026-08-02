@@ -16,6 +16,36 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const [optimizingField, setOptimizingField] = useState(null); // 'story' | charId
+
+  const handleOptimizeText = async (target, text, type = "persona") => {
+    if (!text || !text.trim()) return;
+    setOptimizingField(target);
+
+    try {
+      const res = await fetch("/api/characters/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text, type }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.optimizedText) {
+        if (target === "story") {
+          setStory(data.optimizedText);
+        } else {
+          handleCharacterChange(target, "persona", data.optimizedText);
+        }
+      } else {
+        alert("Failed to optimize text: " + (data.error || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Error optimizing text: " + err.message);
+    } finally {
+      setOptimizingField(null);
+    }
+  };
+
   const handleAddCharacter = () => {
     setCharacters((prev) => [
       ...prev,
@@ -130,9 +160,30 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-neutral-400 mb-1 uppercase tracking-wider">
-              Scenario / Story Setting Background
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-xs font-medium text-neutral-400 uppercase tracking-wider">
+                Scenario / Story Setting Background
+              </label>
+              <button
+                type="button"
+                onClick={() => handleOptimizeText("story", story, "story")}
+                disabled={!story?.trim() || optimizingField === "story"}
+                className="text-[11px] font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 px-2 py-0.5 rounded-lg transition-all disabled:opacity-40"
+                title="Improve spelling, grammar & enhance story setting with Gemini"
+              >
+                {optimizingField === "story" ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+                    <span>Improving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3 text-purple-400" />
+                    <span>✨ Improve with Gemini</span>
+                  </>
+                )}
+              </button>
+            </div>
             <textarea
               rows={2}
               placeholder="Describe the setting, plot context, or world rules for all characters..."
@@ -197,18 +248,39 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-[11px] font-medium text-neutral-400 mb-1">
-                      Character Persona & Speaking Style
-                    </label>
-                    <input
-                      type="text"
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-[11px] font-medium text-neutral-400">
+                        Character Persona & Speaking Style
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => handleOptimizeText(char.id, char.persona, "persona")}
+                        disabled={!char.persona?.trim() || optimizingField === char.id}
+                        className="text-[11px] font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 px-2 py-0.5 rounded-lg transition-all disabled:opacity-40"
+                        title="Improve spelling, grammar & expand persona with Gemini"
+                      >
+                        {optimizingField === char.id ? (
+                          <>
+                            <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+                            <span>Improving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3 h-3 text-purple-400" />
+                            <span>✨ Improve with Gemini</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <textarea
+                      rows={2}
                       required
                       placeholder="e.g. Smart, observational detective who speaks formally."
                       value={char.persona}
                       onChange={(e) =>
                         handleCharacterChange(char.id, "persona", e.target.value)
                       }
-                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-base sm:text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-base sm:text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 resize-none"
                     />
                   </div>
                 </div>
