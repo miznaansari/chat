@@ -65,7 +65,7 @@ export default function PrivacyPage() {
         <section className="space-y-2 pt-4 border-t border-neutral-800">
           <h2 className="text-base font-bold text-white">5. Contact Us</h2>
           <p>
-            If you have questions regarding this Privacy Policy, please contact us at support@nextaichat.com.
+            If you have questions regarding this Privacy Policy, please contact us at support@nextaichat.online.
           </p>
         </section>
       </div>

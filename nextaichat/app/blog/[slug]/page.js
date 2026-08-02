@@ -8,7 +8,7 @@ import { ArrowLeft, Calendar, Eye, User, Sparkles, Share2, BookOpen } from "luci
 
 export const revalidate = 0;
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.com";
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.online";
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
@@ -152,7 +152,7 @@ export default async function SingleBlogPostPage({ params }) {
           </p>
         </div>
         <a
-          href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.com"}
+          href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.online"}
           target="_blank"
           rel="noopener noreferrer"
           className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-md transition-colors cursor-pointer shrink-0"

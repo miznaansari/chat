@@ -291,7 +291,6 @@ export default function GeminiLayout({
             <button
               onClick={handleToggleSidebar}
               className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-900 transition-colors md:hidden touch-manipulation cursor-pointer"
-              title="Toggle Menu"
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -303,7 +302,6 @@ export default function GeminiLayout({
               <button
                 onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
                 className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-neutral-200 hover:bg-neutral-900 px-2.5 py-1.5 rounded-full transition-colors border border-neutral-800 md:border-transparent cursor-pointer touch-manipulation"
-                title="Select Gemini Generative AI Model Architecture"
               >
                 <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                 <span className="truncate max-w-[120px] sm:max-w-none">{activeModelName}</span>
@@ -318,7 +316,6 @@ export default function GeminiLayout({
                       setModelDropdownOpen(false);
                     }}
                     className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
-                    title="Gemini 3.5 Flash Lite: Fastest response latency for turn-by-turn roleplays"
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5 text-blue-400" />
@@ -335,7 +332,6 @@ export default function GeminiLayout({
                       setModelDropdownOpen(false);
                     }}
                     className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
-                    title="Gemini 3.1 Flash Lite: Stable model architecture for creative roleplays"
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5 text-purple-400" />

@@ -2,402 +2,337 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
-  Sparkles,
-  Bot,
-  Zap,
-  BookOpen,
-  Gamepad2,
-  Code,
-  Send,
+  Menu,
+  SquarePen,
   MessageSquare,
-  ChevronRight,
-  ShieldCheck,
-  Cpu,
-  Plus,
+  Sparkles,
+  ChevronDown,
+  Trash2,
   Settings,
-  Layers,
-  Terminal,
-  CheckCircle2,
-  ArrowUpRight,
-  Sliders,
-  Flame,
+  LogOut,
+  Mic,
+  Send,
+  Plus,
+  Edit2,
 } from "lucide-react";
 
 export default function ProductShowcase() {
-  const [activeTab, setActiveTab] = useState("study");
+  const [activeChatTab, setActiveChatTab] = useState("physics");
 
-  const tabs = [
-    {
-      id: "study",
-      label: "Study & Exam Matrix",
-      icon: BookOpen,
-      badge: "100% Academic Prep",
-      color: "from-purple-600 to-indigo-600",
-    },
-    {
-      id: "story",
-      label: "Multi-Persona RPG",
-      icon: Gamepad2,
-      badge: "Multi-Character Room",
-      color: "from-pink-600 to-rose-600",
-    },
-    {
-      id: "engine",
-      label: "Dynamic Speaker Turn",
-      icon: Zap,
-      badge: "Zero Latency",
-      color: "from-cyan-600 to-blue-600",
-    },
-    {
-      id: "snippets",
-      label: "Snippets & Prompts",
-      icon: Code,
-      badge: "Instant Execution",
-      color: "from-emerald-600 to-teal-600",
-    },
-  ];
-
-  const showcaseData = {
-    study: {
-      sessionTitle: "Quantum Physics Oral Exam Prep",
-      personas: [
-        { name: "Dr. Aris (Physics Tutor)", avatar: "⚛️", role: "Subject Specialist", color: "purple" },
-        { name: "Exam Evaluator AI", avatar: "📝", role: "Score Coach", color: "indigo" },
-      ],
+  const showcaseChats = {
+    physics: {
+      title: "Quantum Physics Prep",
+      characters: ["Dr. Aris (Tutor)", "Exam Coach"],
+      description: "Quantum Physics oral exam & wave mechanics tutor simulation...",
       messages: [
         {
-          sender: "Dr. Aris (Physics Tutor)",
-          avatar: "⚛️",
-          type: "ai",
-          personaBadge: "Study Tutor",
-          time: "10:42 AM",
-          text: "Welcome back! Today we are simulating oral exam questions on Schrödinger wave equations. Question 1: What is the physical significance of the wavefunction magnitude squared $|\\psi|^2$?",
+          sender: "Dr. Aris (Tutor)",
+          avatarColor: "bg-purple-900/90 text-purple-200 border-purple-700/60",
+          thought: "Evaluating student's understanding of Schrödinger wave function magnitude squared",
+          text: "Welcome back! Today we are simulating oral exam questions on Schrödinger wave equations. Question 1: What is the physical significance of the wavefunction magnitude squared |ψ|²?",
         },
         {
-          sender: "Student (You)",
-          avatar: "👤",
+          sender: "You",
           type: "user",
-          personaBadge: "User",
-          time: "10:43 AM",
           text: "It represents the probability density of finding a particle in a given region of space at a given time.",
-        },
-        {
-          sender: "Exam Evaluator AI",
-          avatar: "📝",
-          type: "ai",
-          personaBadge: "Turn Engine Auto-Selected",
-          time: "10:43 AM",
-          text: "Correct! Score: 10/10. Key concept included: 'probability density'. Dr. Aris will now follow up with boundary conditions.",
+          promptTag: "[Exam Coach]: 'Score 10/10! State boundary conditions next.'",
         },
       ],
-      snippets: ["Explain Boundary Conditions", "Calculate Energy Levels", "Give Practice Quiz"],
+      activeSpeaker: "Exam Coach",
+    },
+    ielts: {
+      title: "IELTS Band 9 Coach",
+      characters: ["Coach Sarah", "Evaluator AI"],
+      description: "Live IELTS Part 2 speaking test simulation with real-time feedback...",
+      messages: [
+        {
+          sender: "Coach Sarah",
+          avatarColor: "bg-rose-900/90 text-pink-200 border-pink-700/60",
+          thought: "Checking fluency, lexical resource, and grammatical accuracy for Part 2 topic",
+          text: "Welcome to your Part 2 speaking simulation! Your topic is: 'Describe a memorable journey you took'. You have 1 minute to structure your key points.",
+        },
+        {
+          sender: "You",
+          type: "user",
+          text: "I would like to talk about a mountain trek I embarked on last summer. The scenery was breathtaking and the local culture was deeply inspiring.",
+          promptTag: "[Evaluator AI]: 'Excellent lexical range! Practice connective transitions next.'",
+        },
+      ],
+      activeSpeaker: "Coach Sarah",
     },
     story: {
-      sessionTitle: "Neon Cyberpunk Syndicate Multiverse",
-      personas: [
-        { name: "Kaelen (Hacker AI)", avatar: "⚡", role: "Netrunner", color: "cyan" },
-        { name: "Commander Vane", avatar: "🛡️", role: "Security Chief", color: "pink" },
-      ],
+      title: "Cyberpunk Chronicles",
+      characters: ["Kaelen (Netrunner)", "Commander Vane"],
+      description: "Neon Cyberpunk syndicate heist & netrunner multi-persona story...",
       messages: [
         {
           sender: "Kaelen (Netrunner)",
-          avatar: "⚡",
-          type: "ai",
-          personaBadge: "Active Persona",
-          time: "11:15 PM",
-          text: "I've breached the mainframe outer firewall. We have 45 seconds before security trace units pinpoint our signal origin!",
+          avatarColor: "bg-cyan-900/90 text-cyan-200 border-cyan-700/60",
+          thought: "Bypassing Arasaka mainframe firewall node #42 and patching grid feed",
+          text: "The icebreaker program just breached sub-grid 4! Commander Vane is moving security droids to lower levels. We have 90 seconds before orbital scan locks our location.",
         },
         {
-          sender: "Commander Vane",
-          avatar: "🛡️",
-          type: "ai",
-          personaBadge: "Turn Engine Auto-Selected",
-          time: "11:15 PM",
-          text: "All security grids locked down! Halt network override immediately or orbital defense turrets engage!",
-        },
-        {
-          sender: "Operative (You)",
-          avatar: "👤",
+          sender: "You",
           type: "user",
-          personaBadge: "User",
-          time: "11:16 PM",
-          text: "Kaelen, trigger the EMP pulse decoy now! Vane, your firewalls are already compromised.",
+          text: "Deploy EMP pulse on lower elevator shafts and patch my terminal into the grid core.",
+          promptTag: "[Commander Vane]: 'Intruder detected in sector B! Backup requested.'",
         },
       ],
-      snippets: ["Trigger EMP Decoy", "Hack Mainframe", "Initiate Stealth Protocol"],
-    },
-    engine: {
-      sessionTitle: "Smart Speaker Turn Latency Benchmark",
-      personas: [
-        { name: "Gemini 2.0 Flash Engine", avatar: "⚡", role: "Context Evaluator", color: "cyan" },
-        { name: "Turn Engine Kernel", avatar: "⚙️", role: "Speaker Dispatcher", color: "purple" },
-      ],
-      messages: [
-        {
-          sender: "System Matrix",
-          avatar: "🖥️",
-          type: "ai",
-          personaBadge: "Engine Status",
-          time: "Real-time",
-          text: "Evaluating conversation context graph across 3 active personas. Latency benchmark: 0 ms delay.",
-        },
-        {
-          sender: "Gemini Turn Evaluator",
-          avatar: "⚡",
-          type: "ai",
-          personaBadge: "Smart Speaker Selection",
-          time: "Real-time",
-          text: "Selected 'Language Tutor Persona' for next response turn based on user's grammar query intent.",
-        },
-      ],
-      snippets: ["Benchmark Latency", "Force Speaker Switch", "Analyze Context Graph"],
-    },
-    snippets: {
-      sessionTitle: "Custom Reusable Prompts & Snippet Vault",
-      personas: [
-        { name: "Snippet Manager", avatar: "📚", role: "Library Vault", color: "emerald" },
-      ],
-      messages: [
-        {
-          sender: "Snippet Engine",
-          avatar: "📚",
-          type: "ai",
-          personaBadge: "Vault Active",
-          time: "Instant",
-          text: "Your reusable roleplay snippet library has 14 saved one-click execution templates (Exam Drill, Hinglish Translation, Code Debugger).",
-        },
-      ],
-      snippets: ["/quiz-me - Initiate 5 question exam", "/hinglish - Translate to Hinglish", "/debug - Analyze syntax error"],
+      activeSpeaker: "Commander Vane",
     },
   };
 
-  const activeData = showcaseData[activeTab];
+  const currentChat = showcaseChats[activeChatTab] || showcaseChats.physics;
 
   return (
-    <section className="relative z-10 py-16 px-4 sm:px-6 md:px-8 max-w-[1440px] mx-auto w-full space-y-8">
+    <section className="relative z-10 py-12 md:py-16 px-4 sm:px-6 md:px-8 max-w-[1440px] mx-auto space-y-6">
       {/* Section Header */}
-      <div className="text-center space-y-3">
-        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-950/80 border border-purple-500/40 text-purple-300 text-xs font-mono tracking-wide">
-          <Sparkles className="w-4 h-4 text-purple-400 animate-pulse" />
-          <span>LIVE PRODUCT SHOWCASE</span>
-        </div>
-        <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-          Experience the <span className="antigravity-glow-text">NextAiChat Interface</span>
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl sm:text-4xl font-black text-white tracking-tight">
+          Experience <span className="antigravity-gradient-text">NextAiChat Workspace</span>
         </h2>
-        <p className="text-sm text-neutral-400 max-w-2xl mx-auto leading-relaxed">
-          Explore how our high-performance AI roleplay engine runs live inside your browser with multi-persona rooms, study prep tools, and zero latency.
+        <p className="text-xs sm:text-sm text-neutral-400 max-w-xl mx-auto">
+          Interactive AI tutors, language coaches, and multi-character story rooms powered by Gemini.
         </p>
       </div>
 
-      {/* Mode Selector Tab Bar */}
-      <div className="flex flex-wrap items-center justify-center gap-3 relative z-10">
-        {tabs.map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-2.5 sm:px-5 sm:py-3 rounded-2xl text-xs sm:text-sm font-bold transition-all duration-300 flex items-center gap-2.5 cursor-pointer ${
-                isActive
-                  ? `bg-gradient-to-r ${tab.color} text-white shadow-[0_0_30px_rgba(147,51,234,0.5)] scale-105 border border-white/20`
-                  : "bg-neutral-900/80 hover:bg-neutral-800 text-neutral-400 hover:text-white border border-neutral-800"
-              }`}
-            >
-              <Icon className={`w-4 h-4 ${isActive ? "text-white animate-pulse" : "text-neutral-400"}`} />
-              <span>{tab.label}</span>
-              {isActive && (
-                <span className="px-2 py-0.5 rounded-full bg-black/40 text-[10px] font-mono border border-white/20">
-                  {tab.badge}
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+      {/* Realistic Product Container matching Screenshot */}
+      <div className="relative z-10 rounded-3xl bg-[#030712] border border-purple-500/30 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.95)] overflow-hidden">
 
-      {/* Mac-Style Cyber Product Window Container */}
-      <div className="relative z-10 rounded-3xl bg-neutral-950/90 border border-purple-500/30 backdrop-blur-2xl shadow-[0_20px_80px_rgba(0,0,0,0.95)] overflow-hidden">
-        
-        {/* Top Window Chrome Bar */}
-        <div className="h-12 px-4 sm:px-6 bg-neutral-900/90 border-b border-white/10 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-red-500/80 border border-red-400/50" />
-            <div className="w-3 h-3 rounded-full bg-yellow-500/80 border border-yellow-400/50" />
-            <div className="w-3 h-3 rounded-full bg-emerald-500/80 border border-emerald-400/50" />
-          </div>
+        {/* Main Application Container */}
+        <div className="flex h-[560px] sm:h-[620px] w-full text-neutral-100 font-sans relative overflow-hidden">
 
-          {/* Fake Browser URL Bar */}
-          <div className="hidden sm:flex items-center gap-2 px-4 py-1 rounded-xl bg-neutral-950/80 border border-white/10 text-xs text-neutral-400 font-mono w-96 justify-center">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="text-white">https://app.nextaichat.com/chat/live</span>
-            <span className="text-purple-400 font-bold ml-auto">SSL 256-bit</span>
-          </div>
-
-          <div className="flex items-center gap-2 font-mono text-[11px] text-emerald-400">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>0 ms LATENCY</span>
-          </div>
-        </div>
-
-        {/* Product Inner Workspace Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 min-h-[480px]">
-          
-          {/* Left Sidebar (Chats & Personas) */}
-          <div className="md:col-span-4 lg:col-span-3 bg-neutral-900/40 border-r border-white/10 p-4 space-y-5 hidden md:block">
-            {/* New Session Button */}
-            <button className="w-full py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs shadow-[0_0_15px_rgba(147,51,234,0.4)] flex items-center justify-center gap-2 transition-all">
-              <Plus className="w-4 h-4" />
-              <span>New Roleplay Room</span>
-            </button>
-
-            {/* Active Sessions List */}
-            <div className="space-y-2">
-              <div className="text-[10px] font-mono text-purple-400 font-bold uppercase tracking-wider">
-                Active Roleplay Sessions
-              </div>
-              <div className="space-y-1.5">
-                <div className="p-2.5 rounded-xl bg-purple-950/60 border border-purple-500/40 text-white text-xs font-semibold flex items-center justify-between">
-                  <span className="truncate">{activeData.sessionTitle}</span>
-                  <span className="w-2 h-2 rounded-full bg-purple-400" />
+          {/* ================= LEFT SIDEBAR ================= */}
+          <div className="w-64 sm:w-72 bg-[#090d16]/95 border-r border-neutral-800/80 flex flex-col justify-between shrink-0 hidden md:flex">
+            {/* Sidebar Top Header */}
+            <div className="space-y-3 p-3 border-b border-neutral-800/60">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <button className="p-1.5 text-neutral-400 hover:text-white rounded-lg">
+                    <Menu className="w-4 h-4" />
+                  </button>
+                  <Link href="/" className="flex items-center gap-2">
+                    <Image
+                      src="/logo-landspace.png"
+                      alt="NextAiChat Logo"
+                      width={160}
+                      height={40}
+                      className="h-9 sm:h-10 w-auto object-contain"
+                    />
+                  </Link>
                 </div>
-                <div className="p-2.5 rounded-xl bg-neutral-900/40 border border-white/5 text-neutral-400 text-xs truncate hover:text-white transition-colors cursor-pointer">
-                  French Conversation Dialogue (B2)
-                </div>
-                <div className="p-2.5 rounded-xl bg-neutral-900/40 border border-white/5 text-neutral-400 text-xs truncate hover:text-white transition-colors cursor-pointer">
-                  Full-Stack React & Node Mentor
-                </div>
-              </div>
-            </div>
-
-            {/* Active Room Personas */}
-            <div className="space-y-2 pt-2 border-t border-white/10">
-              <div className="text-[10px] font-mono text-cyan-400 font-bold uppercase tracking-wider">
-                Active Room Personas ({activeData.personas.length})
-              </div>
-              <div className="space-y-2">
-                {activeData.personas.map((p, idx) => (
-                  <div key={idx} className="p-2 rounded-xl bg-neutral-950/80 border border-white/5 flex items-center gap-2.5">
-                    <span className="text-base">{p.avatar}</span>
-                    <div className="space-y-0.5 truncate">
-                      <div className="text-xs font-bold text-white truncate">{p.name}</div>
-                      <div className="text-[10px] text-purple-300 font-mono">{p.role}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* User Profile Quick Badge */}
-            <div className="pt-4 border-t border-white/10 flex items-center justify-between text-xs text-neutral-400">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 to-cyan-500 flex items-center justify-center font-bold text-white">
-                  JS
-                </div>
-                <div>
-                  <div className="font-bold text-white text-xs">Student User</div>
-                  <div className="text-[10px] text-emerald-400 font-mono">Pro Active</div>
-                </div>
-              </div>
-              <Settings className="w-4 h-4 text-neutral-500 hover:text-white transition-colors cursor-pointer" />
-            </div>
-          </div>
-
-          {/* Main Chat Workspace */}
-          <div className="md:col-span-8 lg:col-span-9 p-4 sm:p-6 flex flex-col justify-between space-y-4">
-            
-            {/* Chat Workspace Header */}
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <div className="space-y-0.5">
-                <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                  <span>{activeData.sessionTitle}</span>
-                  <span className="px-2 py-0.5 rounded-full bg-purple-950 border border-purple-700 text-purple-300 text-[10px] font-mono">
-                    Gemini 2.0 Flash
-                  </span>
-                </h3>
-                <p className="text-xs text-neutral-400">
-                  Dynamic Turn Engine evaluating speaker context in real time
-                </p>
-              </div>
-
-              <a
-                href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.com"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs shadow-md flex items-center gap-1.5 hover:scale-105 transition-all shrink-0"
-              >
-                <span>Launch Live App</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
-              </a>
-            </div>
-
-            {/* Messages Area */}
-            <div className="space-y-4 py-2 flex-1 overflow-y-auto max-h-[320px] pr-1">
-              {activeData.messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`flex items-start gap-3 ${
-                    msg.type === "user" ? "ml-4 sm:ml-12" : ""
-                  }`}
-                >
-                  <div className="w-8 h-8 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-white shrink-0 text-sm font-bold shadow-md">
-                    {msg.avatar}
-                  </div>
-                  <div className="space-y-1.5 flex-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-bold text-white flex items-center gap-2">
-                        {msg.sender}
-                        <span className="px-1.5 py-0.2 rounded bg-purple-950/80 text-[10px] text-purple-300 border border-purple-800 font-mono">
-                          {msg.personaBadge}
-                        </span>
-                      </span>
-                      <span className="text-[10px] text-neutral-500 font-mono">{msg.time}</span>
-                    </div>
-                    <div
-                      className={`p-3.5 rounded-2xl text-xs sm:text-sm leading-relaxed border ${
-                        msg.type === "user"
-                          ? "bg-purple-950/70 border-purple-500/40 text-purple-100"
-                          : "bg-neutral-900/80 border-white/10 text-neutral-200"
-                      }`}
-                    >
-                      {msg.text}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Snippet Quick Action Pills */}
-            <div className="pt-2 flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-mono text-neutral-400 uppercase font-bold flex items-center gap-1">
-                <Code className="w-3 h-3 text-purple-400" /> Quick Snippets:
-              </span>
-              {activeData.snippets.map((snip, idx) => (
-                <button
-                  key={idx}
-                  className="px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-purple-950 border border-white/10 hover:border-purple-500/50 text-[11px] text-neutral-300 hover:text-white transition-colors font-mono cursor-pointer"
-                >
-                  {snip}
+                <button className="p-1.5 text-neutral-400 hover:text-white rounded-lg">
+                  <SquarePen className="w-4 h-4" />
                 </button>
-              ))}
+              </div>
+
+              {/* New Roleplay Chat Button */}
+              <button className="w-full bg-purple-950/60 hover:bg-purple-900/80 text-white border border-purple-800/60 font-semibold py-2.5 px-3 rounded-xl flex items-center gap-2.5 text-xs shadow-sm cursor-pointer transition-all">
+                <SquarePen className="w-4 h-4 text-purple-400 shrink-0" />
+                <span>New Roleplay Chat</span>
+              </button>
             </div>
 
-            {/* Simulated Prompt Input Bar */}
-            <div className="relative flex items-center bg-neutral-900/90 border border-purple-500/30 focus-within:border-purple-500 rounded-2xl p-2 shadow-inner">
-              <input
-                type="text"
-                readOnly
-                value="Ask a study question or type next roleplay action..."
-                className="w-full bg-transparent px-3 text-xs text-neutral-400 outline-none cursor-default"
-              />
-              <button
-                disabled
-                className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-xs flex items-center gap-1.5 opacity-90 shadow-md"
+            {/* Recent Roleplays List */}
+            <div className="flex-1 overflow-y-auto p-2 space-y-1">
+              <div className="px-2 py-1 text-[10px] font-bold text-neutral-500 uppercase tracking-wider">
+                Recent Roleplays
+              </div>
+
+              {/* Physics Session Tab */}
+              <div
+                onClick={() => setActiveChatTab("physics")}
+                className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${activeChatTab === "physics"
+                    ? "bg-purple-950/80 border border-purple-800/80 text-white font-medium shadow-sm"
+                    : "text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200"
+                  }`}
               >
-                <span>Send</span>
-                <Send className="w-3.5 h-3.5" />
-              </button>
+                <MessageSquare className={`w-4 h-4 mt-0.5 shrink-0 ${activeChatTab === "physics" ? "text-purple-400" : "text-neutral-500"}`} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold truncate">Quantum Physics Prep</div>
+                  <div className="text-[10px] text-neutral-400 truncate">Dr. Aris, Exam Coach</div>
+                </div>
+              </div>
+
+              {/* IELTS Session Tab */}
+              <div
+                onClick={() => setActiveChatTab("ielts")}
+                className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${activeChatTab === "ielts"
+                    ? "bg-purple-950/80 border border-purple-800/80 text-white font-medium shadow-sm"
+                    : "text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200"
+                  }`}
+              >
+                <MessageSquare className={`w-4 h-4 mt-0.5 shrink-0 ${activeChatTab === "ielts" ? "text-purple-400" : "text-neutral-500"}`} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold truncate">IELTS Band 9 Coach</div>
+                  <div className="text-[10px] text-neutral-400 truncate">Coach Sarah, AI</div>
+                </div>
+              </div>
+
+              {/* Cyberpunk Session Tab */}
+              <div
+                onClick={() => setActiveChatTab("story")}
+                className={`flex items-start gap-2.5 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${activeChatTab === "story"
+                    ? "bg-purple-950/80 border border-purple-800/80 text-white font-medium shadow-sm"
+                    : "text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200"
+                  }`}
+              >
+                <MessageSquare className={`w-4 h-4 mt-0.5 shrink-0 ${activeChatTab === "story" ? "text-purple-400" : "text-neutral-500"}`} />
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-bold truncate">Cyberpunk Chronicles</div>
+                  <div className="text-[10px] text-neutral-400 truncate">Kaelen, Commander Vane</div>
+                </div>
+              </div>
+            </div>
+
+            {/* User Profile Footer */}
+            <div className="p-3 border-t border-neutral-800/80 flex items-center justify-between">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-7 h-7 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-inner">
+                  A
+                </div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-white truncate">alex.vance@example.com</div>
+                  <div className="text-[9px] text-neutral-400">Authenticated</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-neutral-400">
+                <Settings className="w-3.5 h-3.5 hover:text-white cursor-pointer" />
+                <LogOut className="w-3.5 h-3.5 hover:text-white cursor-pointer" />
+              </div>
+            </div>
+          </div>
+
+          {/* ================= RIGHT WORKSPACE CANVAS ================= */}
+          <div className="flex-1 flex flex-col h-full bg-[#030712] relative overflow-hidden bg-antigravity-grid">
+
+            {/* Background Glowing Orbit Rings */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] rounded-full border border-purple-900/30 pointer-events-none z-0">
+              <div className="absolute top-1/4 left-0 w-2.5 h-2.5 bg-purple-500 rounded-full shadow-[0_0_12px_#a855f7]" />
+              <div className="absolute bottom-1/3 right-0 w-2.5 h-2.5 bg-cyan-400 rounded-full shadow-[0_0_12px_#22d3ee]" />
+            </div>
+
+            {/* TOP CHAT HEADER BAR */}
+            <header className="h-14 border-b border-purple-500/20 px-3 sm:px-4 flex items-center justify-between bg-neutral-950/80 backdrop-blur-xl z-20 shrink-0">
+              <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                {/* Model Selector Dropdown */}
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-neutral-200 bg-neutral-900/80 px-3 py-1.5 rounded-full border border-neutral-800 shrink-0">
+                  <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                  <span>AI Model</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-neutral-400" />
+                </div>
+
+                {/* Chat Title & Character Pills */}
+                <div className="hidden sm:flex items-center gap-1.5 pl-2">
+                  <span className="text-xs font-bold text-white flex items-center gap-1">
+                    👥 {currentChat.title}
+                  </span>
+                  {currentChat.characters.map((char, idx) => (
+                    <span
+                      key={idx}
+                      className="px-2 py-0.5 rounded-full bg-neutral-900 border border-neutral-700 text-[10px] text-neutral-300 font-mono"
+                    >
+                      {char}
+                    </span>
+                  ))}
+                  <Edit2 className="w-3 h-3 text-neutral-400 cursor-pointer" />
+                </div>
+              </div>
+
+              {/* Right Control Mode */}
+              <div className="flex items-center gap-1.5 shrink-0">
+                <span className="px-2.5 py-1 rounded-full bg-purple-950 border border-purple-700 text-purple-300 text-[10px] font-mono font-bold flex items-center gap-1 shadow-sm">
+                  ⚡ Dynamic Turn
+                </span>
+                <Trash2 className="w-4 h-4 text-neutral-500 hover:text-red-400 cursor-pointer ml-1" />
+              </div>
+            </header>
+
+            {/* CHAT MESSAGES CANVAS */}
+            <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-4 relative z-10">
+
+              {/* Character Response Message */}
+              {currentChat.messages[0] && (
+                <div className="space-y-2 max-w-3xl">
+                  {/* Speaker Name Badge */}
+                  <span className={`inline-block px-3 py-0.5 rounded-full text-xs font-extrabold border ${currentChat.messages[0].avatarColor}`}>
+                    {currentChat.messages[0].sender}
+                  </span>
+
+                  {/* Character Thought Box */}
+                  {currentChat.messages[0].thought && (
+                    <div className="bg-purple-950/70 border border-purple-800/60 rounded-xl p-3 text-purple-200 text-xs italic leading-relaxed space-y-1 shadow-inner">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-purple-300 font-mono uppercase tracking-wider not-italic">
+                        <span className="px-1.5 py-0.2 rounded bg-purple-900/90 text-purple-200">💭 THOUGHT</span>
+                      </div>
+                      <p>"{currentChat.messages[0].thought}"</p>
+                    </div>
+                  )}
+
+                  {/* Dialogue Message Content */}
+                  <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm text-neutral-200 leading-relaxed shadow-lg">
+                    {currentChat.messages[0].text}
+                  </div>
+                </div>
+              )}
+
+              {/* User Dialogue Message */}
+              {currentChat.messages[1] && (
+                <div className="space-y-1 max-w-3xl ml-auto text-right">
+                  <div className="flex items-center justify-end gap-1.5 text-xs font-bold text-neutral-400 pr-1">
+                    <span>You</span>
+                    <div className="w-5 h-5 rounded-full bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-300 text-[10px]">
+                      👤
+                    </div>
+                  </div>
+
+                  <div className="bg-neutral-900/80 border border-neutral-800 rounded-2xl p-3.5 sm:p-4 text-xs sm:text-sm text-neutral-200 text-left space-y-2 shadow-lg">
+                    <p>{currentChat.messages[1].text}</p>
+                    {currentChat.messages[1].promptTag && (
+                      <div className="text-[11px] text-purple-300 font-mono font-medium">
+                        {currentChat.messages[1].promptTag}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Scene Roleplay Header Pill */}
+              <div className="pt-2">
+                <div className="text-[11px] font-semibold text-neutral-400 mb-1 flex items-center gap-1">
+                  <span>Scene Roleplay Dialogue ({currentChat.characters.join(", ")})</span>
+                </div>
+                <span className="inline-block px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-700 text-emerald-300 text-xs font-extrabold shadow-sm">
+                  {currentChat.activeSpeaker}
+                </span>
+              </div>
+            </div>
+
+            {/* FLOATING CHAT INPUT BAR */}
+            <div className="p-3 sm:p-4 border-t border-purple-500/20 bg-neutral-950/90 backdrop-blur-xl relative z-20 space-y-1.5">
+              <div className="relative flex items-center bg-neutral-900/90 border border-purple-500/30 focus-within:border-purple-500 rounded-2xl p-2 shadow-inner">
+                <button className="p-1.5 text-neutral-400 hover:text-white rounded-lg">
+                  <Plus className="w-4 h-4" />
+                </button>
+                <input
+                  type="text"
+                  readOnly
+                  value={`Speak to ${currentChat.characters.join(", ")}...`}
+                  className="w-full bg-transparent px-3 text-xs sm:text-sm text-neutral-400 outline-none cursor-default"
+                />
+                <button className="p-2 text-neutral-400 hover:text-white rounded-lg">
+                  <Mic className="w-4 h-4" />
+                </button>
+                <button className="p-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold shrink-0 shadow-md">
+                  <Send className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="text-[10px] text-neutral-500 text-center font-mono hidden sm:block">
+                Press <span className="px-1 py-0.2 rounded bg-neutral-800 text-neutral-300">Enter</span> to send, <span className="px-1 py-0.2 rounded bg-neutral-800 text-neutral-300">Shift + Enter</span> for new line. Right-click or press + for quick actions.
+              </div>
             </div>
 
           </div>

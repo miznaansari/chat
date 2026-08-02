@@ -2,13 +2,14 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import JsonLd from "@/components/JsonLd";
+import { LanguageProvider } from "@/context/LanguageContext";
 
-const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.com";
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.online";
 
 export const metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "NextAiChat - #1 AI Roleplay Platform for Study & Entertainment",
+    default: "NextAiChat - AI Roleplay Platform for Study & Entertainment",
     template: "%s | NextAiChat",
   },
   description:
@@ -47,7 +48,7 @@ export const metadata = {
     locale: "en_US",
     url: baseUrl,
     siteName: "NextAiChat",
-    title: "NextAiChat - #1 AI Roleplay Platform for Study & Entertainment",
+    title: "NextAiChat - AI Roleplay Platform for Study & Entertainment",
     description:
       "Engage with AI personas for interactive studying, educational simulations, language practice, storytelling, and multi-character entertainment.",
     images: [
@@ -61,7 +62,7 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "NextAiChat - #1 AI Roleplay Platform for Study & Entertainment",
+    title: "NextAiChat - AI Roleplay Platform for Study & Entertainment",
     description:
       "Interactive AI Roleplay for study simulations, tutor conversations, and multi-character storytelling.",
     images: ["/logo-landspace.png"],
@@ -112,10 +113,30 @@ export default function RootLayout({ children }) {
         <meta name="chatgpt-plugin" content="enabled" />
         <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM Context Summary" />
       </head>
-      <body className="min-h-full flex flex-col bg-neutral-950 text-neutral-100 selection:bg-purple-500 selection:text-white">
-        <Navbar />
-        <main className="flex-1 flex flex-col">{children}</main>
-        <Footer />
+      <body className="min-h-full flex flex-col bg-[#030712] text-neutral-100 selection:bg-purple-500 selection:text-white relative overflow-x-clip w-full max-w-full font-sans">
+        <LanguageProvider>
+          {/* ANTIGRAVITY ALWAYS-ON BACKGROUND MOTION (ORBS, ORBITS, PARTICLES & GRID) */}
+          <div className="fixed top-[-10%] left-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-purple-900/30 via-indigo-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
+          <div className="fixed bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-blue-900/30 via-cyan-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
+
+          {/* Floating Physics Particles */}
+          <div className="fixed top-1/4 left-10 w-24 h-24 rounded-full border border-purple-500/20 bg-purple-500/5 backdrop-blur-sm animate-float-slow pointer-events-none hidden md:block z-0" />
+          <div className="fixed bottom-1/4 right-12 w-32 h-32 rounded-full border border-cyan-500/20 bg-cyan-500/5 backdrop-blur-sm animate-float-reverse pointer-events-none hidden md:block z-0" />
+
+          {/* Orbit Rings Centered */}
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] rounded-full border border-neutral-800/40 animate-orbit pointer-events-none hidden lg:block z-0">
+            <div className="absolute top-0 left-1/2 w-3 h-3 bg-purple-500 rounded-full shadow-[0_0_15px_#a855f7]" />
+          </div>
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full border border-purple-900/30 animate-orbit-reverse pointer-events-none hidden lg:block z-0">
+            <div className="absolute bottom-0 right-1/2 w-2.5 h-2.5 bg-cyan-400 rounded-full shadow-[0_0_15px_#22d3ee]" />
+          </div>
+          <div className="fixed inset-0 bg-antigravity-grid pointer-events-none opacity-40 z-0" />
+
+          {/* Navbar Header (Admin Dashboard link commented out) */}
+          <Navbar />
+          <main className="flex-1 flex flex-col relative z-10 w-full max-w-full overflow-x-clip">{children}</main>
+          <Footer />
+        </LanguageProvider>
       </body>
     </html>
   );

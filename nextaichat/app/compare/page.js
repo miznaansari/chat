@@ -114,7 +114,7 @@ export default function ComparePage() {
                     <div className="font-bold text-white text-sm">{item.feature}</div>
                     <div className="text-neutral-400 text-[11px] leading-snug">{item.description}</div>
                   </td>
-                  
+
                   {/* NextAiChat Cell */}
                   <td className="py-4 px-4 bg-purple-950/20 font-semibold text-purple-200">
                     <div className="flex items-center gap-2">
@@ -173,7 +173,7 @@ export default function ComparePage() {
           Start roleplaying for study or fun with zero latency and smart turn management.
         </p>
         <a
-          href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.com"}
+          href={process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.online"}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-neutral-950 font-bold text-xs hover:bg-neutral-200 transition-colors shadow-lg"

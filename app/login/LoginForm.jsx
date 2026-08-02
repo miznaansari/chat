@@ -90,10 +90,6 @@ export default function LoginForm() {
 
         {/* Center Hero Visual Content */}
         <div className="my-auto space-y-6 max-w-lg">
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-purple-950/70 border border-purple-500/30 text-purple-300 text-xs font-semibold tracking-wide">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-            <span>Next-Gen AI Roleplay Platform</span>
-          </div>
 
           <div className="space-y-3">
             <h1 className="text-3xl xl:text-4xl font-extrabold tracking-tight text-white leading-tight">
@@ -110,47 +106,47 @@ export default function LoginForm() {
           {/* Feature Highlights Grid */}
           <div className="space-y-3 pt-1">
             {/* Feature 1 */}
-            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-neutral-950/60 border border-neutral-800/60 backdrop-blur-md">
-              <div className="p-2 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-400 shrink-0 mt-0.5">
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-950/60 border border-neutral-800/60 backdrop-blur-md">
+              <div className="p-2 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-400 shrink-0">
                 <BookOpen className="w-4 h-4" />
               </div>
               <div>
                 <h2 className="text-xs font-bold text-white">
                   Study & Educational Roleplay
                 </h2>
-                <p className="text-[11px] text-neutral-400 mt-0.5">
+                {/* <p className="text-[11px] text-neutral-400 mt-0.5">
                   Practice subject concepts, exam prep, historical personas, and tutor scenarios.
-                </p>
+                </p> */}
               </div>
             </div>
 
             {/* Feature 2 */}
-            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-neutral-950/60 border border-neutral-800/60 backdrop-blur-md">
-              <div className="p-2 rounded-xl bg-pink-950/80 border border-pink-800/60 text-pink-400 shrink-0 mt-0.5">
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-950/60 border border-neutral-800/60 backdrop-blur-md">
+              <div className="p-2 rounded-xl bg-pink-950/80 border border-pink-800/60 text-pink-400 shrink-0">
                 <Gamepad2 className="w-4 h-4" />
               </div>
               <div>
                 <h2 className="text-xs font-bold text-white">
                   Fun & Entertainment Stories
                 </h2>
-                <p className="text-[11px] text-neutral-400 mt-0.5">
+                {/* <p className="text-[11px] text-neutral-400 mt-0.5">
                   Dive into rich anime, fictional, movie, and custom multi-character dialogue worlds.
-                </p>
+                </p> */}
               </div>
             </div>
 
             {/* Feature 3 */}
-            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-neutral-950/60 border border-neutral-800/60 backdrop-blur-md">
-              <div className="p-2 rounded-xl bg-cyan-950/80 border border-cyan-800/60 text-cyan-400 shrink-0 mt-0.5">
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-950/60 border border-neutral-800/60 backdrop-blur-md">
+              <div className="p-2 rounded-xl bg-cyan-950/80 border border-cyan-800/60 text-cyan-400 shrink-0">
                 <Zap className="w-4 h-4" />
               </div>
               <div>
                 <h2 className="text-xs font-bold text-white">
                   Turn-by-Turn Dynamic AI Engine
                 </h2>
-                <p className="text-[11px] text-neutral-400 mt-0.5">
+                {/* <p className="text-[11px] text-neutral-400 mt-0.5">
                   Intelligent speaker turn management powered by Gemini Flash models.
-                </p>
+                </p> */}
               </div>
             </div>
           </div>
@@ -177,10 +173,6 @@ export default function LoginForm() {
               className="h-20 sm:h-20 w-auto object-contain"
             />
           </Link>
-          <div className="flex items-center gap-1.5 text-[10px] font-semibold text-purple-300 bg-purple-950/60 px-2.5 py-1 rounded-full border border-purple-800/50">
-            <Sparkles className="w-3 h-3 text-purple-400" />
-            <span>NextAiChat</span>
-          </div>
         </div>
 
         {/* Center Form Glass Card */}
@@ -190,11 +182,6 @@ export default function LoginForm() {
 
           {/* Hero Header */}
           <div className="text-center space-y-2">
-            <img
-              src="/logo.png"
-              alt="NextAiChat Icon"
-              className="w-12 h-12 object-contain mx-auto drop-shadow-[0_0_20px_rgba(147,51,234,0.4)] mb-1"
-            />
             <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
               {isRegister ? "Create Account" : "Welcome Back"}
             </h2>

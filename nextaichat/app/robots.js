@@ -1,5 +1,5 @@
 export default function robots() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.com";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.online";
 
   const aiUserAgents = [
     "GPTBot",

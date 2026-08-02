@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 export const revalidate = 3600; // Revalidate every hour
 
 export default async function sitemap() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.com";
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.online";
 
   // Static site routes
   const staticRoutes = [

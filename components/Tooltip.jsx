@@ -5,7 +5,8 @@ import { useLanguage } from "@/context/LanguageContext";
 
 /**
  * Custom GenZ AI Glassmorphic Tooltip Component
- * Displays a glowing neon glass badge on hover with customizable text and positioning.
+ * Displays a glowing neon glass badge on hover on desktop devices.
+ * Tooltips are completely disabled on mobile/touch screens to prevent tap popups.
  */
 export default function Tooltip({
   content,
@@ -20,6 +21,14 @@ export default function Tooltip({
   const { translate } = useLanguage();
 
   const handleMouseEnter = () => {
+    // Disable tooltips on mobile / touch devices (screen width < 768px or touch pointer)
+    if (
+      typeof window !== "undefined" &&
+      (window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches)
+    ) {
+      return;
+    }
+
     timeoutRef.current = setTimeout(() => {
       setIsVisible(true);
     }, delay);
@@ -47,12 +56,13 @@ export default function Tooltip({
       onFocus={handleMouseEnter}
       onBlur={handleMouseLeave}
     >
-
       {children}
 
       {isVisible && content && (
         <div
-          className={`absolute ${positionClasses[position] || positionClasses.top} z-[99999] pointer-events-none animate-in fade-in zoom-in-95 duration-150`}
+          className={`absolute ${
+            positionClasses[position] || positionClasses.top
+          } z-[99999] pointer-events-none animate-in fade-in zoom-in-95 duration-150 hidden md:block`}
         >
           <div className="bg-neutral-950/90 border border-purple-500/40 rounded-xl px-3 py-1.5 shadow-[0_0_25px_rgba(147,51,234,0.3)] backdrop-blur-xl flex items-center gap-1.5 text-xs text-neutral-100 font-medium tracking-wide whitespace-nowrap">
             {badgeIcon && <span className="text-xs">{badgeIcon}</span>}
