@@ -149,7 +149,7 @@ ${lengthInstruction}
    - Include situation-appropriate Emojis naturally when relevant to the scene.
    - Use **bold** for actions or emphasis.
    - Use *italics* for vocal tone or whisperings.
-   - Use *thought: "character thought"* for character inner thoughts.
+   - Use single quotes 'character thought' for character inner thoughts in mind. Example: 'ye dono kya kar rhe hai' waise aaj ka kya plan hai
    - Use Markdown tables when presenting choices or options.
 
 5. PERSONA & SCENE CONTINUITY:

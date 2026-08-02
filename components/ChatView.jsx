@@ -166,6 +166,53 @@ const NarrativeTeaserCard = memo(function NarrativeTeaserCard({ text }) {
   );
 });
 
+// Helper to render single-quoted thoughts like 'ye dono kya kar rhe hai' with a distinct 💭 thought badge
+function renderContentWithThoughts(children) {
+  if (typeof children === "string") {
+    if (!children.includes("'")) return children;
+    const regex = /'([^'\n]{2,})'/g;
+    const parts = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(children)) !== null) {
+      if (match.index > lastIndex) {
+        parts.push(children.substring(lastIndex, match.index));
+      }
+
+      const thoughtText = match[1];
+      parts.push(
+        <span
+          key={match.index}
+          className="inline-flex items-center gap-1 bg-purple-950/80 border border-purple-700/60 text-purple-200 px-2 py-0.5 rounded-lg font-serif italic text-[0.93em] my-0.5 mx-1 shadow-xs"
+          title="Character Inner Thought"
+        >
+          <span className="not-italic font-sans text-[10px] font-bold uppercase tracking-wider text-purple-400 bg-purple-900/90 px-1 py-0.2 rounded border border-purple-700/50">
+            💭 thought
+          </span>
+          '{thoughtText}'
+        </span>
+      );
+
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < children.length) {
+      parts.push(children.substring(lastIndex));
+    }
+
+    return parts.length > 0 ? parts : children;
+  }
+
+  if (Array.isArray(children)) {
+    return children.map((child, i) => (
+      <span key={i}>{renderContentWithThoughts(child)}</span>
+    ));
+  }
+
+  return children;
+}
+
 // Memoized component to render message text with Markdown
 const FormattedMessageContent = memo(function FormattedMessageContent({ content }) {
   if (!content) return null;
@@ -194,7 +241,11 @@ const FormattedMessageContent = memo(function FormattedMessageContent({ content 
               return <NarrativeTeaserCard text={trimmed} />;
             }
 
-            return <p className="mb-2.5 last:mb-0 leading-relaxed block">{children}</p>;
+            return (
+              <p className="mb-2.5 last:mb-0 leading-relaxed block">
+                {renderContentWithThoughts(children)}
+              </p>
+            );
           },
           strong: ({ children }) => <strong className="font-bold text-white px-0.5">{children}</strong>,
           em: ({ children }) => <em className="italic text-neutral-300">{children}</em>,
