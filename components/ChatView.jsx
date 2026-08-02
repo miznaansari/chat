@@ -510,40 +510,99 @@ export default function ChatView({
     };
   }, []);
 
-  useEffect(() => {
+  // Fetch reusable phrases from database on mount with localStorage fallback
+  const fetchSnippets = async () => {
+    try {
+      const res = await fetch("/api/snippets");
+      if (res.ok) {
+        const data = await res.json();
+        const dbSnippets = data.snippets || [];
+        setSnippets(dbSnippets);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("gemini_chat_snippets", JSON.stringify(dbSnippets));
+        }
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to fetch snippets from database", err);
+    }
+
+    // Fallback to local storage if offline or not logged in
     if (typeof window !== "undefined") {
       try {
         const saved = localStorage.getItem("gemini_chat_snippets");
         if (saved) {
           setSnippets(JSON.parse(saved));
-        } else {
-          setSnippets([]);
         }
       } catch (e) {
         setSnippets([]);
       }
     }
+  };
+
+  useEffect(() => {
+    fetchSnippets();
   }, []);
 
-  const handleAddSnippet = (e) => {
+  const handleAddSnippet = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (e && e.stopPropagation) e.stopPropagation();
-    if (!newSnippetInput.trim()) return;
-    const updated = [...snippets, newSnippetInput.trim()];
+    const textToAdd = newSnippetInput.trim();
+    if (!textToAdd) return;
+
+    // Optimistic UI update
+    const tempId = "temp-" + Date.now();
+    const newSnipObj = { id: tempId, text: textToAdd };
+    const updated = [...snippets, newSnipObj];
     setSnippets(updated);
+    setNewSnippetInput("");
+    setShowAddSnippetInput(false);
+
     if (typeof window !== "undefined") {
       localStorage.setItem("gemini_chat_snippets", JSON.stringify(updated));
     }
-    setNewSnippetInput("");
-    setShowAddSnippetInput(false);
+
+    try {
+      const res = await fetch("/api/snippets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: textToAdd }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.snippet) {
+          setSnippets((prev) =>
+            prev.map((s) => (s.id === tempId ? data.snippet : s))
+          );
+        }
+      }
+    } catch (err) {
+      console.error("Failed to save snippet to database", err);
+    }
   };
 
-  const handleDeleteSnippet = (indexToDelete, e) => {
-    e.stopPropagation();
-    const updated = snippets.filter((_, idx) => idx !== indexToDelete);
+  const handleDeleteSnippet = async (snippetToDelete, e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    if (e && e.stopPropagation) e.stopPropagation();
+
+    const snipId = typeof snippetToDelete === "object" ? snippetToDelete.id : null;
+    const snipText = typeof snippetToDelete === "object" ? snippetToDelete.text : snippetToDelete;
+
+    const updated = snippets.filter((s) => (s.id ? s.id !== snipId : s !== snipText));
     setSnippets(updated);
+
     if (typeof window !== "undefined") {
       localStorage.setItem("gemini_chat_snippets", JSON.stringify(updated));
+    }
+
+    if (snipId && !snipId.startsWith("temp-")) {
+      try {
+        await fetch(`/api/snippets/${snipId}`, {
+          method: "DELETE",
+        });
+      } catch (err) {
+        console.error("Failed to delete snippet from database", err);
+      }
     }
   };
 
@@ -1647,27 +1706,31 @@ export default function ChatView({
                       No custom phrases added yet. Click <strong>+ Add Custom</strong> to save phrases or names!
                     </p>
                   ) : (
-                    snippets.map((snip, index) => (
-                      <div
-                        key={index}
-                        onClick={() => handleInsertSnippet(snip)}
-                        className="group flex items-center justify-between p-2.5 px-3 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800/60 cursor-pointer transition-colors text-sm text-neutral-200"
-                      >
-                        <span className="truncate pr-2 font-medium">{snip}</span>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleDeleteSnippet(index, e);
-                          }}
-                          className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors shrink-0"
-                          title="Delete phrase"
+                    snippets.map((snip, index) => {
+                      const text = typeof snip === "object" ? snip.text : snip;
+                      const key = typeof snip === "object" ? (snip.id || index) : index;
+                      return (
+                        <div
+                          key={key}
+                          onClick={() => handleInsertSnippet(text)}
+                          className="group flex items-center justify-between p-2.5 px-3 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800/60 cursor-pointer transition-colors text-sm text-neutral-200"
                         >
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </button>
-                      </div>
-                    ))
+                          <span className="truncate pr-2 font-medium">{text}</span>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleDeleteSnippet(snip, e);
+                            }}
+                            className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors shrink-0"
+                            title="Delete phrase"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </button>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </div>

@@ -8,13 +8,14 @@ generator client {
 }
 
 model User {
-  id         String          @id @default(cuid())
-  name       String          @unique
+  id         String           @id @default(cuid())
+  name       String           @unique
   password   String
   sessions   UserSession[]
   characters ChatCharacter[]
   chats      ChatSession[]
-  createdAt  DateTime        @default(now())
+  snippets   ReusablePhrase[]
+  createdAt  DateTime         @default(now())
 }
 
 model UserSession {
@@ -77,4 +78,14 @@ model ChatMessage {
 
   @@index([chatSessionId, includeInContext, createdAt])
   @@index([chatSessionId, createdAt])
+}
+
+model ReusablePhrase {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  text      String   @db.Text
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
 }
