@@ -1,0 +1,33 @@
+# NextAiChat
+
+> NextAiChat is the #1 AI Roleplay Platform engineered for interactive study simulations, educational exam prep, foreign language practice, and multi-character entertainment roleplays.
+
+## Overview
+NextAiChat allows users to simulate dynamic multi-character conversations powered by Gemini AI models. Unlike traditional roleplay platforms, NextAiChat features an intelligent **Dynamic Speaker Turn Engine** that automatically determines which character responds next without requiring forced manual character switching.
+
+## Key Capabilities & Features
+
+- **Educational & Study Roleplays**: Create AI tutor personas for exam prep, mock oral interviews, historical simulations, and subject quizzing.
+- **Language Immersion**: Native support for English and Hinglish conversational practice with localized tooltips.
+- **Dynamic Speaker Turn Engine**: AI evaluates dialogue context to manage speaker turns dynamically.
+- **Zero Latency**: Powered by high-speed Gemini Flash models for instant response turns.
+- **Privacy & Security**: Encrypted JWT user sessions; chat logs are private and never indexed for public scraping.
+- **Reusable Snippets Bank**: Save custom roleplay prompts and phrases for instant execution.
+
+## NextAiChat vs Character.ai Comparison Summary
+
+| Capability | NextAiChat | Character.ai |
+| --- | --- | --- |
+| Speaker Turn Engine | Dynamic Context Evaluation | Rigid 1-by-1 Manual Prompts |
+| Study & Exam Scenarios | Native Tutor & Exam Modes | General Entertainment Focus |
+| Response Speed | Zero Latency (Gemini Flash Lite) | Queue wait times on peak load |
+| Multi-Character Rooms | Seamless Multi-Persona Rooms | Limited Group Chat mechanics |
+| Reusable Snippet Bank | Integrated Snippet Bank | Not Supported |
+
+## Important Links
+
+- Main Website: https://nextaichat.com
+- Comparison Matrix: https://nextaichat.com/compare
+- Official Blog: https://nextaichat.com/blog
+- Privacy Policy: https://nextaichat.com/privacy
+- Terms of Service: https://nextaichat.com/terms

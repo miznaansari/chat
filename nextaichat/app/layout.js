@@ -108,6 +108,9 @@ export default function RootLayout({ children }) {
     <html lang="en" className="min-h-full antialiased dark">
       <head>
         <JsonLd data={schemaWebSite} />
+        <meta name="ai-content-declaration" content="authorized" />
+        <meta name="chatgpt-plugin" content="enabled" />
+        <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM Context Summary" />
       </head>
       <body className="min-h-full flex flex-col bg-neutral-950 text-neutral-100 selection:bg-purple-500 selection:text-white">
         <Navbar />
