@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import RequireUser from "@/lib/RequireUser";
+import prisma from "@/lib/prisma";
 import ClientChatPage from "./ClientChatPage";
 
 export const dynamic = "force-dynamic";
@@ -13,5 +14,23 @@ export default async function Page() {
     redirect("/login");
   }
 
-  return <ClientChatPage initialUser={user} />;
+  let initialChats = [];
+  try {
+    const chatSessions = await prisma.chatSession.findMany({
+      where: { userId: user.id },
+      include: {
+        sessionCharacters: true,
+        messages: {
+          orderBy: { createdAt: "asc" },
+        },
+      },
+      orderBy: { updatedAt: "desc" },
+    });
+
+    initialChats = JSON.parse(JSON.stringify(chatSessions));
+  } catch (err) {
+    console.error("Error fetching server-side initial chats:", err);
+  }
+
+  return <ClientChatPage initialUser={user} initialChats={initialChats} />;
 }

@@ -6,11 +6,13 @@ import GeminiLayout from "@/components/GeminiLayout";
 import ChatView from "@/components/ChatView";
 import NewSessionModal from "@/components/NewSessionModal";
 
-export default function ClientChatPage({ initialUser }) {
+export default function ClientChatPage({ initialUser, initialChats = [] }) {
   const router = useRouter();
   const [user, setUser] = useState(initialUser);
-  const [chats, setChats] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(null);
+  const [chats, setChats] = useState(initialChats);
+  const [activeChatId, setActiveChatId] = useState(
+    initialChats && initialChats.length > 0 ? initialChats[0].id : null
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -22,9 +24,15 @@ export default function ClientChatPage({ initialUser }) {
       const res = await fetch("/api/chats");
       if (res.ok) {
         const data = await res.json();
-        setChats(data.chats || []);
-        if (data.chats?.length > 0 && !activeChatId) {
-          setActiveChatId(data.chats[0].id);
+        const freshChats = data.chats || [];
+        setChats(freshChats);
+        if (freshChats.length > 0) {
+          setActiveChatId((prev) => {
+            if (prev && freshChats.some((c) => c.id === prev)) {
+              return prev;
+            }
+            return freshChats[0].id;
+          });
         }
       }
     } catch (err) {

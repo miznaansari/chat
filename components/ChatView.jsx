@@ -13,7 +13,6 @@ import {
   EyeOff,
   User,
   Trash2,
-  Info,
   Edit2,
   X,
   Loader2,
@@ -89,8 +88,8 @@ function ContextCircularGauge({ percentage, size = 36, strokeWidth = 3.5, label 
     percentage > 90
       ? "text-rose-500"
       : percentage > 70
-      ? "text-amber-400"
-      : "text-blue-400";
+        ? "text-amber-400"
+        : "text-blue-400";
 
   return (
     <div className="relative inline-flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
@@ -187,8 +186,9 @@ function renderContentWithThoughts(children) {
           className="inline-flex items-center gap-1 bg-purple-950/80 border border-purple-700/60 text-purple-200 px-2 py-0.5 rounded-lg font-serif italic text-[0.93em] my-0.5 mx-1 shadow-xs"
           title="Character Inner Thought"
         >
-          <span className="not-italic font-sans text-[10px] font-bold uppercase tracking-wider text-purple-400 bg-purple-900/90 px-1 py-0.2 rounded border border-purple-700/50">
-            💭 thought
+          <span className="not-italic font-sans text-[10px] font-bold uppercase tracking-wider text-purple-400 bg-purple-900/90 px-1 py-0.2 rounded border border-purple-700/50 inline-flex items-center gap-0.5">
+            <span>💭</span>
+            <span className="hidden sm:inline">thought</span>
           </span>
           '{thoughtText}'
         </span>
@@ -228,8 +228,8 @@ const FormattedMessageContent = memo(function FormattedMessageContent({ content 
               typeof children === "string"
                 ? children
                 : Array.isArray(children) && typeof children[0] === "string"
-                ? children[0]
-                : "";
+                  ? children[0]
+                  : "";
 
             const trimmed = raw.trim();
             const isNarrativeHook =
@@ -282,6 +282,7 @@ const ChatMessageItem = memo(function ChatMessageItem({
   latestMessageRef,
   sessionChars,
   onToggleContext,
+  isToggling,
 }) {
   const isUser = msg.role === "user";
   const charBlocks = useMemo(
@@ -292,9 +293,8 @@ const ChatMessageItem = memo(function ChatMessageItem({
   return (
     <div
       ref={isLatestMsg ? latestMessageRef : null}
-      className={`flex gap-4 max-w-3xl mx-auto group ${
-        isUser ? "justify-end" : "justify-start"
-      }`}
+      className={`flex gap-4 max-w-3xl mx-auto group ${isUser ? "justify-end" : "justify-start"
+        }`}
     >
       {!isUser && (
         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-md">
@@ -319,19 +319,25 @@ const ChatMessageItem = memo(function ChatMessageItem({
             )}
 
             <button
+              disabled={isToggling}
               onClick={() => onToggleContext(msg.id, msg.includeInContext)}
-              className={`p-1 rounded transition-colors ${
-                msg.includeInContext
-                  ? "text-neutral-500 hover:text-blue-400 hover:bg-neutral-900"
-                  : "text-amber-400 hover:text-amber-300 bg-amber-950/40"
-              }`}
+              className={`p-1 rounded transition-colors ${isToggling
+                  ? "text-blue-400 opacity-80 cursor-wait"
+                  : msg.includeInContext
+                    ? "text-neutral-500 hover:text-blue-400 hover:bg-neutral-900 cursor-pointer"
+                    : "text-amber-400 hover:text-amber-300 bg-amber-950/40 cursor-pointer"
+                }`}
               title={
-                msg.includeInContext
-                  ? "Included in Context - Click to Exclude"
-                  : "Excluded from Context - Click to Include"
+                isToggling
+                  ? "Updating context memory..."
+                  : msg.includeInContext
+                    ? "Included in Context - Click to Exclude"
+                    : "Excluded from Context - Click to Include"
               }
             >
-              {msg.includeInContext ? (
+              {isToggling ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
+              ) : msg.includeInContext ? (
                 <Eye className="w-3.5 h-3.5" />
               ) : (
                 <EyeOff className="w-3.5 h-3.5" />
@@ -343,9 +349,8 @@ const ChatMessageItem = memo(function ChatMessageItem({
         {/* Message Body */}
         {isUser ? (
           <div
-            className={`p-4 rounded-2xl text-sm leading-relaxed bg-neutral-800 text-neutral-100 rounded-tr-xs ${
-              !msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
-            }`}
+            className={`p-4 rounded-2xl text-sm leading-relaxed bg-neutral-800 text-neutral-100 rounded-tr-xs ${!msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
+              }`}
           >
             <FormattedMessageContent content={msg.content} />
           </div>
@@ -357,9 +362,8 @@ const ChatMessageItem = memo(function ChatMessageItem({
               return (
                 <div
                   key={bIdx}
-                  className={`p-4 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-xs shadow-md ${
-                    !msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
-                  }`}
+                  className={`p-4 rounded-2xl bg-neutral-900 border border-neutral-800 text-neutral-200 rounded-tl-xs shadow-md ${!msg.includeInContext ? "opacity-60 border-dashed border-amber-900/50" : ""
+                    }`}
                 >
                   {block.charName && (
                     <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-neutral-800/60">
@@ -395,7 +399,8 @@ export default function ChatView({
   onOpenNewModal,
 }) {
   const [inputPrompt, setInputPrompt] = useState("");
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(activeChat?.messages || []);
+  const [fetchingMessages, setFetchingMessages] = useState(false);
   const [loading, setLoading] = useState(false);
   const [responseLength, setResponseLength] = useState("normal"); // "veryshort" | "short" | "normal" | "detailed"
   const [chatMode, setChatMode] = useState("turn"); // "turn" | "classic"
@@ -448,6 +453,7 @@ export default function ChatView({
 
   // Quick Snippets & Instant Paste state
   const [showSnippetsMenu, setShowSnippetsMenu] = useState(false);
+  const [contextMenuPos, setContextMenuPos] = useState(null); // { x, y } screen coordinates
   const [snippets, setSnippets] = useState([]);
   const [newSnippetInput, setNewSnippetInput] = useState("");
   const [showAddSnippetInput, setShowAddSnippetInput] = useState(false);
@@ -462,6 +468,7 @@ export default function ChatView({
         !snippetsMenuRef.current.contains(e.target)
       ) {
         setShowSnippetsMenu(false);
+        setContextMenuPos(null);
       }
     };
 
@@ -472,6 +479,36 @@ export default function ChatView({
       document.removeEventListener("touchstart", handleClickOutside);
     };
   }, [showSnippetsMenu]);
+
+  // Global right-click event handler to open context menu anywhere on screen
+  useEffect(() => {
+    const handleGlobalContextMenu = (e) => {
+      e.preventDefault();
+
+      const windowWidth = typeof window !== "undefined" ? window.innerWidth : 1000;
+      const windowHeight = typeof window !== "undefined" ? window.innerHeight : 800;
+      const menuWidth = 330;
+      const menuHeight = 380;
+
+      let posX = e.clientX;
+      let posY = e.clientY;
+
+      if (posX + menuWidth > windowWidth - 12) {
+        posX = Math.max(12, windowWidth - menuWidth - 12);
+      }
+      if (posY + menuHeight > windowHeight - 12) {
+        posY = Math.max(12, windowHeight - menuHeight - 12);
+      }
+
+      setContextMenuPos({ x: posX, y: posY });
+      setShowSnippetsMenu(true);
+    };
+
+    document.addEventListener("contextmenu", handleGlobalContextMenu);
+    return () => {
+      document.removeEventListener("contextmenu", handleGlobalContextMenu);
+    };
+  }, []);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -516,6 +553,7 @@ export default function ChatView({
       return /\s$/.test(prev) ? `${prev}${snippetText}` : `${prev} ${snippetText}`;
     });
     setShowSnippetsMenu(false);
+    setContextMenuPos(null);
     if (textareaRef.current) {
       textareaRef.current.focus();
     }
@@ -570,9 +608,16 @@ export default function ChatView({
     if (activeChat) {
       setStoryEdit(activeChat.story || "");
       setCharactersEdit(activeChat.sessionCharacters || []);
+      if (activeChat.messages && activeChat.messages.length > 0) {
+        setMessages(activeChat.messages);
+        setFetchingMessages(false);
+      } else {
+        setFetchingMessages(true);
+      }
       fetchChatMessages(activeChat.id);
     } else {
       setMessages([]);
+      setFetchingMessages(false);
     }
   }, [activeChat?.id]);
 
@@ -588,6 +633,8 @@ export default function ChatView({
       }
     } catch (err) {
       console.error("Failed to load messages", err);
+    } finally {
+      setFetchingMessages(false);
     }
   };
 
@@ -603,15 +650,21 @@ export default function ChatView({
   }, [messages, visibleCount]);
 
   // Context token calculation & limits
-  const MAX_CONTEXT_TOKENS = 1048576; // 1,048,576 tokens for Gemini 3.5 & 3.1 Flash-Lite (1M Context)
-  const { totalTokens, usagePercentage } = useMemo(() => {
-    const includedMessages = messages.filter((m) => m.includeInContext);
-    const tokens = includedMessages.reduce(
-      (acc, m) => acc + (m.tokenEstimate || Math.ceil(m.content.length / 4)),
+  const MAX_CONTEXT_TOKENS = 256000; // 256,000 tokens max limit
+  const { totalTokens, tokensRemaining, usagePercentage, includedMessages } = useMemo(() => {
+    const incMsgs = messages.filter((m) => m.includeInContext);
+    const tokens = incMsgs.reduce(
+      (acc, m) => acc + (m.tokenEstimate || Math.ceil((m.content || "").length / 4)),
       0
     );
+    const remaining = Math.max(0, MAX_CONTEXT_TOKENS - tokens);
     const usage = Math.min(100, (tokens / MAX_CONTEXT_TOKENS) * 100);
-    return { totalTokens: tokens, usagePercentage: usage };
+    return {
+      totalTokens: tokens,
+      tokensRemaining: remaining,
+      usagePercentage: usage,
+      includedMessages: incMsgs,
+    };
   }, [messages]);
 
   // Typewriter animation helper to stream text out smoothly before triggering next character turn
@@ -784,7 +837,12 @@ export default function ChatView({
     }
   };
 
+  const [togglingContextIds, setTogglingContextIds] = useState(new Set());
+
   const handleToggleContext = async (messageId, currentFlag) => {
+    if (togglingContextIds.has(messageId)) return;
+
+    setTogglingContextIds((prev) => new Set(prev).add(messageId));
     const newFlag = !currentFlag;
 
     setMessages((prev) =>
@@ -805,6 +863,12 @@ export default function ChatView({
       setMessages((prev) =>
         prev.map((m) => (m.id === messageId ? { ...m, includeInContext: currentFlag } : m))
       );
+    } finally {
+      setTogglingContextIds((prev) => {
+        const next = new Set(prev);
+        next.delete(messageId);
+        return next;
+      });
     }
   };
 
@@ -988,11 +1052,10 @@ export default function ChatView({
           <div className="hidden md:flex items-center bg-neutral-900 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
             <button
               onClick={() => handleSetChatMode("turn")}
-              className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
-                chatMode === "turn"
+              className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${chatMode === "turn"
                   ? "bg-purple-950/80 border border-purple-600/80 text-purple-300 shadow-sm font-semibold"
                   : "text-neutral-400 hover:text-neutral-200"
-              }`}
+                }`}
               title="Dynamic Turn Mode: Gemini decides character turns sequentially with typing indicators"
             >
               <Sparkles className="w-3 h-3 text-purple-400 shrink-0" />
@@ -1001,11 +1064,10 @@ export default function ChatView({
 
             <button
               onClick={() => handleSetChatMode("classic")}
-              className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
-                chatMode === "classic"
+              className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${chatMode === "classic"
                   ? "bg-blue-950/80 border border-blue-600/80 text-blue-300 shadow-sm font-semibold"
                   : "text-neutral-400 hover:text-neutral-200"
-              }`}
+                }`}
               title="Classic Mode: All character responses generated together in one turn"
             >
               <Zap className="w-3 h-3 text-blue-400 shrink-0" />
@@ -1017,11 +1079,10 @@ export default function ChatView({
           <div className="hidden sm:flex items-center bg-neutral-900 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
             <button
               onClick={() => handleSetResponseLength("veryshort")}
-              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
-                responseLength === "veryshort"
+              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${responseLength === "veryshort"
                   ? "bg-red-950/80 border border-red-600/80 text-red-300 shadow-sm"
                   : "text-neutral-400 hover:text-neutral-200"
-              }`}
+                }`}
               title="Very Short Mode: Strictly 1 short sentence per character (max 15 words)"
             >
               <Zap className="w-3 h-3 text-red-400 shrink-0" />
@@ -1030,11 +1091,10 @@ export default function ChatView({
 
             <button
               onClick={() => handleSetResponseLength("short")}
-              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
-                responseLength === "short"
+              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${responseLength === "short"
                   ? "bg-amber-950/80 border border-amber-600/80 text-amber-300 shadow-sm"
                   : "text-neutral-400 hover:text-neutral-200"
-              }`}
+                }`}
               title="Short Mode: Concise 1-2 sentences per character"
             >
               <Zap className="w-3 h-3 text-amber-400 shrink-0" />
@@ -1043,11 +1103,10 @@ export default function ChatView({
 
             <button
               onClick={() => handleSetResponseLength("normal")}
-              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
-                responseLength === "normal"
+              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${responseLength === "normal"
                   ? "bg-blue-950/80 border border-blue-600/80 text-blue-300 shadow-sm"
                   : "text-neutral-400 hover:text-neutral-200"
-              }`}
+                }`}
               title="Normal Mode: Standard balanced roleplay"
             >
               <span>Normal</span>
@@ -1055,11 +1114,10 @@ export default function ChatView({
 
             <button
               onClick={() => handleSetResponseLength("detailed")}
-              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${
-                responseLength === "detailed"
+              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${responseLength === "detailed"
                   ? "bg-purple-950/80 border border-purple-600/80 text-purple-300 shadow-sm"
                   : "text-neutral-400 hover:text-neutral-200"
-              }`}
+                }`}
               title="Detailed Mode: Rich immersive character descriptions"
             >
               <BookOpen className="w-3 h-3 text-purple-400 shrink-0" />
@@ -1070,11 +1128,10 @@ export default function ChatView({
           {/* Context Window Status Gauge */}
           <button
             onClick={() => setShowContextInfo(!showContextInfo)}
-            className={`text-xs px-2 md:px-3 py-1.5 rounded-full border flex items-center gap-1.5 transition-all ${
-              showContextInfo
+            className={`text-xs px-2 md:px-3 py-1.5 rounded-full border flex items-center gap-1.5 transition-all ${showContextInfo
                 ? "bg-blue-950/60 border-blue-500 text-blue-300 shadow-md shadow-blue-500/10"
                 : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-neutral-200"
-            }`}
+              }`}
             title="Context Window Status & Limits"
           >
             <ContextCircularGauge percentage={usagePercentage} size={20} strokeWidth={2.5} />
@@ -1098,11 +1155,10 @@ export default function ChatView({
           <div className="flex sm:hidden">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className={`p-1.5 rounded-xl border transition-colors ${
-                showMobileMenu
+              className={`p-1.5 rounded-xl border transition-colors ${showMobileMenu
                   ? "bg-neutral-800 border-neutral-700 text-white"
                   : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white"
-              }`}
+                }`}
               title="More Options"
             >
               <MoreVertical className="w-4 h-4" />
@@ -1141,11 +1197,10 @@ export default function ChatView({
                           handleSetChatMode("turn");
                           setShowMobileMenu(false);
                         }}
-                        className={`py-2 px-2 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${
-                          chatMode === "turn"
+                        className={`py-2 px-2 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${chatMode === "turn"
                             ? "bg-purple-950/90 text-purple-300 border border-purple-600/80 shadow"
                             : "text-neutral-400 hover:text-white"
-                        }`}
+                          }`}
                       >
                         <Sparkles className="w-3 h-3 text-purple-400 shrink-0" />
                         <span>🎭 Dynamic Turn</span>
@@ -1157,11 +1212,10 @@ export default function ChatView({
                           handleSetChatMode("classic");
                           setShowMobileMenu(false);
                         }}
-                        className={`py-2 px-2 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${
-                          chatMode === "classic"
+                        className={`py-2 px-2 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${chatMode === "classic"
                             ? "bg-blue-950/90 text-blue-300 border border-blue-600/80 shadow"
                             : "text-neutral-400 hover:text-white"
-                        }`}
+                          }`}
                       >
                         <Zap className="w-3 h-3 text-blue-400 shrink-0" />
                         <span>⚡ Classic</span>
@@ -1181,11 +1235,10 @@ export default function ChatView({
                           handleSetResponseLength("veryshort");
                           setShowMobileMenu(false);
                         }}
-                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${
-                          responseLength === "veryshort"
+                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${responseLength === "veryshort"
                             ? "bg-red-950/90 text-red-300 border border-red-600/80 shadow"
                             : "text-neutral-400 hover:text-white"
-                        }`}
+                          }`}
                       >
                         <Zap className="w-3 h-3 text-red-400 shrink-0" />
                         <span>V.Short</span>
@@ -1197,11 +1250,10 @@ export default function ChatView({
                           handleSetResponseLength("short");
                           setShowMobileMenu(false);
                         }}
-                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${
-                          responseLength === "short"
+                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${responseLength === "short"
                             ? "bg-amber-950/90 text-amber-300 border border-amber-600/80 shadow"
                             : "text-neutral-400 hover:text-white"
-                        }`}
+                          }`}
                       >
                         <Zap className="w-3 h-3 text-amber-400 shrink-0" />
                         <span>Short</span>
@@ -1213,11 +1265,10 @@ export default function ChatView({
                           handleSetResponseLength("normal");
                           setShowMobileMenu(false);
                         }}
-                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${
-                          responseLength === "normal"
+                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${responseLength === "normal"
                             ? "bg-blue-950/90 text-blue-300 border border-blue-600/80 shadow"
                             : "text-neutral-400 hover:text-white"
-                        }`}
+                          }`}
                       >
                         <span>Normal</span>
                       </button>
@@ -1228,11 +1279,10 @@ export default function ChatView({
                           handleSetResponseLength("detailed");
                           setShowMobileMenu(false);
                         }}
-                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${
-                          responseLength === "detailed"
+                        className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${responseLength === "detailed"
                             ? "bg-purple-950/90 text-purple-300 border border-purple-600/80 shadow"
                             : "text-neutral-400 hover:text-white"
-                        }`}
+                          }`}
                       >
                         <BookOpen className="w-3 h-3 text-purple-400 shrink-0" />
                         <span>Detail</span>
@@ -1319,7 +1369,7 @@ export default function ChatView({
 
                 <div className="bg-neutral-900 border border-neutral-800/80 p-2.5 rounded-xl">
                   <span className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-0.5">Max Limit</span>
-                  <span className="text-xs font-bold text-purple-400">1,048,576 t</span>
+                  <span className="text-xs font-bold text-purple-400">256,000 t</span>
                 </div>
 
                 <div className="bg-neutral-900 border border-neutral-800/80 p-2.5 rounded-xl">
@@ -1330,7 +1380,7 @@ export default function ChatView({
             </div>
 
             <p className="text-[11px] text-neutral-400 leading-relaxed">
-              💡 <strong>Context window:</strong> Gemini Flash Lite supports <strong>1,048,576 tokens</strong> (~1M tokens). Every message with an active eye icon (<Eye className="w-3.5 h-3.5 inline text-blue-400" />) is fed into prompt memory. Click the eye icon on any older message to exclude it and free up memory space.
+              💡 <strong>Context window:</strong> Gemini Flash Lite supports <strong>256,000 tokens</strong> (~256k tokens). Every message with an active eye icon (<Eye className="w-3.5 h-3.5 inline text-blue-400" />) is fed into prompt memory. Click the eye icon on any older message to exclude it and free up memory space.
             </p>
           </div>
         </div>
@@ -1338,7 +1388,12 @@ export default function ChatView({
 
       {/* Message Area */}
       <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 touch-pan-y overscroll-contain">
-        {messages.length === 0 ? (
+        {fetchingMessages && messages.length === 0 ? (
+          <div className="h-full flex flex-col items-center justify-center text-center my-12">
+            <Loader2 className="w-8 h-8 text-blue-400 animate-spin mb-3" />
+            <span className="text-xs font-semibold text-neutral-400">Loading session messages...</span>
+          </div>
+        ) : messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center my-12">
             <div className="w-16 h-16 relative mb-6">
               <svg className="w-full h-full" viewBox="0 0 24 24" fill="none">
@@ -1403,6 +1458,7 @@ export default function ChatView({
                   latestMessageRef={latestMessageRef}
                   sessionChars={sessionChars}
                   onToggleContext={handleToggleContext}
+                  isToggling={togglingContextIds.has(msg.id)}
                 />
               );
             })}
@@ -1435,8 +1491,8 @@ export default function ChatView({
                 {typingCharacter
                   ? `${typingCharacter} is typing...`
                   : sessionChars.length > 0
-                  ? `${sessionChars.map((c) => c.name).join(" & ")} are typing...`
-                  : "Generating response..."}
+                    ? `${sessionChars.map((c) => c.name).join(" & ")} are typing...`
+                    : "Generating response..."}
               </span>
             </div>
           </div>
@@ -1449,26 +1505,47 @@ export default function ChatView({
       <div className="p-3 md:px-8 max-w-4xl mx-auto w-full z-10">
         <form
           onSubmit={handleSendMessage}
+          onContextMenu={(e) => {
+            e.preventDefault();
+            setShowSnippetsMenu(true);
+          }}
           className="relative bg-neutral-900 border border-neutral-800 rounded-2xl md:rounded-3xl p-2 px-3.5 shadow-2xl flex items-end gap-2.5 focus-within:border-neutral-700 transition-all"
         >
           {/* Quick Snippets & Instant Paste Button + Popover Menu */}
           <div ref={snippetsMenuRef} className="relative shrink-0 mb-1">
             <button
               type="button"
-              onClick={() => setShowSnippetsMenu(!showSnippetsMenu)}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
-                showSnippetsMenu
+              onClick={() => {
+                setContextMenuPos(null);
+                setShowSnippetsMenu(!showSnippetsMenu);
+              }}
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${showSnippetsMenu
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 rotate-45"
                   : "text-neutral-400 hover:text-white hover:bg-neutral-800"
-              }`}
-              title="Instant Paste Snippets & Menu"
+                }`}
+              title="Instant Paste Snippets & Menu (Right-click anywhere on screen to open)"
             >
               <Plus className="w-5 h-5 transition-transform" />
             </button>
 
             {/* Quick Snippets & Presets Popover Menu */}
             {showSnippetsMenu && (
-              <div className="absolute bottom-12 left-0 z-50 w-80 sm:w-96 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-4 animate-in slide-in-from-bottom-2 fade-in duration-150 max-w-[calc(100vw-32px)]">
+              <div
+                style={
+                  contextMenuPos
+                    ? {
+                        position: "fixed",
+                        left: `${contextMenuPos.x}px`,
+                        top: `${contextMenuPos.y}px`,
+                      }
+                    : undefined
+                }
+                className={`${
+                  contextMenuPos
+                    ? "z-[99999] shadow-2xl animate-in zoom-in-95 fade-in duration-150"
+                    : "absolute bottom-12 left-0 z-50 animate-in slide-in-from-bottom-2 fade-in duration-150"
+                } w-80 sm:w-96 bg-neutral-900/95 backdrop-blur-xl border border-neutral-800 rounded-2xl p-4 max-w-[calc(100vw-32px)] ring-1 ring-white/10`}
+              >
                 <div className="flex items-center justify-between pb-2.5 border-b border-neutral-800 mb-3">
                   <div className="flex items-center gap-1.5 text-white font-semibold text-sm">
                     <Bookmark className="w-4 h-4 text-blue-400" />
@@ -1476,7 +1553,10 @@ export default function ChatView({
                   </div>
                   <button
                     type="button"
-                    onClick={() => setShowSnippetsMenu(false)}
+                    onClick={() => {
+                      setShowSnippetsMenu(false);
+                      setContextMenuPos(null);
+                    }}
                     className="text-neutral-400 hover:text-white p-1 rounded-lg hover:bg-neutral-800 transition-colors"
                   >
                     <X className="w-4 h-4" />
@@ -1600,6 +1680,10 @@ export default function ChatView({
             value={inputPrompt}
             onChange={(e) => setInputPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setShowSnippetsMenu(true);
+            }}
             placeholder={`Speak to ${sessionChars.map((c) => c.name).join(", ")}...`}
             className="flex-1 bg-transparent text-base sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none max-h-40 min-h-[38px] py-2 leading-relaxed"
             disabled={loading}
@@ -1629,7 +1713,7 @@ export default function ChatView({
             <span>Tap <strong>Send</strong> button to post message. <strong>Return</strong> key creates a new line.</span>
           ) : (
             <span>
-              Press <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Shift + Enter</kbd> for new line. Supports **bold**, *italics*, & 'thoughts'.
+              Press <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Shift + Enter</kbd> for new line. Right-click or press <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">+</kbd> for quick actions.
             </span>
           )}
         </p>

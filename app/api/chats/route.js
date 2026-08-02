@@ -14,8 +14,8 @@ export async function GET(req) {
       where: { userId: user.id },
       include: {
         sessionCharacters: true,
-        _count: {
-          select: { messages: true },
+        messages: {
+          orderBy: { createdAt: "asc" },
         },
       },
       orderBy: { updatedAt: "desc" },
