@@ -869,9 +869,9 @@ export default function ChatView({
   const sessionChars = activeChat.sessionCharacters || charactersEdit || [];
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-neutral-950 text-neutral-100 overflow-hidden relative">
+    <div className="flex-1 flex flex-col h-full bg-neutral-950 text-neutral-100 overflow-hidden relative overscroll-none">
       {/* Top Multi-Character Session Bar */}
-      <div className="h-14 border-b border-neutral-800/80 px-3 md:px-6 flex items-center justify-between bg-neutral-950/80 backdrop-blur-md z-10 shrink-0">
+      <div className="h-14 border-b border-neutral-800/80 px-3 md:px-6 flex items-center justify-between bg-neutral-950/80 backdrop-blur-md z-10 shrink-0 touch-none select-none overscroll-none">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xs shrink-0">
             <Users className="w-4 h-4" />
@@ -1265,7 +1265,7 @@ export default function ChatView({
       )}
 
       {/* Message Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 touch-pan-y overscroll-contain">
         {messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center my-12">
             <div className="w-16 h-16 relative mb-6">

@@ -52,7 +52,7 @@ export default function GeminiLayout({
   };
 
   return (
-    <div className="flex h-screen w-screen bg-neutral-950 text-neutral-100 overflow-hidden font-sans relative">
+    <div className="flex h-[100dvh] w-full fixed inset-0 bg-neutral-950 text-neutral-100 overflow-hidden overscroll-none font-sans">
       {/* Mobile Backdrop Overlay */}
       {isMobile && sidebarOpen && (
         <div
@@ -68,10 +68,10 @@ export default function GeminiLayout({
           }`
           : `${sidebarOpen ? "w-72" : "w-16"
           } transition-all duration-300 bg-neutral-900/90 border-r border-neutral-800/80 shrink-0 z-20`
-          } flex flex-col h-full`}
+          } flex flex-col h-full overscroll-none`}
       >
         {/* Sidebar Header */}
-        <div className="h-14 px-4 flex items-center justify-between border-b border-neutral-800/50 shrink-0">
+        <div className="h-14 px-4 flex items-center justify-between border-b border-neutral-800/50 shrink-0 touch-none select-none">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
