@@ -174,7 +174,7 @@ export default function LoginForm() {
             <img
               src="/logo-landspace.png"
               alt="NextAiChat Logo"
-              className="h-20 sm:h-9 w-auto object-contain"
+              className="h-20 sm:h-20 w-auto object-contain"
             />
           </Link>
           <div className="flex items-center gap-1.5 text-[10px] font-semibold text-purple-300 bg-purple-950/60 px-2.5 py-1 rounded-full border border-purple-800/50">
