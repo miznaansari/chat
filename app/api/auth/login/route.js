@@ -33,15 +33,10 @@ export async function POST(req) {
       );
     }
 
-    // Invalidate existing sessions for security
-    await prisma.userSession.updateMany({
-      where: { userId: user.id },
-      data: { isExpire: true },
-    });
-
-    // Create signed JWT token
+    // Create signed JWT token (30 days validity)
     const token = await createAuthToken({ userId: user.id, name: user.name });
 
+    // Track active user session
     await prisma.userSession.create({
       data: {
         userId: user.id,
@@ -62,7 +57,7 @@ export async function POST(req) {
 
     response.cookies.set("auth_token", token, {
       httpOnly: true,
-      secure: isHttps,
+      secure: process.env.NODE_ENV === "production" && isHttps,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",

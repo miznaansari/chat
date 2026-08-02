@@ -60,7 +60,7 @@ export async function POST(req) {
     // Set HTTP-only cookie
     response.cookies.set("auth_token", token, {
       httpOnly: true,
-      secure: isHttps || process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production" && isHttps,
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
