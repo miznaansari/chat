@@ -147,6 +147,25 @@ function getCharStyle(charName) {
   return charColors[index];
 }
 
+// Narrative Teaser Card component for story hooks like (Ab dekhte hai aage kya hota hai...)
+const NarrativeTeaserCard = memo(function NarrativeTeaserCard({ text }) {
+  const cleanText = text.replace(/^\s*[\(*_]+\s*|\s*[\)*_]+\s*$/g, "").trim();
+
+  return (
+    <div className="my-2.5 p-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-950/80 via-amber-950/50 to-neutral-900 border border-purple-500/40 text-amber-200/90 shadow-xl backdrop-blur-md flex items-center gap-3 animate-in fade-in duration-200 group hover:border-purple-400/60 transition-all">
+      <div className="w-7 h-7 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-300 shrink-0 shadow-inner">
+        <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+      </div>
+      <div className="text-xs sm:text-sm font-serif italic tracking-wide leading-relaxed">
+        <span className="font-semibold text-purple-300 not-italic mr-2 font-sans uppercase tracking-wider text-[10px] bg-purple-950/90 px-2 py-0.5 rounded-md border border-purple-700/60 shadow-xs">
+          🎬 Story Scene Hook
+        </span>
+        "{cleanText}"
+      </div>
+    </div>
+  );
+});
+
 // Memoized component to render message text with Markdown
 const FormattedMessageContent = memo(function FormattedMessageContent({ content }) {
   if (!content) return null;
@@ -157,7 +176,26 @@ const FormattedMessageContent = memo(function FormattedMessageContent({ content 
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
         components={{
-          p: ({ children }) => <p className="mb-2.5 last:mb-0 leading-relaxed block">{children}</p>,
+          p: ({ children }) => {
+            const raw =
+              typeof children === "string"
+                ? children
+                : Array.isArray(children) && typeof children[0] === "string"
+                ? children[0]
+                : "";
+
+            const trimmed = raw.trim();
+            const isNarrativeHook =
+              /^\s*[\(*]*\s*(ab dekhte|ab aage|dekhte hai|dekhte hain|aage kya|aage dekhte|story note|scene note|what happens next)[^)]*[\)*]*\s*$/i.test(
+                trimmed
+              ) || /^\s*\([^)]+\)\s*$/.test(trimmed);
+
+            if (isNarrativeHook) {
+              return <NarrativeTeaserCard text={trimmed} />;
+            }
+
+            return <p className="mb-2.5 last:mb-0 leading-relaxed block">{children}</p>;
+          },
           strong: ({ children }) => <strong className="font-bold text-white px-0.5">{children}</strong>,
           em: ({ children }) => <em className="italic text-neutral-300">{children}</em>,
           u: ({ children }) => (

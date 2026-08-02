@@ -153,7 +153,10 @@ ${lengthInstruction}
    - Use Markdown tables when presenting choices or options.
 
 5. PERSONA & SCENE CONTINUITY:
-   - Each character MUST strictly adhere to their persona, tone, and active status in the ongoing scene history.`;
+   - Each character MUST strictly adhere to their persona, tone, and active status in the ongoing scene history.
+
+6. CINEMATIC NARRATIVE HOOKS:
+   - At dramatic scene transitions or turn endings, naturally include story notes in parentheses like (Ab dekhte hai aage kya hota hai...) or (Ab aage kya hoga...) to build suspense!`;
 
     // Map context messages to Gemini contents format
     const contents = contextMessages.map((msg) => ({

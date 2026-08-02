@@ -62,7 +62,8 @@ ${characterListFormatted}
 2. Select the character who naturally should speak next based on conversation flow, scene context, and previous dialogue.
 3. A character can speak in consecutive turns if they have a follow-up sentence or thought before someone else speaks!
 4. ${lengthDirective}
-5. Decide who should speak in the NEXT turn:
+5. CINEMATIC NARRATIVE HOOKS: At dramatic scene points, cliffhangers, or turn transitions, naturally include narrative notes in parentheses such as (Ab dekhte hai aage kya hota hai...) or (Ab aage kya hoga...) to build excitement!
+6. Decide who should speak in the NEXT turn:
    - Name of another character (e.g. ${characterNames.join(", ")})
    - Same character again if they have more to say immediately
    - "USER" (or "me") if it is time for the user to respond.
