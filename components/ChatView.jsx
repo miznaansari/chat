@@ -400,6 +400,27 @@ export default function ChatView({
   const [snippets, setSnippets] = useState([]);
   const [newSnippetInput, setNewSnippetInput] = useState("");
   const [showAddSnippetInput, setShowAddSnippetInput] = useState(false);
+  const snippetsMenuRef = useRef(null);
+
+  // Close snippets popover menu on click / touch outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (
+        showSnippetsMenu &&
+        snippetsMenuRef.current &&
+        !snippetsMenuRef.current.contains(e.target)
+      ) {
+        setShowSnippetsMenu(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("touchstart", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("touchstart", handleClickOutside);
+    };
+  }, [showSnippetsMenu]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -1380,11 +1401,11 @@ export default function ChatView({
           className="relative bg-neutral-900 border border-neutral-800 rounded-2xl md:rounded-3xl p-2 px-3.5 shadow-2xl flex items-end gap-2.5 focus-within:border-neutral-700 transition-all"
         >
           {/* Quick Snippets & Instant Paste Button + Popover Menu */}
-          <div className="relative shrink-0 mb-1">
+          <div ref={snippetsMenuRef} className="relative shrink-0 mb-1">
             <button
               type="button"
               onClick={() => setShowSnippetsMenu(!showSnippetsMenu)}
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
                 showSnippetsMenu
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 rotate-45"
                   : "text-neutral-400 hover:text-white hover:bg-neutral-800"
@@ -1396,18 +1417,18 @@ export default function ChatView({
 
             {/* Quick Snippets & Presets Popover Menu */}
             {showSnippetsMenu && (
-              <div className="absolute bottom-11 left-0 z-50 w-72 sm:w-80 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-3 animate-in slide-in-from-bottom-2 fade-in duration-150">
-                <div className="flex items-center justify-between pb-2 border-b border-neutral-800 mb-2">
-                  <div className="flex items-center gap-1.5 text-white font-semibold text-xs">
-                    <Bookmark className="w-3.5 h-3.5 text-blue-400" />
+              <div className="absolute bottom-12 left-0 z-50 w-80 sm:w-96 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl p-4 animate-in slide-in-from-bottom-2 fade-in duration-150 max-w-[calc(100vw-32px)]">
+                <div className="flex items-center justify-between pb-2.5 border-b border-neutral-800 mb-3">
+                  <div className="flex items-center gap-1.5 text-white font-semibold text-sm">
+                    <Bookmark className="w-4 h-4 text-blue-400" />
                     <span>Instant Paste & Actions</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowSnippetsMenu(false)}
-                    className="text-neutral-500 hover:text-white p-0.5 rounded"
+                    className="text-neutral-400 hover:text-white p-1 rounded-lg hover:bg-neutral-800 transition-colors"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
 
@@ -1418,7 +1439,7 @@ export default function ChatView({
                     setShowSnippetsMenu(false);
                     onOpenNewModal();
                   }}
-                  className="w-full mb-2 p-2 rounded-xl bg-blue-950/50 hover:bg-blue-900/60 border border-blue-800/60 text-blue-200 text-xs font-semibold flex items-center gap-2 transition-colors text-left"
+                  className="w-full mb-3 p-2.5 rounded-xl bg-blue-950/50 hover:bg-blue-900/60 border border-blue-800/60 text-blue-200 text-sm font-semibold flex items-center gap-2 transition-colors text-left"
                 >
                   <Plus className="w-4 h-4 text-blue-400 shrink-0" />
                   <span>Create New Chat Session</span>
@@ -1426,17 +1447,17 @@ export default function ChatView({
 
                 {/* Quick Character Tags (if available) */}
                 {sessionChars.length > 0 && (
-                  <div className="mb-2.5">
-                    <span className="text-[10px] text-neutral-400 uppercase tracking-wider block mb-1 font-semibold">
+                  <div className="mb-3">
+                    <span className="text-xs text-neutral-400 uppercase tracking-wider block mb-1.5 font-semibold">
                       Quick Character Tags
                     </span>
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-1.5">
                       {sessionChars.map((char) => (
                         <button
                           key={char.id || char.name}
                           type="button"
                           onClick={() => handleInsertSnippet(`[${char.name}]: `)}
-                          className="text-[11px] px-2 py-0.5 rounded-lg bg-neutral-950 border border-neutral-800 text-blue-300 font-semibold hover:border-blue-500 hover:text-white transition-colors"
+                          className="text-xs sm:text-sm px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-700/80 text-blue-300 font-semibold hover:border-blue-500 hover:text-white transition-all active:scale-95 flex items-center gap-1"
                           title={`Insert [${char.name}]: tag`}
                         >
                           [{char.name}]
@@ -1447,26 +1468,26 @@ export default function ChatView({
                 )}
 
                 {/* Saved Snippets List */}
-                <div className="space-y-1.5 max-h-48 overflow-y-auto pr-0.5">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] text-neutral-400 uppercase tracking-wider block font-semibold">
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs text-neutral-400 uppercase tracking-wider block font-semibold">
                       Reusable Phrases ({snippets.length})
                     </span>
                     <button
                       type="button"
                       onClick={() => setShowAddSnippetInput(!showAddSnippetInput)}
-                      className="text-[10px] text-blue-400 hover:underline font-semibold"
+                      className="text-xs text-blue-400 hover:underline font-semibold"
                     >
                       {showAddSnippetInput ? "Cancel" : "+ Add Custom"}
                     </button>
                   </div>
 
-                  {/* Add Custom Snippet Inline Control (Non-form container to prevent outer form submission) */}
+                  {/* Add Custom Snippet Inline Control */}
                   {showAddSnippetInput && (
-                    <div className="flex gap-1 mb-2">
+                    <div className="flex items-center gap-2 my-2 p-1.5 bg-neutral-950 rounded-xl border border-neutral-700/80 w-full">
                       <input
                         type="text"
-                        placeholder="Type reusable phrase or name..."
+                        placeholder="Type phrase or name..."
                         value={newSnippetInput}
                         onChange={(e) => setNewSnippetInput(e.target.value)}
                         onKeyDown={(e) => {
@@ -1476,14 +1497,14 @@ export default function ChatView({
                             handleAddSnippet(e);
                           }
                         }}
-                        className="flex-1 bg-neutral-950 border border-neutral-700 rounded-lg py-1 px-2 text-base sm:text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                        className="flex-1 min-w-0 bg-transparent py-1 px-2 text-sm text-white placeholder-neutral-500 focus:outline-none"
                         autoFocus
                       />
                       <button
                         type="button"
                         onClick={handleAddSnippet}
                         disabled={!newSnippetInput.trim()}
-                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold disabled:opacity-40"
+                        className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shrink-0 disabled:opacity-40"
                       >
                         Save
                       </button>
@@ -1491,7 +1512,7 @@ export default function ChatView({
                   )}
 
                   {snippets.length === 0 && !showAddSnippetInput ? (
-                    <p className="text-[11px] text-neutral-500 italic py-1.5 text-center">
+                    <p className="text-xs text-neutral-500 italic py-2 text-center">
                       No custom phrases added yet. Click <strong>+ Add Custom</strong> to save phrases or names!
                     </p>
                   ) : (
@@ -1499,16 +1520,20 @@ export default function ChatView({
                       <div
                         key={index}
                         onClick={() => handleInsertSnippet(snip)}
-                        className="group flex items-center justify-between p-1.5 px-2.5 rounded-lg bg-neutral-950 border border-neutral-800/80 hover:border-neutral-700 hover:bg-neutral-800/50 cursor-pointer transition-colors text-xs text-neutral-200"
+                        className="group flex items-center justify-between p-2.5 px-3 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800/60 cursor-pointer transition-colors text-sm text-neutral-200"
                       >
-                        <span className="truncate pr-2">{snip}</span>
+                        <span className="truncate pr-2 font-medium">{snip}</span>
                         <button
                           type="button"
-                          onClick={(e) => handleDeleteSnippet(index, e)}
-                          className="text-neutral-500 hover:text-red-400 p-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                          title="Delete snippet"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleDeleteSnippet(index, e);
+                          }}
+                          className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors shrink-0"
+                          title="Delete phrase"
                         >
-                          <Trash2 className="w-3.5 h-3.5" />
+                          <Trash2 className="w-4 h-4 text-red-400" />
                         </button>
                       </div>
                     ))
