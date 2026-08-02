@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Tooltip from "@/components/Tooltip";
+
 import {
   Menu,
   Sparkles,
@@ -11,6 +13,7 @@ import {
   ChevronDown,
   X,
 } from "lucide-react";
+
 
 export default function GeminiLayout({
   user,
@@ -86,69 +89,102 @@ export default function GeminiLayout({
   };
 
   return (
-    <div className="flex h-[100dvh] w-full fixed inset-0 bg-neutral-950 text-neutral-100 overflow-hidden overscroll-none font-sans">
+    <div className="flex h-[100dvh] w-full fixed inset-0 bg-[#030712] text-neutral-100 overflow-hidden overscroll-none font-sans bg-antigravity-grid relative">
+      {/* ANTIGRAVITY FLOATING ORBS & ORBITAL RINGS (EXACT SAME AS /LOGIN) */}
+      <div className="fixed top-[-10%] left-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-purple-900/30 via-indigo-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
+      <div className="fixed bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-blue-900/30 via-cyan-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
+
+      {/* Floating Physics Particles */}
+      <div className="fixed top-1/4 left-10 w-24 h-24 rounded-full border border-purple-500/20 bg-purple-500/5 backdrop-blur-sm animate-float-slow pointer-events-none hidden md:block z-0" />
+      <div className="fixed bottom-1/4 right-12 w-32 h-32 rounded-full border border-cyan-500/20 bg-cyan-500/5 backdrop-blur-sm animate-float-reverse pointer-events-none hidden md:block z-0" />
+
+      {/* Orbit Rings Centered */}
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] rounded-full border border-neutral-800/40 animate-orbit pointer-events-none hidden lg:block z-0">
+        <div className="absolute top-0 left-1/2 w-3 h-3 bg-purple-500 rounded-full shadow-[0_0_15px_#a855f7]" />
+      </div>
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full border border-purple-900/30 animate-orbit-reverse pointer-events-none hidden lg:block z-0">
+        <div className="absolute bottom-0 right-1/2 w-2.5 h-2.5 bg-cyan-400 rounded-full shadow-[0_0_15px_#22d3ee]" />
+      </div>
+
+
       {/* Mobile Backdrop Overlay */}
       {mobileOpen && (
         <div
           onClick={() => setMobileOpen(false)}
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 md:hidden transition-opacity"
+          className="fixed inset-0 bg-black/75 backdrop-blur-md z-40 md:hidden transition-opacity"
         />
       )}
 
       {/* Sidebar Drawer */}
       <aside
-        className={`fixed md:relative inset-y-0 left-0 z-50 flex flex-col h-full bg-neutral-900 border-r border-neutral-800 transition-all duration-300 shrink-0 overscroll-none ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        className={`fixed md:relative inset-y-0 left-0 z-50 flex flex-col h-full bg-neutral-950/40 backdrop-blur-xl border-r border-purple-500/20 transition-all duration-300 shrink-0 overscroll-none ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
           } ${sidebarOpen ? "w-72 md:w-72 shadow-2xl md:shadow-none" : "w-72 md:w-16"}`}
       >
+
+
         {/* Sidebar Header */}
-        <div className="h-14 px-4 flex items-center justify-between border-b border-neutral-800/50 shrink-0 touch-none select-none">
+        <div className="h-14 px-3 flex items-center justify-between border-b border-neutral-800/50 shrink-0 touch-none select-none">
           <div className="flex items-center gap-2 min-w-0">
-            <button
-              onClick={handleToggleSidebar}
-              className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors shrink-0"
-              title="Toggle Sidebar"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-            <span className={`text-sm font-bold text-white tracking-wide truncate ${!sidebarOpen ? "md:hidden" : ""}`}>
+            <Tooltip content="Toggle Drawer Menu" position="right" badgeIcon="⚡">
+              <button
+                onClick={handleToggleSidebar}
+                className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800/60 transition-colors shrink-0"
+              >
+                <Menu className="w-5 h-5" />
+              </button>
+            </Tooltip>
+            <span className={`text-sm font-bold text-white tracking-wide transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[120px]"}`}>
               Gemini RP
             </span>
           </div>
 
-          <button
-            onClick={() => {
-              onNewChat();
-              setMobileOpen(false);
-            }}
-            className={`p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors shrink-0 ${!sidebarOpen ? "md:hidden" : ""}`}
-            title="New Chat"
-          >
-            <SquarePen className="w-5 h-5" />
-          </button>
+          <Tooltip content="New Chat Session" position="bottom" badgeIcon="🎭">
+            <button
+              onClick={() => {
+                onNewChat();
+                setMobileOpen(false);
+              }}
+              className={`p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800/60 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shrink-0 ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
+            >
+              <SquarePen className="w-5 h-5" />
+            </button>
+          </Tooltip>
         </div>
 
         {/* New Chat Button */}
-        <div className={`p-3 shrink-0 ${!sidebarOpen ? "md:hidden" : ""}`}>
-          <button
-            onClick={() => {
-              onNewChat();
-              setMobileOpen(false);
-            }}
-            className="w-full bg-neutral-800/80 hover:bg-neutral-800 text-neutral-200 border border-neutral-700/60 font-medium py-2.5 px-4 rounded-xl flex items-center gap-3 text-xs transition-all shadow-sm"
-          >
-            <SquarePen className="w-4 h-4 text-blue-400 shrink-0" />
-            <span>New Roleplay Chat</span>
-          </button>
+        <div className="p-2 sm:p-3 shrink-0">
+          <Tooltip content="Create Multi-Character Session" position="right" badgeIcon="🚀" className="w-full">
+            <button
+              onClick={() => {
+                onNewChat();
+                setMobileOpen(false);
+              }}
+              className="w-full bg-purple-950/40 hover:bg-purple-900/60 text-neutral-200 border border-purple-800/50 font-medium py-2.5 px-3 rounded-xl flex items-center gap-3 justify-start transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] shadow-sm cursor-pointer"
+            >
+
+              <SquarePen className="w-4 h-4 text-purple-400 shrink-0" />
+              <span
+                className={`transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${
+                  !sidebarOpen
+                    ? "md:opacity-0 md:max-w-0 md:pointer-events-none"
+                    : "md:opacity-100 md:max-w-[180px]"
+                }`}
+              >
+                New Roleplay Chat
+              </span>
+            </button>
+          </Tooltip>
         </div>
+
 
         {/* Recent Chats List */}
         <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-          <div className={`px-3 py-1.5 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider ${!sidebarOpen ? "md:hidden" : ""}`}>
+          <div className={`px-3 py-1.5 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:h-0 md:py-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
             Recent Roleplays
           </div>
 
           {chats.length === 0 ? (
-            <div className={`px-3 py-4 text-center text-xs text-neutral-500 ${!sidebarOpen ? "md:hidden" : ""}`}>
+            <div className={`px-3 py-4 text-center text-xs text-neutral-500 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:h-0 md:py-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
               No chat sessions yet. Create one to begin!
             </div>
           ) : (
@@ -158,15 +194,17 @@ export default function GeminiLayout({
                 <div
                   key={chat.id}
                   onClick={() => handleSelectChatMobile(chat.id)}
-                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${isActive
-                    ? "bg-neutral-800 text-white font-medium shadow-sm"
-                    : "text-neutral-400 hover:bg-neutral-800/50 hover:text-neutral-200"
-                    }`}
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] justify-start ${
+                    isActive
+                      ? "bg-purple-950/60 border border-purple-800/60 text-white font-medium shadow-sm"
+                      : "text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200"
+                  }`}
                   title={chat.title}
                 >
-                  <MessageSquare className={`w-4 h-4 shrink-0 ${isActive ? "text-blue-400" : "text-neutral-500"}`} />
+                  <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${isActive ? "text-purple-400" : "text-neutral-500"}`} />
 
-                  <div className={`flex-1 min-w-0 flex items-center justify-between gap-2 ${!sidebarOpen ? "md:hidden" : ""}`}>
+                  <div className={`flex-1 min-w-0 flex items-center justify-between gap-2 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
+
                     <div className="flex-1 min-w-0">
                       <div className="text-xs truncate font-semibold text-neutral-200">
                         {chat.title}
@@ -198,11 +236,12 @@ export default function GeminiLayout({
         <div className="p-3 border-t border-neutral-800/80 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-8 h-8 rounded-full bg-amber-700/80 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-inner">
+
+              <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shrink-0 shadow-inner">
                 {user?.name?.[0]?.toUpperCase() || "U"}
               </div>
 
-              <div className={`min-w-0 ${!sidebarOpen ? "md:hidden" : ""}`}>
+              <div className={`min-w-0 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[140px]"}`}>
                 <div className="text-xs font-semibold text-white truncate">
                   {user?.name || "User"}
                 </div>
@@ -210,21 +249,27 @@ export default function GeminiLayout({
               </div>
             </div>
 
-            <button
-              onClick={onLogout}
-              className={`p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors ${!sidebarOpen ? "md:hidden" : ""}`}
-              title="Log Out"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <Tooltip content="Sign Out Account" position="right" badgeIcon="🔒">
+              <button
+                onClick={onLogout}
+                className={`p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            </Tooltip>
+
           </div>
         </div>
+
+
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         {/* Top Header Bar matching Gemini UI screenshot */}
-        <header className="h-14 border-b border-neutral-800/60 px-3 md:px-6 flex items-center justify-between bg-neutral-950 z-30 shrink-0 relative">
+        <header className="h-14 border-b border-purple-500/20 px-3 md:px-6 flex items-center justify-between bg-neutral-950/40 backdrop-blur-xl z-30 shrink-0 relative">
+
+
           <div className="flex items-center gap-2">
             {/* Toggle Drawer button for Mobile Header */}
             <button
@@ -240,6 +285,7 @@ export default function GeminiLayout({
               <button
                 onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
                 className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-neutral-200 hover:bg-neutral-900 px-2.5 py-1.5 rounded-full transition-colors border border-neutral-800 md:border-transparent cursor-pointer"
+                title="Select Gemini Generative AI Model Architecture"
               >
                 <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
                 <span className="truncate max-w-[120px] sm:max-w-none">{activeModelName}</span>
@@ -254,6 +300,7 @@ export default function GeminiLayout({
                       setModelDropdownOpen(false);
                     }}
                     className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
+                    title="Gemini 3.5 Flash Lite: Fastest response latency for turn-by-turn roleplays"
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5 text-blue-400" />
@@ -270,6 +317,7 @@ export default function GeminiLayout({
                       setModelDropdownOpen(false);
                     }}
                     className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
+                    title="Gemini 3.1 Flash Lite: Stable model architecture for creative roleplays"
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5 text-purple-400" />
@@ -285,9 +333,13 @@ export default function GeminiLayout({
           </div>
 
           {/* User Initial Circle in Header */}
-          <div className="w-8 h-8 rounded-full bg-amber-800 text-white font-bold flex items-center justify-center text-xs shadow-inner shrink-0">
+          <div
+            className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-inner shrink-0 cursor-default"
+            title={`Logged in as ${user?.name || "User"}`}
+          >
             {user?.name?.[0]?.toUpperCase() || "M"}
           </div>
+
         </header>
 
         {/* Content View */}

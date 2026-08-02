@@ -4,6 +4,9 @@ import { useState, useRef, useEffect, useMemo, memo } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import Tooltip from "@/components/Tooltip";
+
+
 import {
   Sparkles,
   Plus,
@@ -322,10 +325,10 @@ const ChatMessageItem = memo(function ChatMessageItem({
               disabled={isToggling}
               onClick={() => onToggleContext(msg.id, msg.includeInContext)}
               className={`p-1 rounded transition-colors ${isToggling
-                  ? "text-blue-400 opacity-80 cursor-wait"
-                  : msg.includeInContext
-                    ? "text-neutral-500 hover:text-blue-400 hover:bg-neutral-900 cursor-pointer"
-                    : "text-amber-400 hover:text-amber-300 bg-amber-950/40 cursor-pointer"
+                ? "text-blue-400 opacity-80 cursor-wait"
+                : msg.includeInContext
+                  ? "text-neutral-500 hover:text-blue-400 hover:bg-neutral-900 cursor-pointer"
+                  : "text-amber-400 hover:text-amber-300 bg-amber-950/40 cursor-pointer"
                 }`}
               title={
                 isToggling
@@ -1019,8 +1022,8 @@ export default function ChatView({
 
   if (!activeChat) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-neutral-950 relative overflow-hidden">
-        <div className="w-20 h-20 rounded-full bg-blue-500/10 flex items-center justify-center mb-6 border border-blue-500/20 shadow-2xl">
+      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-transparent relative overflow-hidden">
+        <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mb-6 border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
           <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none">
             <path
               d="M12 0C12 6.627 6.627 12 0 12C6.627 12 12 17.373 12 24C12 17.373 17.373 12 24 12C17.373 12 12 6.627 12 0Z"
@@ -1043,7 +1046,7 @@ export default function ChatView({
           </svg>
         </div>
 
-        <h2 className="text-3xl font-normal tracking-tight text-white mb-2">
+        <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2">
           Where should we start?
         </h2>
         <p className="text-neutral-400 max-w-md text-sm mb-6">
@@ -1052,7 +1055,7 @@ export default function ChatView({
 
         <button
           onClick={onOpenNewModal}
-          className="px-5 py-2.5 rounded-full bg-white text-neutral-950 font-medium text-sm hover:bg-neutral-200 transition-colors flex items-center gap-2 shadow-lg"
+          className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white font-semibold text-sm hover:opacity-95 transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(147,51,234,0.4)] active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>New Multi-Character Chat</span>
@@ -1064,7 +1067,8 @@ export default function ChatView({
   const sessionChars = activeChat.sessionCharacters || charactersEdit || [];
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-neutral-950 text-neutral-100 overflow-hidden relative overscroll-none">
+    <div className="flex-1 flex flex-col h-full bg-transparent text-neutral-100 overflow-hidden relative overscroll-none">
+
       {/* Top Multi-Character Session Bar */}
       <div className="h-14 border-b border-neutral-800/80 px-3 md:px-6 flex items-center justify-between bg-neutral-950/80 backdrop-blur-md z-10 shrink-0 touch-none select-none overscroll-none">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
@@ -1090,13 +1094,14 @@ export default function ChatView({
                 ))}
               </div>
 
-              <button
-                onClick={() => setShowStoryModal(true)}
-                className="text-neutral-400 hover:text-white p-1 rounded hover:bg-neutral-800 transition-colors shrink-0"
-                title="Edit Story & Characters"
-              >
-                <Edit2 className="w-3.5 h-3.5" />
-              </button>
+              <Tooltip content="Edit Scenario & Personas" position="bottom" badgeIcon="📝">
+                <button
+                  onClick={() => setShowStoryModal(true)}
+                  className="text-neutral-400 hover:text-white p-1 rounded hover:bg-neutral-800 transition-colors shrink-0"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
+              </Tooltip>
             </div>
 
             <p className="text-[11px] md:text-xs text-neutral-400 line-clamp-1 max-w-[140px] sm:max-w-md">
@@ -1109,114 +1114,123 @@ export default function ChatView({
         <div className="flex items-center gap-1.5 md:gap-2.5 shrink-0">
           {/* Mode Switcher Selector */}
           <div className="hidden md:flex items-center bg-neutral-900 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
-            <button
-              onClick={() => handleSetChatMode("turn")}
-              className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${chatMode === "turn"
+            <Tooltip content="Gemini decides speaker turns dynamically" position="bottom" badgeIcon="🎭">
+              <button
+                onClick={() => handleSetChatMode("turn")}
+                className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all cursor-pointer ${chatMode === "turn"
                   ? "bg-purple-950/80 border border-purple-600/80 text-purple-300 shadow-sm font-semibold"
                   : "text-neutral-400 hover:text-neutral-200"
-                }`}
-              title="Dynamic Turn Mode: Gemini decides character turns sequentially with typing indicators"
-            >
-              <Sparkles className="w-3 h-3 text-purple-400 shrink-0" />
-              <span>🎭 Dynamic Turn</span>
-            </button>
+                  }`}
+              >
+                <Sparkles className="w-3 h-3 text-purple-400 shrink-0" />
+                <span>🎭 Dynamic Turn</span>
+              </button>
+            </Tooltip>
 
-            <button
-              onClick={() => handleSetChatMode("classic")}
-              className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${chatMode === "classic"
+            <Tooltip content="Generates all character responses in 1 block" position="bottom" badgeIcon="⚡">
+              <button
+                onClick={() => handleSetChatMode("classic")}
+                className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all cursor-pointer ${chatMode === "classic"
                   ? "bg-blue-950/80 border border-blue-600/80 text-blue-300 shadow-sm font-semibold"
                   : "text-neutral-400 hover:text-neutral-200"
-                }`}
-              title="Classic Mode: All character responses generated together in one turn"
-            >
-              <Zap className="w-3 h-3 text-blue-400 shrink-0" />
-              <span>⚡ Classic</span>
-            </button>
+                  }`}
+              >
+                <Zap className="w-3 h-3 text-blue-400 shrink-0" />
+                <span>⚡ Classic</span>
+              </button>
+            </Tooltip>
           </div>
 
           {/* Desktop Response Length Pill Selector */}
           <div className="hidden sm:flex items-center bg-neutral-900 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
-            <button
-              onClick={() => handleSetResponseLength("veryshort")}
-              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${responseLength === "veryshort"
+            <Tooltip content="Strictly 1 short sentence per character" position="bottom" badgeIcon="⚡">
+              <button
+                onClick={() => handleSetResponseLength("veryshort")}
+                className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all cursor-pointer ${responseLength === "veryshort"
                   ? "bg-red-950/80 border border-red-600/80 text-red-300 shadow-sm"
                   : "text-neutral-400 hover:text-neutral-200"
-                }`}
-              title="Very Short Mode: Strictly 1 short sentence per character (max 15 words)"
-            >
-              <Zap className="w-3 h-3 text-red-400 shrink-0" />
-              <span>V.Short</span>
-            </button>
+                  }`}
+              >
+                <Zap className="w-3 h-3 text-red-400 shrink-0" />
+                <span>V.Short</span>
+              </button>
+            </Tooltip>
 
-            <button
-              onClick={() => handleSetResponseLength("short")}
-              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${responseLength === "short"
+            <Tooltip content="Concise 1-2 sentences per character" position="bottom" badgeIcon="⚡">
+              <button
+                onClick={() => handleSetResponseLength("short")}
+                className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all cursor-pointer ${responseLength === "short"
                   ? "bg-amber-950/80 border border-amber-600/80 text-amber-300 shadow-sm"
                   : "text-neutral-400 hover:text-neutral-200"
-                }`}
-              title="Short Mode: Concise 1-2 sentences per character"
-            >
-              <Zap className="w-3 h-3 text-amber-400 shrink-0" />
-              <span>Short</span>
-            </button>
+                  }`}
+              >
+                <Zap className="w-3 h-3 text-amber-400 shrink-0" />
+                <span>Short</span>
+              </button>
+            </Tooltip>
 
-            <button
-              onClick={() => handleSetResponseLength("normal")}
-              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${responseLength === "normal"
+            <Tooltip content="Balanced natural roleplay length" position="bottom" badgeIcon="💬">
+              <button
+                onClick={() => handleSetResponseLength("normal")}
+                className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all cursor-pointer ${responseLength === "normal"
                   ? "bg-blue-950/80 border border-blue-600/80 text-blue-300 shadow-sm"
                   : "text-neutral-400 hover:text-neutral-200"
-                }`}
-              title="Normal Mode: Standard balanced roleplay"
-            >
-              <span>Normal</span>
-            </button>
+                  }`}
+              >
+                <span>Normal</span>
+              </button>
+            </Tooltip>
 
-            <button
-              onClick={() => handleSetResponseLength("detailed")}
-              className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all ${responseLength === "detailed"
+            <Tooltip content="Immersive rich dialogue & actions" position="bottom" badgeIcon="📖">
+              <button
+                onClick={() => handleSetResponseLength("detailed")}
+                className={`px-2 py-1 rounded-full flex items-center gap-1 text-[11px] font-medium transition-all cursor-pointer ${responseLength === "detailed"
                   ? "bg-purple-950/80 border border-purple-600/80 text-purple-300 shadow-sm"
                   : "text-neutral-400 hover:text-neutral-200"
-                }`}
-              title="Detailed Mode: Rich immersive character descriptions"
-            >
-              <BookOpen className="w-3 h-3 text-purple-400 shrink-0" />
-              <span>Detailed</span>
-            </button>
+                  }`}
+              >
+                <BookOpen className="w-3 h-3 text-purple-400 shrink-0" />
+                <span>Detailed</span>
+              </button>
+            </Tooltip>
           </div>
 
           {/* Context Window Status Gauge */}
-          <button
-            onClick={() => setShowContextInfo(!showContextInfo)}
-            className={`text-xs px-2 md:px-3 py-1.5 rounded-full border flex items-center gap-1.5 transition-all ${showContextInfo
+          <Tooltip content="Token Capacity & Memory Status" position="bottom" badgeIcon="🧠">
+            <button
+              onClick={() => setShowContextInfo(!showContextInfo)}
+              className={`text-xs px-2 md:px-3 py-1.5 rounded-full border flex items-center gap-1.5 transition-all ${showContextInfo
                 ? "bg-blue-950/60 border-blue-500 text-blue-300 shadow-md shadow-blue-500/10"
                 : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-neutral-200"
-              }`}
-            title="Context Window Status & Limits"
-          >
-            <ContextCircularGauge percentage={usagePercentage} size={20} strokeWidth={2.5} />
-            <span className="hidden sm:inline font-medium">Context:</span>
-            <span className="font-semibold text-white text-[11px] md:text-xs">~{totalTokens > 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens}t</span>
-            <span className="hidden sm:inline-block text-[10px] bg-emerald-950/80 border border-emerald-800/80 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-semibold">
-              {((100 - usagePercentage)).toFixed(0)}% free
-            </span>
-          </button>
+                }`}
+            >
+              <ContextCircularGauge percentage={usagePercentage} size={20} strokeWidth={2.5} />
+              <span className="hidden sm:inline font-medium">Context:</span>
+              <span className="font-semibold text-white text-[11px] md:text-xs">~{totalTokens > 1000 ? `${(totalTokens / 1000).toFixed(1)}k` : totalTokens}t</span>
+              <span className="hidden sm:inline-block text-[10px] bg-emerald-950/80 border border-emerald-800/80 text-emerald-300 px-2 py-0.5 rounded-full font-mono font-semibold">
+                {((100 - usagePercentage)).toFixed(0)}% free
+              </span>
+            </button>
+          </Tooltip>
 
           {/* Desktop Delete Button */}
-          <button
-            onClick={() => onDeleteChat(activeChat.id)}
-            className="hidden sm:flex p-1.5 md:p-2 text-neutral-400 hover:text-red-400 hover:bg-neutral-900 rounded-lg transition-colors shrink-0"
-            title="Delete Chat Session"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          <Tooltip content="Delete Chat Session" position="bottom" badgeIcon="🗑️">
+            <button
+              onClick={() => onDeleteChat(activeChat.id)}
+              className="hidden sm:flex p-1.5 md:p-2 text-neutral-400 hover:text-red-400 hover:bg-neutral-900 rounded-lg transition-colors shrink-0"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </Tooltip>
+
 
           {/* Mobile 3-Dots Options Button */}
           <div className="flex sm:hidden">
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
               className={`p-1.5 rounded-xl border transition-colors ${showMobileMenu
-                  ? "bg-neutral-800 border-neutral-700 text-white"
-                  : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white"
+                ? "bg-neutral-800 border-neutral-700 text-white"
+                : "bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white"
                 }`}
               title="More Options"
             >
@@ -1257,8 +1271,8 @@ export default function ChatView({
                           setShowMobileMenu(false);
                         }}
                         className={`py-2 px-2 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${chatMode === "turn"
-                            ? "bg-purple-950/90 text-purple-300 border border-purple-600/80 shadow"
-                            : "text-neutral-400 hover:text-white"
+                          ? "bg-purple-950/90 text-purple-300 border border-purple-600/80 shadow"
+                          : "text-neutral-400 hover:text-white"
                           }`}
                       >
                         <Sparkles className="w-3 h-3 text-purple-400 shrink-0" />
@@ -1272,8 +1286,8 @@ export default function ChatView({
                           setShowMobileMenu(false);
                         }}
                         className={`py-2 px-2 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${chatMode === "classic"
-                            ? "bg-blue-950/90 text-blue-300 border border-blue-600/80 shadow"
-                            : "text-neutral-400 hover:text-white"
+                          ? "bg-blue-950/90 text-blue-300 border border-blue-600/80 shadow"
+                          : "text-neutral-400 hover:text-white"
                           }`}
                       >
                         <Zap className="w-3 h-3 text-blue-400 shrink-0" />
@@ -1295,8 +1309,8 @@ export default function ChatView({
                           setShowMobileMenu(false);
                         }}
                         className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${responseLength === "veryshort"
-                            ? "bg-red-950/90 text-red-300 border border-red-600/80 shadow"
-                            : "text-neutral-400 hover:text-white"
+                          ? "bg-red-950/90 text-red-300 border border-red-600/80 shadow"
+                          : "text-neutral-400 hover:text-white"
                           }`}
                       >
                         <Zap className="w-3 h-3 text-red-400 shrink-0" />
@@ -1310,8 +1324,8 @@ export default function ChatView({
                           setShowMobileMenu(false);
                         }}
                         className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${responseLength === "short"
-                            ? "bg-amber-950/90 text-amber-300 border border-amber-600/80 shadow"
-                            : "text-neutral-400 hover:text-white"
+                          ? "bg-amber-950/90 text-amber-300 border border-amber-600/80 shadow"
+                          : "text-neutral-400 hover:text-white"
                           }`}
                       >
                         <Zap className="w-3 h-3 text-amber-400 shrink-0" />
@@ -1325,8 +1339,8 @@ export default function ChatView({
                           setShowMobileMenu(false);
                         }}
                         className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-1 transition-all ${responseLength === "normal"
-                            ? "bg-blue-950/90 text-blue-300 border border-blue-600/80 shadow"
-                            : "text-neutral-400 hover:text-white"
+                          ? "bg-blue-950/90 text-blue-300 border border-blue-600/80 shadow"
+                          : "text-neutral-400 hover:text-white"
                           }`}
                       >
                         <span>Normal</span>
@@ -1339,8 +1353,8 @@ export default function ChatView({
                           setShowMobileMenu(false);
                         }}
                         className={`py-2 px-1 rounded-lg text-[10px] font-semibold flex items-center justify-center gap-0.5 transition-all ${responseLength === "detailed"
-                            ? "bg-purple-950/90 text-purple-300 border border-purple-600/80 shadow"
-                            : "text-neutral-400 hover:text-white"
+                          ? "bg-purple-950/90 text-purple-300 border border-purple-600/80 shadow"
+                          : "text-neutral-400 hover:text-white"
                           }`}
                       >
                         <BookOpen className="w-3 h-3 text-purple-400 shrink-0" />
@@ -1579,8 +1593,8 @@ export default function ChatView({
                 setShowSnippetsMenu(!showSnippetsMenu);
               }}
               className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${showSnippetsMenu
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 rotate-45"
-                  : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 rotate-45"
+                : "text-neutral-400 hover:text-white hover:bg-neutral-800"
                 }`}
               title="Instant Paste Snippets & Menu (Right-click anywhere on screen to open)"
             >
@@ -1593,17 +1607,16 @@ export default function ChatView({
                 style={
                   contextMenuPos
                     ? {
-                        position: "fixed",
-                        left: `${contextMenuPos.x}px`,
-                        top: `${contextMenuPos.y}px`,
-                      }
+                      position: "fixed",
+                      left: `${contextMenuPos.x}px`,
+                      top: `${contextMenuPos.y}px`,
+                    }
                     : undefined
                 }
-                className={`${
-                  contextMenuPos
+                className={`${contextMenuPos
                     ? "z-[99999] shadow-2xl animate-in zoom-in-95 fade-in duration-150"
                     : "absolute bottom-12 left-0 z-50 animate-in slide-in-from-bottom-2 fade-in duration-150"
-                } w-80 sm:w-96 bg-neutral-900/95 backdrop-blur-xl border border-neutral-800 rounded-2xl p-4 max-w-[calc(100vw-32px)] ring-1 ring-white/10`}
+                  } w-80 sm:w-96 bg-neutral-900/95 backdrop-blur-xl border border-neutral-800 rounded-2xl p-4 max-w-[calc(100vw-32px)] ring-1 ring-white/10`}
               >
                 <div className="flex items-center justify-between pb-2.5 border-b border-neutral-800 mb-3">
                   <div className="flex items-center gap-1.5 text-white font-semibold text-sm">
@@ -1753,23 +1766,26 @@ export default function ChatView({
           />
 
           <div className="flex items-center gap-1 shrink-0 mb-1">
-            <button
-              type="button"
-              className="w-8 h-8 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors"
-              title="Voice Input"
-            >
-              <Mic className="w-4 h-4" />
-            </button>
+            <Tooltip content="Speech Voice Input" position="top" badgeIcon="🎙️">
+              <button
+                type="button"
+                className="w-8 h-8 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <Mic className="w-4 h-4" />
+              </button>
+            </Tooltip>
 
-            <button
-              type="submit"
-              disabled={!inputPrompt.trim() || loading}
-              className="w-8 h-8 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center transition-colors disabled:opacity-40 disabled:hover:bg-blue-600"
-              title="Send Message (Press Enter, Shift+Enter for new line)"
-            >
-              <Send className="w-4 h-4" />
-            </button>
+            <Tooltip content="Send Message (Enter)" position="top" badgeIcon="🚀">
+              <button
+                type="submit"
+                disabled={!inputPrompt.trim() || loading}
+                className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white flex items-center justify-center transition-all disabled:opacity-40 shadow-md cursor-pointer"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </Tooltip>
           </div>
+
         </form>
         <p className="text-[11px] text-center text-neutral-500 mt-2">
           {isMobileDevice ? (
