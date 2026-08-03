@@ -315,7 +315,7 @@ export default function HomeDiscoveryView({
     <div
       key={char.id}
       onClick={() => setSelectedCharPreview(char)}
-      className="group relative bg-neutral-900/80 backdrop-blur-xl border border-purple-500/20 hover:border-purple-500/60 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(168,85,247,0.3)] flex flex-col h-full touch-pan-y select-none md:active:scale-95"
+      className="group relative bg-neutral-900/80 backdrop-blur-xl border border-purple-500/20 hover:border-purple-500/60 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(168,85,247,0.3)] flex flex-col h-full touch-manipulation select-none md:active:scale-95"
     >
       <div className="relative h-28 sm:h-36 w-full bg-neutral-950 overflow-hidden shrink-0">
         <img
@@ -355,7 +355,7 @@ export default function HomeDiscoveryView({
   );
 
   return (
-    <div className="flex-1 strict-scroll-stream min-h-0 p-4 md:p-8 space-y-7 text-white font-sans relative touch-pan-y overscroll-contain">
+    <div className="flex-1 strict-scroll-stream min-h-0 p-4 md:p-8 space-y-7 text-white font-sans relative touch-manipulation overscroll-contain">
       
       {/* Standalone Search Bar & Create Persona Row */}
       <div className="flex flex-row items-center justify-between gap-2.5 md:gap-4">
@@ -521,7 +521,7 @@ export default function HomeDiscoveryView({
               No characters found matching filter.
             </div>
           ) : (
-            <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-pan-x touch-pan-y -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-manipulation -mx-4 px-4 sm:mx-0 sm:px-0">
               {filteredCharacters.map((char) => (
                 <div key={char.id} className="w-[155px] sm:w-auto shrink-0 snap-start">
                   <CharacterCard char={char} />
@@ -554,8 +554,8 @@ export default function HomeDiscoveryView({
                   </button>
                 </div>
 
-                {/* Compact Touch-Pan Horizontal Slider on Mobile */}
-                <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-pan-x touch-pan-y -mx-4 px-4 sm:mx-0 sm:px-0">
+                {/* Compact Touch-Manipulated Horizontal Slider on Mobile */}
+                <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-manipulation -mx-4 px-4 sm:mx-0 sm:px-0">
                   {categoryChars.map((char) => (
                     <div key={char.id} className="w-[155px] sm:w-auto shrink-0 snap-start">
                       <CharacterCard char={char} />
@@ -570,8 +570,8 @@ export default function HomeDiscoveryView({
 
       {/* CHARACTER PREVIEW & CONFIRMATION MODAL */}
       {selectedCharPreview && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[9999] flex items-center justify-center p-3.5 sm:p-4 overflow-hidden">
-          <div className="relative w-full max-w-xl bg-[#090d16] border border-purple-500/40 rounded-3xl overflow-hidden shadow-[0_0_90px_rgba(147,51,234,0.4)] my-auto flex flex-col h-[calc(100dvh-28px)] sm:h-auto sm:max-h-[85vh] animate-fadeIn font-sans">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[999999] flex items-center justify-center p-3.5 sm:p-4 pt-16 pb-20 md:pt-6 md:pb-6 overflow-hidden">
+          <div className="relative w-full max-w-xl bg-[#090d16] border border-purple-500/40 rounded-3xl overflow-hidden shadow-[0_0_90px_rgba(147,51,234,0.4)] my-auto flex flex-col h-auto max-h-[calc(100vh-140px)] md:max-h-[85vh] animate-fadeIn font-sans">
             
             {/* Modal Header Bar */}
             <div className="relative p-4 sm:p-5 bg-neutral-950/90 border-b border-neutral-800/80 shrink-0">
