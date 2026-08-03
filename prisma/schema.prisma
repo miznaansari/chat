@@ -11,6 +11,8 @@ model User {
   id                String           @id @default(cuid())
   name              String           @unique
   password          String
+  email             String?          @unique
+  authProvider      String           @default("credentials")
   language          String           @default("en")
   hasChosenLanguage Boolean          @default(false)
   sessions          UserSession[]
