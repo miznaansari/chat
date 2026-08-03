@@ -11,12 +11,15 @@ model User {
   id                String           @id @default(cuid())
   name              String           @unique
   password          String
+  email             String?          @unique
+  authProvider      String           @default("credentials")
   language          String           @default("en")
   hasChosenLanguage Boolean          @default(false)
   sessions          UserSession[]
   characters        ChatCharacter[]
   chats             ChatSession[]
   snippets          ReusablePhrase[]
+  aiUsages          AiUsage[]
   createdAt         DateTime         @default(now())
 }
 
@@ -120,4 +123,56 @@ model BlogPost {
   updatedAt   DateTime @updatedAt
 
   @@index([published, createdAt])
+}
+
+model AiUsage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      String   // YYYY-MM-DD format (e.g. 2026-08-03)
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+
+model Admin {
+  id        String         @id @default(cuid())
+  email     String         @unique
+  password  String
+  sessions  AdminSession[]
+  createdAt DateTime       @default(now())
+}
+
+model AdminSession {
+  id        String   @id @default(cuid())
+  adminId   String
+  admin     Admin    @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  token     String   @db.Text
+  isExpire  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([adminId, isExpire])
+}
+
+model DiscoverCharacter {
+  id          String   @id @default(cuid())
+  name        String
+  tagline     String
+  badge       String?
+  badgeBg     String?
+  avatar      String   @db.Text
+  category    String   @default("Your Sales") // "Your Sales", "Products", "Recent Tools"
+  filterGroup String   @default("assistants") // "sales", "products", "tools", "assistants", "fantasy", "group"
+  chatsCount  Int      @default(0)
+  rating      String   @default("4.9")
+  story       String   @db.Text
+  characters  Json     // Array of [{ name: string, persona: string }]
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isPublic, category])
 }

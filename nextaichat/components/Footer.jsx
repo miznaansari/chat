@@ -4,10 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import packageInfo from "@/package.json";
 import { Sparkles, ShieldCheck, FileText, LayoutDashboard, Cpu, Radio, Mail } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function Footer() {
+  const pathname = usePathname();
   const { t } = useLanguage();
+
+  if (pathname?.startsWith("/admin")) return null;
 
   return (
     <footer className="w-full max-w-full overflow-hidden border-t border-purple-500/20 bg-neutral-950/90 backdrop-blur-2xl py-12 px-4 md:px-8 relative z-20 shrink-0 mt-auto shadow-[0_-10px_40px_rgba(0,0,0,0.9)]">

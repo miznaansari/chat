@@ -15,6 +15,8 @@ export const metadata = {
 
 export default async function HomePage() {
   let blogs = [];
+  let characters = [];
+
   try {
     blogs = await prisma.blogPost.findMany({
       where: { published: true },
@@ -23,6 +25,22 @@ export default async function HomePage() {
     });
   } catch (e) {
     console.error("Home page blog fetch error:", e);
+  }
+
+  try {
+    const rawChars = await prisma.discoverCharacter.findMany({
+      where: { isPublic: true },
+      orderBy: { createdAt: "desc" },
+    });
+    
+    // Serialize Prisma objects safely for Client Component
+    characters = rawChars.map((c) => ({
+      ...c,
+      createdAt: c.createdAt.toISOString(),
+      updatedAt: c.updatedAt.toISOString(),
+    }));
+  } catch (e) {
+    console.error("Home page character fetch error:", e);
   }
 
   const faqSchema = {
@@ -48,63 +66,12 @@ export default async function HomePage() {
     ],
   };
 
-  const samplePersonas = [
-    {
-      name: "Prof. Ananya / Sarah",
-      role: "Subject & Exam Prep Tutor",
-      tag: "Exam Prep",
-      desc: "Simulates oral exams, tests knowledge with mock questions & explains any subject step-by-step.",
-      badgeColor: "bg-purple-950/90 border border-purple-700/60 text-purple-300",
-      avatar: "⚛️",
-    },
-    {
-      name: "Dr. Vikram / Marcus",
-      role: "Science & Math Master",
-      tag: "Problem Solver",
-      desc: "Master complex formulas, competitive exam strategies, and conceptual problem-solving step-by-step.",
-      badgeColor: "bg-blue-950/90 border border-blue-700/60 text-blue-300",
-      avatar: "🧮",
-    },
-    {
-      name: "Coach Priya / Emma",
-      role: "English Speaking & Fluency",
-      tag: "Spoken English",
-      desc: "Practice conversational English, gentle grammar corrections in parentheses & build speaking confidence.",
-      badgeColor: "bg-cyan-950/90 border border-cyan-700/60 text-cyan-300",
-      avatar: "🗣️",
-    },
-    {
-      name: "Coach Rohan / Alex",
-      role: "Fluency & Pronunciation Coach",
-      tag: "Interview Prep",
-      desc: "Improve interview speaking skills, professional English vocabulary & accent confidence.",
-      badgeColor: "bg-emerald-950/90 border border-emerald-700/60 text-emerald-300",
-      avatar: "💼",
-    },
-    {
-      name: "Mentor Diya / Maya",
-      role: "Calm Wellness & Anti-Depression",
-      tag: "Mental Wellness",
-      desc: "A compassionate, quiet space to share stress, manage anxiety, work through depression & find peace of mind.",
-      badgeColor: "bg-amber-950/90 border border-amber-700/60 text-amber-300",
-      avatar: "🧘",
-    },
-    {
-      name: "Mentor Kabir / Julian",
-      role: "Mindset & Stress Relief",
-      tag: "Habit & Reset",
-      desc: "Overcome burnout, stay focused, reframe low moods, and build positive resilient habits.",
-      badgeColor: "bg-rose-950/90 border border-rose-700/60 text-rose-300",
-      avatar: "⚡",
-    },
-  ];
-
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://app.nextaichat.online";
 
   return (
     <>
       <JsonLd data={faqSchema} />
-      <HomeClient blogs={blogs} samplePersonas={samplePersonas} appUrl={appUrl} />
+      <HomeClient blogs={blogs} characters={characters} appUrl={appUrl} />
     </>
   );
 }

@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation";
 import RequireUser from "@/lib/RequireUser";
 import prisma from "@/lib/prisma";
-import ClientChatPage from "./ClientChatPage";
+import AppRouteLayoutShell from "./AppRouteLayoutShell";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-export default async function Page() {
-  // Enforce authentication via RequireUser server utility
+export default async function RouteGroupLayout({ children }) {
   const user = await RequireUser();
 
   if (!user) {
@@ -29,8 +28,12 @@ export default async function Page() {
 
     initialChats = JSON.parse(JSON.stringify(chatSessions));
   } catch (err) {
-    console.error("Error fetching server-side initial chats:", err);
+    console.error("Error fetching initial chats for route layout:", err);
   }
 
-  return <ClientChatPage initialUser={user} initialChats={initialChats} />;
+  return (
+    <AppRouteLayoutShell initialUser={user} initialChats={initialChats}>
+      {children}
+    </AppRouteLayoutShell>
+  );
 }

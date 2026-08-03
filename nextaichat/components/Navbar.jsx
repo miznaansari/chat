@@ -12,6 +12,8 @@ export default function Navbar() {
   const { language, toggleLanguage, t } = useLanguage();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
+  if (pathname?.startsWith("/admin")) return null;
+
   const navLinks = [
     { name: "Home", href: "/" },
     { name: "Compare (vs Character.ai)", href: "/compare" },
@@ -21,8 +23,8 @@ export default function Navbar() {
 
   return (
     <>
-      {/* FIXED TOP NAVBAR HEADER */}
-      <header className="fixed top-0 left-0 right-0 z-[100] h-20 sm:h-24 border-b border-purple-500/20 px-4 sm:px-6 lg:px-10 bg-neutral-950/95 backdrop-blur-2xl shrink-0 shadow-[0_10px_30px_rgba(0,0,0,0.8)] w-full">
+      {/* STICKY TOP NAVBAR HEADER */}
+      <header className="sticky top-0 left-0 right-0 z-[100] h-20 sm:h-24 border-b border-purple-500/20 px-4 sm:px-6 lg:px-10 bg-neutral-950/95 backdrop-blur-2xl shrink-0 shadow-[0_10px_30px_rgba(0,0,0,0.8)] w-full">
         <div className="max-w-[1440px] mx-auto w-full h-full flex items-center justify-between">
           <div className="flex items-center gap-3 sm:gap-8">
             {/* Mobile Hamburger Drawer Toggle (Animated 3 Line to X Morph) */}

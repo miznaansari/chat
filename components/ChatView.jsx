@@ -1246,8 +1246,6 @@ export default function ChatView({
         const data = await res.json();
         onUpdateChat(data.chatSession);
         setShowStoryModal(false);
-      } else {
-        alert("Failed to update session details");
       }
     } catch (err) {
       alert("Failed to update session details: " + err.message);
@@ -1256,7 +1254,7 @@ export default function ChatView({
 
   if (!activeChat) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-6 text-center bg-transparent relative overflow-hidden">
+      <div className="flex-1 min-h-[75vh] flex flex-col items-center justify-center p-6 text-center bg-transparent relative overflow-hidden my-auto select-none">
         <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mb-6 border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
           <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none">
             <path
@@ -1280,16 +1278,16 @@ export default function ChatView({
           </svg>
         </div>
 
-        <h2 className="text-3xl font-extrabold tracking-tight text-white mb-2">
+        <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-2 text-center">
           Where should we start?
         </h2>
-        <p className="text-neutral-400 max-w-md text-sm mb-6">
+        <p className="text-neutral-400 max-w-md text-sm mb-6 text-center">
           Create a multi-character roleplay session to chat with multiple AI personas in a single response.
         </p>
 
         <button
           onClick={onOpenNewModal}
-          className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white font-semibold text-sm hover:opacity-95 transition-all flex items-center gap-2 shadow-[0_0_25px_rgba(147,51,234,0.4)] active:scale-95 cursor-pointer"
+          className="mx-auto px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white font-semibold text-sm hover:opacity-95 transition-all flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(147,51,234,0.4)] active:scale-95 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>New Multi-Character Chat</span>
@@ -1409,11 +1407,10 @@ export default function ChatView({
                       handleSetResponseLength(item.id);
                       setShowLengthDropdown(false);
                     }}
-                    className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                      responseLength === item.id
+                    className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${responseLength === item.id
                         ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
                         : "text-neutral-300 hover:bg-neutral-800 hover:text-white"
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-2">
                       <span>{item.icon}</span>
@@ -1453,8 +1450,8 @@ export default function ChatView({
                   setSelectedMsgIds(new Set());
                 }}
                 className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-semibold transition-all cursor-pointer ${isBatchSelectMessages
-                    ? "bg-purple-600 text-white border border-purple-400 shadow-md"
-                    : "bg-neutral-900 border border-neutral-800 text-purple-300 hover:text-white hover:bg-neutral-800"
+                  ? "bg-purple-600 text-white border border-purple-400 shadow-md"
+                  : "bg-neutral-900 border border-neutral-800 text-purple-300 hover:text-white hover:bg-neutral-800"
                   }`}
               >
                 <CheckSquare className="w-3.5 h-3.5" />
@@ -1722,7 +1719,7 @@ export default function ChatView({
             <span className="text-xs font-semibold text-neutral-400">Loading session messages...</span>
           </div>
         ) : messages.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center my-12">
+          <div className="min-h-[55vh] flex flex-col items-center justify-center text-center my-auto py-6 select-none">
             <div className="w-16 h-16 relative mb-6">
               <svg className="w-full h-full" viewBox="0 0 24 24" fill="none">
                 <path
@@ -1746,7 +1743,7 @@ export default function ChatView({
                 </defs>
               </svg>
             </div>
-            <h1 className="text-3xl font-normal text-white mb-2">
+            <h1 className="text-3xl font-extrabold text-white mb-2 text-center">
               Where should we start?
             </h1>
 
@@ -1887,246 +1884,246 @@ export default function ChatView({
       {/* Solid Fixed Bottom Input Capsule Bar Container */}
       <div className="solid-fixed-footer border-t border-neutral-800/80 p-3 md:px-8 w-full bg-neutral-950">
         <div className="max-w-4xl mx-auto w-full">
-        <div
-          className="relative bg-neutral-900 border border-neutral-800 rounded-2xl md:rounded-3xl p-2 px-3.5 shadow-2xl flex items-end gap-2.5 focus-within:border-neutral-700 transition-all"
-        >
-          {/* Quick Snippets & Instant Paste Button + Popover Menu */}
-          <div ref={snippetsMenuRef} className="relative shrink-0 mb-1">
-            <button
-              type="button"
-              onClick={() => {
-                setContextMenuPos(null);
-                setShowSnippetsMenu(!showSnippetsMenu);
-              }}
-              className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${showSnippetsMenu
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 rotate-45"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-800"
-                }`}
-              title="Instant Paste Snippets & Menu"
-            >
-              <Plus className="w-5 h-5 transition-transform" />
-            </button>
-
-            {/* Quick Snippets & Presets Popover Menu */}
-            {showSnippetsMenu && (
-              <div
-                style={
-                  contextMenuPos
-                    ? {
-                      position: "fixed",
-                      left: `${contextMenuPos.x}px`,
-                      top: `${contextMenuPos.y}px`,
-                    }
-                    : undefined
-                }
-                className={`${contextMenuPos
-                  ? "z-[99999] shadow-2xl animate-in zoom-in-95 fade-in duration-150"
-                  : "absolute bottom-12 left-0 z-50 animate-in slide-in-from-bottom-2 fade-in duration-150"
-                  } w-80 sm:w-96 bg-neutral-900/95 backdrop-blur-xl border border-neutral-800 rounded-2xl p-4 max-w-[calc(100vw-32px)] ring-1 ring-white/10`}
+          <div
+            className="relative bg-neutral-900 border border-neutral-800 rounded-2xl md:rounded-3xl p-2 px-3.5 shadow-2xl flex items-end gap-2.5 focus-within:border-neutral-700 transition-all"
+          >
+            {/* Quick Snippets & Instant Paste Button + Popover Menu */}
+            <div ref={snippetsMenuRef} className="relative shrink-0 self-center">
+              <button
+                type="button"
+                onClick={() => {
+                  setContextMenuPos(null);
+                  setShowSnippetsMenu(!showSnippetsMenu);
+                }}
+                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${showSnippetsMenu
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 rotate-45"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                  }`}
+                title="Instant Paste Snippets & Menu"
               >
-                <div className="flex items-center justify-between pb-2.5 border-b border-neutral-800 mb-3">
-                  <div className="flex items-center gap-1.5 text-white font-semibold text-sm">
-                    <Bookmark className="w-4 h-4 text-blue-400" />
-                    <span>Instant Paste & Actions</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setShowSnippetsMenu(false);
-                      setContextMenuPos(null);
-                    }}
-                    className="p-1 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                <Plus className="w-5 h-5 transition-transform" />
+              </button>
 
-                {/* Preset Quick Actions */}
-                <div className="grid grid-cols-2 gap-2 mb-3">
-                  <button
-                    type="button"
-                    onClick={() => handlePresetAction("story")}
-                    className="flex items-center gap-2 p-2 rounded-xl bg-purple-950/40 border border-purple-800/50 hover:bg-purple-900/60 text-purple-300 text-xs font-semibold transition-all text-left"
-                  >
-                    <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
-                    <span>Auto Story Prompt</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handlePresetAction("drama")}
-                    className="flex items-center gap-2 p-2 rounded-xl bg-amber-950/40 border border-amber-800/50 hover:bg-amber-900/60 text-amber-300 text-xs font-semibold transition-all text-left"
-                  >
-                    <MessageSquare className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Dramatic Twist</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handlePresetAction("continue")}
-                    className="flex items-center gap-2 p-2 rounded-xl bg-blue-950/40 border border-blue-800/50 hover:bg-blue-900/60 text-blue-300 text-xs font-semibold transition-all text-left"
-                  >
-                    <CornerDownLeft className="w-4 h-4 text-blue-400 shrink-0" />
-                    <span>Continue Scene</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handlePresetAction("group")}
-                    className="flex items-center gap-2 p-2 rounded-xl bg-emerald-950/40 border border-emerald-800/50 hover:bg-emerald-900/60 text-emerald-300 text-xs font-semibold transition-all text-left"
-                  >
-                    <Users className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>Group Debate</span>
-                  </button>
-                </div>
-
-                {/* Quick Character Speaker Chips */}
-                {sessionChars && sessionChars.length > 0 && (
-                  <div className="mb-3">
-                    <div className="text-[11px] font-semibold text-neutral-400 mb-1.5 uppercase tracking-wider">
-                      Speaker Tag Chips
+              {/* Quick Snippets & Presets Popover Menu */}
+              {showSnippetsMenu && (
+                <div
+                  style={
+                    contextMenuPos
+                      ? {
+                        position: "fixed",
+                        left: `${contextMenuPos.x}px`,
+                        top: `${contextMenuPos.y}px`,
+                      }
+                      : undefined
+                  }
+                  className={`${contextMenuPos
+                    ? "z-[99999] shadow-2xl animate-in zoom-in-95 fade-in duration-150"
+                    : "absolute bottom-12 left-0 z-50 animate-in slide-in-from-bottom-2 fade-in duration-150"
+                    } w-80 sm:w-96 bg-neutral-900/95 backdrop-blur-xl border border-neutral-800 rounded-2xl p-4 max-w-[calc(100vw-32px)] ring-1 ring-white/10`}
+                >
+                  <div className="flex items-center justify-between pb-2.5 border-b border-neutral-800 mb-3">
+                    <div className="flex items-center gap-1.5 text-white font-semibold text-sm">
+                      <Bookmark className="w-4 h-4 text-blue-400" />
+                      <span>Instant Paste & Actions</span>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
-                      {sessionChars.map((char) => {
-                        const styleClass = getCharStyle(char.name);
-                        return (
-                          <button
-                            key={char.id || char.name}
-                            type="button"
-                            onClick={() => handleInsertSnippet(`[${char.name}]: `)}
-                            className={`px-3 py-1 rounded-full border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 capitalize ${styleClass}`}
-                            title={`Insert [${char.name}]: into prompt`}
-                          >
-                            <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
-                            <span>{char.name}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowSnippetsMenu(false);
+                        setContextMenuPos(null);
+                      }}
+                      className="p-1 text-neutral-400 hover:text-white hover:bg-neutral-800 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
                   </div>
-                )}
 
-                {/* Custom Snippets Header */}
-                <div className="flex items-center justify-between py-1 mb-2">
-                  <span className="text-xs font-semibold text-neutral-400">My Saved Phrases</span>
-                  <button
-                    type="button"
-                    onClick={() => setShowAddSnippetInput(!showAddSnippetInput)}
-                    className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>{showAddSnippetInput ? "Cancel" : "Add Custom"}</span>
-                  </button>
-                </div>
+                  {/* Preset Quick Actions */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <button
+                      type="button"
+                      onClick={() => handlePresetAction("story")}
+                      className="flex items-center gap-2 p-2 rounded-xl bg-purple-950/40 border border-purple-800/50 hover:bg-purple-900/60 text-purple-300 text-xs font-semibold transition-all text-left"
+                    >
+                      <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+                      <span>Auto Story Prompt</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePresetAction("drama")}
+                      className="flex items-center gap-2 p-2 rounded-xl bg-amber-950/40 border border-amber-800/50 hover:bg-amber-900/60 text-amber-300 text-xs font-semibold transition-all text-left"
+                    >
+                      <MessageSquare className="w-4 h-4 text-amber-400 shrink-0" />
+                      <span>Dramatic Twist</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePresetAction("continue")}
+                      className="flex items-center gap-2 p-2 rounded-xl bg-blue-950/40 border border-blue-800/50 hover:bg-blue-900/60 text-blue-300 text-xs font-semibold transition-all text-left"
+                    >
+                      <CornerDownLeft className="w-4 h-4 text-blue-400 shrink-0" />
+                      <span>Continue Scene</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePresetAction("group")}
+                      className="flex items-center gap-2 p-2 rounded-xl bg-emerald-950/40 border border-emerald-800/50 hover:bg-emerald-900/60 text-emerald-300 text-xs font-semibold transition-all text-left"
+                    >
+                      <Users className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Group Debate</span>
+                    </button>
+                  </div>
 
-                {/* Snippets List Scroll Container */}
-                <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
-                  {/* Add Custom Snippet Inline Control */}
-                  {showAddSnippetInput && (
-                    <div className="flex items-center gap-1.5 p-1 bg-neutral-950 border border-neutral-800 rounded-xl mb-2">
-                      <input
-                        type="text"
-                        tabIndex={-1}
-                        placeholder="Type phrase or name..."
-                        value={newSnippetInput}
-                        onChange={(e) => setNewSnippetInput(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            handleAddSnippet(e);
-                          }
-                        }}
-                        className="flex-1 min-w-0 bg-transparent py-1 px-2 text-sm text-white placeholder-neutral-500 focus:outline-none"
-                        autoFocus
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddSnippet}
-                        disabled={!newSnippetInput.trim()}
-                        className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shrink-0 disabled:opacity-40"
-                      >
-                        Save
-                      </button>
+                  {/* Quick Character Speaker Chips */}
+                  {sessionChars && sessionChars.length > 0 && (
+                    <div className="mb-3">
+                      <div className="text-[11px] font-semibold text-neutral-400 mb-1.5 uppercase tracking-wider">
+                        Speaker Tag Chips
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {sessionChars.map((char) => {
+                          const styleClass = getCharStyle(char.name);
+                          return (
+                            <button
+                              key={char.id || char.name}
+                              type="button"
+                              onClick={() => handleInsertSnippet(`[${char.name}]: `)}
+                              className={`px-3 py-1 rounded-full border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 capitalize ${styleClass}`}
+                              title={`Insert [${char.name}]: into prompt`}
+                            >
+                              <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
+                              <span>{char.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
-                  {snippets.length === 0 && !showAddSnippetInput ? (
-                    <p className="text-xs text-neutral-500 italic py-2 text-center">
-                      No custom phrases added yet. Click <strong>+ Add Custom</strong> to save phrases or names!
-                    </p>
-                  ) : (
-                    snippets.map((snip, index) => {
-                      const text = typeof snip === "object" ? snip.text : snip;
-                      const key = typeof snip === "object" ? (snip.id || index) : index;
-                      return (
-                        <div
-                          key={key}
-                          onClick={() => handleInsertSnippet(text)}
-                          className="group flex items-center justify-between p-2.5 px-3 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800/60 cursor-pointer transition-colors text-sm text-neutral-200"
-                        >
-                          <span className="truncate pr-2 font-medium">{text}</span>
-                          <button
-                            type="button"
-                            onClick={(e) => {
+                  {/* Custom Snippets Header */}
+                  <div className="flex items-center justify-between py-1 mb-2">
+                    <span className="text-xs font-semibold text-neutral-400">My Saved Phrases</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowAddSnippetInput(!showAddSnippetInput)}
+                      className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{showAddSnippetInput ? "Cancel" : "Add Custom"}</span>
+                    </button>
+                  </div>
+
+                  {/* Snippets List Scroll Container */}
+                  <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1">
+                    {/* Add Custom Snippet Inline Control */}
+                    {showAddSnippetInput && (
+                      <div className="flex items-center gap-1.5 p-1 bg-neutral-950 border border-neutral-800 rounded-xl mb-2">
+                        <input
+                          type="text"
+                          tabIndex={-1}
+                          placeholder="Type phrase or name..."
+                          value={newSnippetInput}
+                          onChange={(e) => setNewSnippetInput(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
                               e.preventDefault();
                               e.stopPropagation();
-                              handleDeleteSnippet(snip, e);
-                            }}
-                            className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors shrink-0"
-                            title="Delete phrase"
+                              handleAddSnippet(e);
+                            }
+                          }}
+                          className="flex-1 min-w-0 bg-transparent py-1 px-2 text-sm text-white placeholder-neutral-500 focus:outline-none"
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAddSnippet}
+                          disabled={!newSnippetInput.trim()}
+                          className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shrink-0 disabled:opacity-40"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    )}
+
+                    {snippets.length === 0 && !showAddSnippetInput ? (
+                      <p className="text-xs text-neutral-500 italic py-2 text-center">
+                        No custom phrases added yet. Click <strong>+ Add Custom</strong> to save phrases or names!
+                      </p>
+                    ) : (
+                      snippets.map((snip, index) => {
+                        const text = typeof snip === "object" ? snip.text : snip;
+                        const key = typeof snip === "object" ? (snip.id || index) : index;
+                        return (
+                          <div
+                            key={key}
+                            onClick={() => handleInsertSnippet(text)}
+                            className="group flex items-center justify-between p-2.5 px-3 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-neutral-700 hover:bg-neutral-800/60 cursor-pointer transition-colors text-sm text-neutral-200"
                           >
-                            <Trash2 className="w-4 h-4 text-red-400" />
-                          </button>
-                        </div>
-                      );
-                    })
-                  )}
+                            <span className="truncate pr-2 font-medium">{text}</span>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeleteSnippet(snip, e);
+                              }}
+                              className="p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors shrink-0"
+                              title="Delete phrase"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-400" />
+                            </button>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
+            </div>
+
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={inputPrompt}
+              onChange={(e) => setInputPrompt(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={`Speak to ${sessionChars.map((c) => c.name).join(", ")}...`}
+              className="flex-1 bg-transparent text-base sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none max-h-40 min-h-[42px] py-2 leading-relaxed touch-manipulation cursor-text"
+              enterKeyHint="send"
+            />
+
+            <div className="flex items-center gap-1 shrink-0 mb-1">
+              <Tooltip content="Speech Voice Input" position="top" badgeIcon="🎙️">
+                <button
+                  type="button"
+                  className="w-8 h-8 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                >
+                  <Mic className="w-4 h-4" />
+                </button>
+              </Tooltip>
+
+              <Tooltip content="Send Message (Enter)" position="top" badgeIcon="🚀">
+                <button
+                  type="button"
+                  onClick={handleSendMessage}
+                  disabled={!inputPrompt.trim() || loading}
+                  className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white flex items-center justify-center transition-all disabled:opacity-40 shadow-md cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                </button>
+              </Tooltip>
+            </div>
+
+          </div>
+          <p className="text-[11px] text-center text-neutral-500 mt-2">
+            {isMobileDevice ? (
+              <span>Tap <strong>Send</strong> button to post message. <strong>Return</strong> key creates a new line.</span>
+            ) : (
+              <span>
+                Press <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Shift + Enter</kbd> for new line. Right-click or press <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">+</kbd> for quick actions.
+              </span>
             )}
-          </div>
-
-          <textarea
-            ref={textareaRef}
-            rows={1}
-            value={inputPrompt}
-            onChange={(e) => setInputPrompt(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={`Speak to ${sessionChars.map((c) => c.name).join(", ")}...`}
-            className="flex-1 bg-transparent text-base sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none max-h-40 min-h-[42px] py-2 leading-relaxed touch-manipulation cursor-text"
-            enterKeyHint="send"
-          />
-
-          <div className="flex items-center gap-1 shrink-0 mb-1">
-            <Tooltip content="Speech Voice Input" position="top" badgeIcon="🎙️">
-              <button
-                type="button"
-                className="w-8 h-8 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
-              >
-                <Mic className="w-4 h-4" />
-              </button>
-            </Tooltip>
-
-            <Tooltip content="Send Message (Enter)" position="top" badgeIcon="🚀">
-              <button
-                type="button"
-                onClick={handleSendMessage}
-                disabled={!inputPrompt.trim() || loading}
-                className="w-8 h-8 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-white flex items-center justify-center transition-all disabled:opacity-40 shadow-md cursor-pointer"
-              >
-                <Send className="w-4 h-4" />
-              </button>
-            </Tooltip>
-          </div>
-
-        </div>
-        <p className="text-[11px] text-center text-neutral-500 mt-2">
-          {isMobileDevice ? (
-            <span>Tap <strong>Send</strong> button to post message. <strong>Return</strong> key creates a new line.</span>
-          ) : (
-            <span>
-              Press <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Enter</kbd> to send, <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">Shift + Enter</kbd> for new line. Right-click or press <kbd className="px-1 py-0.5 bg-neutral-800 rounded text-neutral-400 font-mono text-[10px]">+</kbd> for quick actions.
-            </span>
-          )}
-        </p>
+          </p>
         </div>
       </div>
 

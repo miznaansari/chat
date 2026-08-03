@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Tooltip from "@/components/Tooltip";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Menu,
   Sparkles,
@@ -16,10 +17,11 @@ import {
   Settings,
   CheckSquare,
   Home,
-  FileText,
+  UserPlus,
   Compass,
   Heart,
   User,
+  History,
 } from "lucide-react";
 
 
@@ -32,14 +34,20 @@ export default function GeminiLayout({
   onSelectHome,
   onUpdateChat,
   onSelectChat,
-  onNewChat,
+  onNewChat = () => {},
   onDeleteChat,
   onBatchDeleteChats,
   onLogout,
   children,
 }) {
+  const pathname = usePathname();
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [selectedChatIds, setSelectedChatIds] = useState(new Set());
+
+  const isHomeActive = pathname === "/" && viewMode === "home";
+  const isAddCharActive = pathname === "/character/add";
+  const isHistoryActive = pathname === "/" && viewMode === "chat";
+  const isSettingActive = pathname === "/setting" || pathname === "/settings";
 
   const toggleSelectChat = (id) => {
     setSelectedChatIds((prev) => {
@@ -192,16 +200,14 @@ export default function GeminiLayout({
       {/* Mobile Backdrop Overlay (Always in DOM for instant rendering, smooth hardware transition) */}
       <div
         onClick={() => setMobileOpen(false)}
-        className={`fixed inset-0 bg-black/70 z-40 md:hidden transition-opacity duration-200 ease-out ${
-          mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-        }`}
+        className={`fixed inset-0 bg-black/70 z-40 md:hidden transition-opacity duration-200 ease-out ${mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+          }`}
       />
 
       {/* Sidebar Drawer */}
       <aside
-        className={`fixed md:relative inset-y-0 left-0 z-50 flex flex-col h-full bg-neutral-950/95 md:bg-neutral-950/40 md:backdrop-blur-xl border-r border-purple-500/20 transition-transform md:transition-[width,transform] duration-200 ease-out shrink-0 overscroll-none will-change-transform ${
-          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } ${sidebarOpen ? "w-72 md:w-72 shadow-2xl md:shadow-none" : "w-72 md:w-16"}`}
+        className={`fixed md:relative inset-y-0 left-0 z-50 flex flex-col h-full bg-neutral-950/95 md:bg-neutral-950/40 md:backdrop-blur-xl border-r border-purple-500/20 transition-transform md:transition-[width,transform] duration-200 ease-out shrink-0 overscroll-none will-change-transform ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          } ${sidebarOpen ? "w-72 md:w-72 shadow-2xl md:shadow-none" : "w-72 md:w-16"}`}
       >
 
 
@@ -246,11 +252,10 @@ export default function GeminiLayout({
                 if (onSelectHome) onSelectHome();
                 setMobileOpen(false);
               }}
-              className={`w-full font-medium py-2.5 px-3 rounded-xl flex items-center gap-3 justify-start transition-all duration-200 ease-out cursor-pointer touch-manipulation ${
-                viewMode === "home"
-                  ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white shadow-md font-bold border border-purple-400"
-                  : "bg-neutral-900/60 hover:bg-neutral-800 text-neutral-300 border border-neutral-800"
-              }`}
+              className={`w-full font-medium py-2.5 px-3 rounded-xl flex items-center gap-3 justify-start transition-all duration-200 ease-out cursor-pointer touch-manipulation ${viewMode === "home"
+                ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white shadow-md font-bold border border-purple-400"
+                : "bg-neutral-900/60 hover:bg-neutral-800 text-neutral-300 border border-neutral-800"
+                }`}
             >
               <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
               <span
@@ -304,11 +309,10 @@ export default function GeminiLayout({
                   setIsBatchMode(!isBatchMode);
                   setSelectedChatIds(new Set());
                 }}
-                className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
-                  isBatchMode
-                    ? "bg-purple-600 text-white border-purple-500 shadow-md"
-                    : "bg-purple-950/60 text-purple-300 border-purple-800/60 hover:bg-purple-900/80 hover:text-white"
-                }`}
+                className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 shrink-0 ${isBatchMode
+                  ? "bg-purple-600 text-white border-purple-500 shadow-md"
+                  : "bg-purple-950/60 text-purple-300 border-purple-800/60 hover:bg-purple-900/80 hover:text-white"
+                  }`}
                 title="Select chats for fast bulk deletion"
               >
                 <CheckSquare className="w-3.5 h-3.5" />
@@ -370,13 +374,12 @@ export default function GeminiLayout({
                       handleSelectChatMobile(chat.id);
                     }
                   }}
-                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors duration-150 ease-out justify-start touch-manipulation ${
-                    isSelected
-                      ? "bg-purple-900/80 border border-purple-600 text-white font-medium shadow-sm"
-                      : isActive
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors duration-150 ease-out justify-start touch-manipulation ${isSelected
+                    ? "bg-purple-900/80 border border-purple-600 text-white font-medium shadow-sm"
+                    : isActive
                       ? "bg-purple-950/60 border border-purple-800/60 text-white font-medium shadow-sm"
                       : "text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200"
-                  }`}
+                    }`}
                   title={chat.title}
                 >
                   {isBatchMode ? (
@@ -467,10 +470,7 @@ export default function GeminiLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
-        {/* Top Header Bar matching Gemini UI screenshot */}
-        <header className="solid-fixed-header !z-50 h-14 border-b border-purple-500/20 px-3 md:px-6 flex items-center justify-between bg-neutral-950 select-none">
-
-
+        <header className="solid-fixed-header !z-50 h-14 border-b border-purple-500/20 px-3 md:px-6 flex items-center justify-between bg-neutral-950 select-none relative">
           <div className="flex items-center gap-2">
             {/* Toggle Drawer button for Mobile Header */}
             <button
@@ -480,49 +480,49 @@ export default function GeminiLayout({
               <Menu className="w-5 h-5" />
             </button>
 
+            {/* Top Left: Gemini Model Dropdown (when chat is active) */}
+            {viewMode === "chat" && (
+              <div className="relative z-[9999]" ref={modelDropdownRef}>
+                <button
+                  onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
+                  className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-neutral-200 hover:bg-neutral-900 px-2.5 py-1.5 rounded-full transition-colors border border-neutral-800 md:border-transparent cursor-pointer touch-manipulation"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <span className="truncate max-w-[120px] sm:max-w-none">{activeModelName}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                </button>
 
+                {modelDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1.5 w-56 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl py-2 z-[99999] ring-1 ring-white/10">
+                    <button
+                      onClick={() => handleModelChange("gemini-3.5-flash-lite")}
+                      className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-blue-400" />
+                        <span className="font-semibold">3.5 Flash Lite</span>
+                      </div>
+                      {(activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel || activeModelName.includes("3.5")) && (
+                        <span className="w-2 h-2 rounded-full bg-blue-500 shadow-sm" />
+                      )}
+                    </button>
 
-            {/* Top Left Gemini Model Dropdown */}
-            <div className="relative z-[9999]" ref={modelDropdownRef}>
-              <button
-                onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-                className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-neutral-200 hover:bg-neutral-900 px-2.5 py-1.5 rounded-full transition-colors border border-neutral-800 md:border-transparent cursor-pointer touch-manipulation"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                <span className="truncate max-w-[120px] sm:max-w-none">{activeModelName}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-              </button>
-
-              {modelDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1.5 w-56 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl py-2 z-[99999] ring-1 ring-white/10">
-                  <button
-                    onClick={() => handleModelChange("gemini-3.5-flash-lite")}
-                    className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                      <span className="font-semibold">3.5 Flash Lite</span>
-                    </div>
-                    {(activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel || activeModelName.includes("3.5")) && (
-                      <span className="w-2 h-2 rounded-full bg-blue-500 shadow-sm" />
-                    )}
-                  </button>
-
-                  <button
-                    onClick={() => handleModelChange("gemini-3.1-flash-lite")}
-                    className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                      <span className="font-semibold">3.1 Flash Lite</span>
-                    </div>
-                    {activeChat?.selectedModel === "gemini-3.1-flash-lite" && (
-                      <span className="w-2 h-2 rounded-full bg-purple-500 shadow-sm" />
-                    )}
-                  </button>
-                </div>
-              )}
-            </div>
+                    <button
+                      onClick={() => handleModelChange("gemini-3.1-flash-lite")}
+                      className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                        <span className="font-semibold">3.1 Flash Lite</span>
+                      </div>
+                      {activeChat?.selectedModel === "gemini-3.1-flash-lite" && (
+                        <span className="w-2 h-2 rounded-full bg-purple-500 shadow-sm" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Desktop View Switcher Pills */}
             <div className="hidden sm:flex items-center bg-neutral-900/80 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
@@ -531,11 +531,10 @@ export default function GeminiLayout({
                 onClick={() => {
                   if (onSelectHome) onSelectHome();
                 }}
-                className={`px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold transition-all cursor-pointer ${
-                  viewMode === "home"
-                    ? "bg-purple-600 text-white shadow-sm font-bold"
-                    : "text-neutral-400 hover:text-white"
-                }`}
+                className={`px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold transition-all cursor-pointer ${viewMode === "home"
+                  ? "bg-purple-600 text-white shadow-sm font-bold"
+                  : "text-neutral-400 hover:text-white"
+                  }`}
               >
                 <Home className="w-3.5 h-3.5" />
                 <span>Discovery</span>
@@ -547,11 +546,10 @@ export default function GeminiLayout({
                   onClick={() => {
                     if (onSelectChat) onSelectChat(activeChat.id);
                   }}
-                  className={`px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold transition-all cursor-pointer ${
-                    viewMode === "chat"
-                      ? "bg-purple-600 text-white shadow-sm font-bold"
-                      : "text-neutral-400 hover:text-white"
-                  }`}
+                  className={`px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold transition-all cursor-pointer ${viewMode === "chat"
+                    ? "bg-purple-600 text-white shadow-sm font-bold"
+                    : "text-neutral-400 hover:text-white"
+                    }`}
                 >
                   <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
                   <span className="truncate max-w-[120px]">{activeChat.title}</span>
@@ -560,17 +558,21 @@ export default function GeminiLayout({
             </div>
           </div>
 
+          {/* Center Brand Logo (when chat is not active) */}
+          {viewMode !== "chat" && (
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-auto">
+              <Link href="/" className="flex items-center gap-2">
+                <img
+                  src="/logo-landspace.png"
+                  alt="NextAiChat Logo"
+                  className="h-20 sm:hidden w-auto object-contain"
+                />
+              </Link>
+            </div>
+          )}
+
           {/* Header Right Actions */}
           <div className="flex items-center gap-2">
-            <Tooltip content="Settings & Account" position="bottom" badgeIcon="⚙️">
-              <Link
-                href="/setting"
-                className="p-2 text-neutral-400 hover:text-white rounded-full hover:bg-neutral-900 transition-colors cursor-pointer"
-              >
-                <Settings className="w-4.5 h-4.5" />
-              </Link>
-            </Tooltip>
-
             {/* User Initial Circle in Header */}
             <div
               className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-inner shrink-0 cursor-default"
@@ -585,76 +587,73 @@ export default function GeminiLayout({
         {/* Content View */}
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">{children}</main>
 
-        {/* Unified Antigravity Bottom Mobile Navigation Bar */}
-        <div className="md:hidden h-16 bg-[#030712]/95 backdrop-blur-xl border-t border-purple-500/20 flex items-center justify-around px-2 z-40 select-none shrink-0">
-          {/* Home Tab */}
-          <button
-            type="button"
-            onClick={() => {
-              if (onSelectHome) onSelectHome();
-            }}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
-              viewMode === "home" ? "text-purple-400 font-bold" : "text-neutral-400 hover:text-white"
-            }`}
-          >
-            <Home className="w-5 h-5" />
-            <span className="text-[10px]">Home</span>
-          </button>
+        {/* Native Clean Mobile Bottom Navigation Bar (hidden when chat is active) */}
+        {viewMode !== "chat" && (
+          <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#030712]/95 backdrop-blur-xl border-t border-purple-500/20 select-none shrink-0 pointer-events-auto">
+            <div className="h-14 flex items-center justify-between w-full">
+              {/* Home Tab */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (onSelectHome) onSelectHome();
+                }}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors cursor-pointer ${
+                  isHomeActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <Home className="w-5 h-5 shrink-0" />
+                <span className="text-[10px] font-medium tracking-tight whitespace-nowrap">Home</span>
+              </button>
 
-          {/* Prompts Tab */}
-          <button
-            type="button"
-            onClick={() => onNewChat()}
-            className="flex flex-col items-center gap-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-          >
-            <FileText className="w-5 h-5" />
-            <span className="text-[10px]">Prompts</span>
-          </button>
+              {/* Add Character Tab */}
+              <Link
+                href="/character/add"
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors cursor-pointer ${
+                  isAddCharActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <UserPlus className="w-5 h-5 shrink-0" />
+                <span className="text-[10px] font-medium tracking-tight whitespace-nowrap">Add Char</span>
+              </Link>
 
-          {/* Center Floating Discover Round Button */}
-          <button
-            type="button"
-            onClick={() => {
-              if (onSelectHome) onSelectHome();
-            }}
-            className="w-12 h-12 -mt-6 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-purple-600/40 border-2 border-[#030712] hover:scale-105 active:scale-95 transition-all cursor-pointer"
-            title="Discover AI Characters"
-          >
-            <Compass className="w-6 h-6 animate-spin-slow" />
-          </button>
+              {/* History / Chats Tab */}
+              <button
+                type="button"
+                onClick={() => {
+                  if (chats.length > 0 && onSelectChat) {
+                    onSelectChat(chats[0].id);
+                  } else {
+                    onNewChat();
+                  }
+                }}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors relative cursor-pointer ${
+                  isHistoryActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <div className="relative inline-flex items-center justify-center">
+                  <History className="w-5 h-5 shrink-0" />
+                  {chats.length > 0 && (
+                    <span className="absolute -top-1 -right-2.5 w-3.5 h-3.5 rounded-full bg-purple-600 text-white font-bold text-[9px] flex items-center justify-center">
+                      {chats.length}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] font-medium tracking-tight whitespace-nowrap">History</span>
+              </button>
 
-          {/* Favorites / Chats Tab */}
-          <button
-            type="button"
-            onClick={() => {
-              if (chats.length > 0 && onSelectChat) {
-                onSelectChat(chats[0].id);
-              } else {
-                onNewChat();
-              }
-            }}
-            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors relative ${
-              viewMode === "chat" ? "text-purple-400 font-bold" : "text-neutral-400 hover:text-white"
-            }`}
-          >
-            <Heart className="w-5 h-5" />
-            <span className="text-[10px]">Favorites</span>
-            {chats.length > 0 && (
-              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-purple-600 text-white font-bold text-[9px] flex items-center justify-center">
-                {chats.length}
-              </span>
-            )}
-          </button>
-
-          {/* Profile Tab */}
-          <Link
-            href="/setting"
-            className="flex flex-col items-center gap-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-          >
-            <User className="w-5 h-5" />
-            <span className="text-[10px]">Profile</span>
-          </Link>
-        </div>
+              {/* Setting Tab */}
+              <Link
+                href="/setting"
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors cursor-pointer ${
+                  isSettingActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <Settings className="w-5 h-5 shrink-0" />
+                <span className="text-[10px] font-medium tracking-tight whitespace-nowrap">Setting</span>
+              </Link>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
