@@ -426,7 +426,7 @@ export default function GeminiLayout({
         </div>
 
         {/* User Profile Footer */}
-        <div className="p-3 border-t border-neutral-800/80 shrink-0">
+        <div className="p-3 pb-16 md:pb-3 border-t border-neutral-800/80 shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 overflow-hidden">
 
@@ -434,7 +434,7 @@ export default function GeminiLayout({
                 {user?.name?.[0]?.toUpperCase() || "U"}
               </div>
 
-              <div className={`min-w-0 transition-[opacity,max-width] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[140px]"}`}>
+              <div className={`min-w-0 transition-[opacity,max-width] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "max-md:opacity-100 md:opacity-0 md:max-w-0 md:pointer-events-none" : "opacity-100 max-w-[140px]"}`}>
                 <div className="text-xs font-semibold text-white truncate">
                   {user?.name || "User"}
                 </div>
@@ -443,19 +443,15 @@ export default function GeminiLayout({
             </div>
 
             <div className="flex items-center gap-1">
-              <Tooltip content="Settings & Account" position="top" badgeIcon="⚙️">
-                <Link
-                  href="/setting"
-                  className={`p-1.5 text-neutral-400 hover:text-purple-400 hover:bg-neutral-800 rounded-lg transition-[opacity,max-width,padding,colors] duration-200 ease-out flex items-center justify-center ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
-                >
-                  <Settings className="w-4 h-4" />
-                </Link>
-              </Tooltip>
-
               <Tooltip content="Sign Out Account" position="right" badgeIcon="🔒">
                 <button
-                  onClick={onLogout}
-                  className={`p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-[opacity,max-width,padding,colors] duration-200 ease-out ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    if (onLogout) onLogout();
+                  }}
+                  className={`p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors flex items-center justify-center cursor-pointer ${!sidebarOpen ? "max-md:opacity-100 md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "opacity-100 max-w-[40px]"}`}
+                  title="Sign Out Account"
                 >
                   <LogOut className="w-4 h-4" />
                 </button>

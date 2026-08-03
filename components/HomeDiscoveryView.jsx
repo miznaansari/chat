@@ -357,37 +357,39 @@ export default function HomeDiscoveryView({
   return (
     <div className="flex-1 strict-scroll-stream min-h-0 p-4 md:p-8 space-y-7 text-white font-sans relative">
       
-      {/* Top Search & Filter Header */}
-      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 bg-neutral-900/70 backdrop-blur-2xl border border-purple-500/20 p-3 md:px-5 rounded-2xl md:rounded-3xl shadow-xl">
-        <div className="flex items-center gap-3 flex-1 bg-neutral-950/80 border border-neutral-800 focus-within:border-purple-500/60 p-2 px-3.5 rounded-xl md:rounded-2xl transition-all">
+      {/* Standalone Search Bar & Create Persona Row */}
+      <div className="flex flex-row items-center justify-between gap-2.5 md:gap-4">
+        {/* Standalone Floating Search Capsule */}
+        <div className="flex items-center gap-2.5 flex-1 min-w-0 bg-neutral-900/80 backdrop-blur-xl border border-neutral-800/90 focus-within:border-purple-500/70 p-2.5 px-4 rounded-2xl md:rounded-3xl shadow-lg transition-all">
           <Search className="w-4 h-4 text-purple-400 shrink-0" />
           <input
             type="text"
-            placeholder="Search characters, scenarios, personas or group debates..."
+            placeholder="Search characters or personas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-transparent text-xs md:text-sm text-white placeholder-neutral-500 focus:outline-none"
+            className="w-full min-w-0 bg-transparent text-xs md:text-sm text-white placeholder-neutral-500 focus:outline-none truncate"
           />
           {searchQuery && (
             <button
+              type="button"
               onClick={() => setSearchQuery("")}
-              className="text-xs text-purple-400 hover:text-purple-300 font-semibold shrink-0 cursor-pointer"
+              className="text-[11px] text-purple-400 hover:text-purple-300 font-semibold shrink-0 cursor-pointer"
             >
               Clear
             </button>
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            type="button"
-            onClick={onOpenNewModal}
-            className="px-4 py-2 rounded-xl md:rounded-2xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-purple-600/30 hover:opacity-95 active:scale-95 transition-all cursor-pointer"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create Persona</span>
-          </button>
-        </div>
+        {/* Create Persona Button */}
+        <button
+          type="button"
+          onClick={onOpenNewModal}
+          className="shrink-0 px-4 py-2.5 rounded-2xl md:rounded-3xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-purple-600/30 hover:opacity-95 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4 shrink-0" />
+          <span className="hidden sm:inline">Create Persona</span>
+          <span className="sm:hidden">Create</span>
+        </button>
       </div>
 
       {/* Dynamic Category Navigation Chips */}
