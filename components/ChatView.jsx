@@ -1964,6 +1964,32 @@ export default function ChatView({
                   </button>
                 </div>
 
+                {/* Quick Character Speaker Chips */}
+                {sessionChars && sessionChars.length > 0 && (
+                  <div className="mb-3">
+                    <div className="text-[11px] font-semibold text-neutral-400 mb-1.5 uppercase tracking-wider">
+                      Speaker Tag Chips
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {sessionChars.map((char) => {
+                        const styleClass = getCharStyle(char.name);
+                        return (
+                          <button
+                            key={char.id || char.name}
+                            type="button"
+                            onClick={() => handleInsertSnippet(`[${char.name}]: `)}
+                            className={`px-3 py-1 rounded-full border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-105 active:scale-95 capitalize ${styleClass}`}
+                            title={`Insert [${char.name}]: into prompt`}
+                          >
+                            <span className="w-2 h-2 rounded-full bg-current animate-pulse" />
+                            <span>{char.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Custom Snippets Header */}
                 <div className="flex items-center justify-between py-1 mb-2">
                   <span className="text-xs font-semibold text-neutral-400">My Saved Phrases</span>
