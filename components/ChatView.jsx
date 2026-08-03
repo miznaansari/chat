@@ -711,13 +711,13 @@ export default function ChatView({
     messagesEndRef.current?.scrollIntoView({ behavior });
   };
 
-  // Auto-scroll to bottom ONLY when a new prompt is sent or initially loaded
+  // Auto-scroll to bottom when new messages arrive or when a character starts typing
   useEffect(() => {
-    if (messages.length === 0) return;
-    if (!userScrolledUp.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length === 0 && !loading) return;
+    if (!userScrolledUp.current && chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-  }, [messages.length]);
+  }, [messages.length, loading, typingCharacter]);
 
   // Auto-expand textarea height as user types
   useEffect(() => {
