@@ -434,7 +434,7 @@ export default function GeminiLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         {/* Top Header Bar matching Gemini UI screenshot */}
-        <header className="solid-fixed-header h-14 border-b border-purple-500/20 px-3 md:px-6 flex items-center justify-between bg-neutral-950 select-none">
+        <header className="solid-fixed-header !z-50 h-14 border-b border-purple-500/20 px-3 md:px-6 flex items-center justify-between bg-neutral-950 select-none">
 
 
           <div className="flex items-center gap-2">
@@ -449,7 +449,7 @@ export default function GeminiLayout({
 
 
             {/* Top Left Gemini Model Dropdown */}
-            <div className="relative z-50" ref={modelDropdownRef}>
+            <div className="relative z-[9999]" ref={modelDropdownRef}>
               <button
                 onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
                 className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-neutral-200 hover:bg-neutral-900 px-2.5 py-1.5 rounded-full transition-colors border border-neutral-800 md:border-transparent cursor-pointer touch-manipulation"
@@ -460,7 +460,7 @@ export default function GeminiLayout({
               </button>
 
               {modelDropdownOpen && (
-                <div className="absolute top-full left-0 mt-1.5 w-56 bg-neutral-900/95 backdrop-blur-xl border border-neutral-800 rounded-2xl shadow-2xl py-2 z-[9999] ring-1 ring-white/10">
+                <div className="absolute top-full left-0 mt-1.5 w-56 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl py-2 z-[99999] ring-1 ring-white/10">
                   <button
                     onClick={() => handleModelChange("gemini-3.5-flash-lite")}
                     className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
