@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import PublicNavbar from "@/components/PublicNavbar";
 import {
   Sparkles,
   Mail,
@@ -72,36 +73,8 @@ export default function ContactPage() {
       <div className="fixed top-[-10%] left-[-10%] w-[550px] h-[550px] bg-purple-600/20 rounded-full blur-[130px] pointer-events-none" />
       <div className="fixed bottom-[-10%] right-[-10%] w-[550px] h-[550px] bg-blue-600/20 rounded-full blur-[130px] pointer-events-none" />
 
-      {/* Header (Shrink-0) */}
-      <header className="shrink-0 z-50 backdrop-blur-md bg-neutral-950/80 border-b border-neutral-800/80 px-6 py-3">
-        <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <Link
-            href="/login"
-            className="flex items-center gap-2 text-xs sm:text-sm text-neutral-400 hover:text-white transition-colors group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span>Back to Login</span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-purple-500 via-indigo-500 to-blue-500 flex items-center justify-center text-white shadow-lg">
-              <Sparkles className="w-3.5 h-3.5 fill-current" />
-            </div>
-            <span className="font-semibold text-sm tracking-tight text-white">Gemini Chat</span>
-          </div>
-
-          <div className="flex items-center gap-4 text-xs font-medium">
-            <Link href="/privacy" className="text-neutral-400 hover:text-white transition-colors flex items-center gap-1">
-              <Shield className="w-3.5 h-3.5 text-purple-400" />
-              <span>Privacy</span>
-            </Link>
-            <Link href="/terms" className="text-neutral-400 hover:text-white transition-colors flex items-center gap-1">
-              <FileText className="w-3.5 h-3.5 text-blue-400" />
-              <span>Terms</span>
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Pro Shared Public Navbar */}
+      <PublicNavbar activePage="contact" />
 
       {/* Main Split Content Container (Flex-1 & Smooth Internal Scroll) */}
       <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-4 flex items-start lg:items-center justify-center min-h-0 relative z-10 overflow-y-auto">
@@ -120,7 +93,7 @@ export default function ContactPage() {
                 Let's Build Better <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400">AI Experiences</span>
               </h1>
               <p className="text-neutral-400 text-xs sm:text-sm mt-2 leading-relaxed">
-                Have questions about multi-character roleplay, custom character personas, or bug reports? Drop us a message and our team will get back to you!
+                Have questions about NextAiChat's multi-character roleplay, custom AI tutors, or bug reports? Drop us a message and our team will get back to you!
               </p>
             </div>
 

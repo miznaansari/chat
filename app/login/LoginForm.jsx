@@ -191,14 +191,10 @@ export default function LoginForm() {
   return (
     <div className="min-h-dvh h-auto lg:h-[100dvh] w-full max-w-full bg-[#030712] text-neutral-100 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden relative font-sans selection:bg-purple-500 selection:text-white bg-antigravity-grid">
       {/* ANTIGRAVITY FLOATING ORBS & ORBITAL RINGS */}
-      <div className="fixed top-[-10%] left-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-purple-900/30 via-indigo-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
-      <div className="fixed bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-blue-900/30 via-cyan-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
+      <div className="fixed top-[-10%] left-[-5%] w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-gradient-to-tr from-purple-900/30 via-indigo-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
+      <div className="fixed bottom-[-10%] right-[-5%] w-[400px] sm:w-[600px] h-[400px] sm:h-[600px] bg-gradient-to-tr from-blue-900/30 via-cyan-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
 
-      {/* Floating Physics Particles */}
-      <div className="fixed top-1/4 left-10 w-24 h-24 rounded-full border border-purple-500/20 bg-purple-500/5 backdrop-blur-sm animate-float-slow pointer-events-none hidden md:block z-0" />
-      <div className="fixed bottom-1/4 right-12 w-32 h-32 rounded-full border border-cyan-500/20 bg-cyan-500/5 backdrop-blur-sm animate-float-reverse pointer-events-none hidden md:block z-0" />
-
-      {/* Orbit Rings Centered */}
+      {/* Orbit Rings Centered (Desktop Only) */}
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] rounded-full border border-neutral-800/40 animate-orbit pointer-events-none hidden lg:block z-0">
         <div className="absolute top-0 left-1/2 w-3 h-3 bg-purple-500 rounded-full shadow-[0_0_15px_#a855f7]" />
       </div>
@@ -206,7 +202,7 @@ export default function LoginForm() {
         <div className="absolute bottom-0 right-1/2 w-2.5 h-2.5 bg-cyan-400 rounded-full shadow-[0_0_15px_#22d3ee]" />
       </div>
 
-      {/* ================= SIDE 1: HERO & BRAND SHOWCASE ================= */}
+      {/* ================= SIDE 1: HERO & BRAND SHOWCASE (Desktop) ================= */}
       <div className="hidden lg:flex w-1/2 flex-col justify-between p-8 xl:p-12 relative z-10 border-r border-neutral-800/40 bg-neutral-950/30 backdrop-blur-md">
         {/* Top Brand Header */}
         <div className="flex items-center gap-3">
@@ -264,19 +260,31 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {/* ================= SIDE 2: AUTH / ONBOARDING STEPPER ================= */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:p-12 relative z-10">
-        
+      {/* ================= SIDE 2: AUTH / ONBOARDING STEPPER (Mobile & Desktop) ================= */}
+      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-4 sm:p-8 lg:p-12 relative z-10 my-auto min-h-dvh lg:min-h-0">
+
+        {/* Mobile Top Brand Header */}
+        <div className="lg:hidden w-full max-w-md flex items-center justify-between mb-6 pt-2">
+          <Link href="/" className="inline-block">
+            <img
+              src="/logo-landspace.png"
+              alt="NextAiChat Logo"
+              className="h-20 w-auto object-contain drop-shadow-[0_0_12px_rgba(147,51,234,0.4)]"
+            />
+          </Link>
+
+        </div>
+
         {/* STEP 1: AUTHENTICATION FORM (LOGIN / REGISTER) */}
         {step === "auth" && (
-          <div className="w-full max-w-md space-y-6 cyber-glass-card p-6 sm:p-8 rounded-3xl border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.2)]">
-            
+          <div className="w-full max-w-md space-y-5 sm:space-y-6 cyber-glass-card p-5 sm:p-8 rounded-2xl sm:rounded-3xl border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.2)] my-auto">
+
             {/* Header Title */}
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+            <div className="text-center space-y-1.5">
+              <h2 className="text-xl sm:text-3xl font-black text-white tracking-tight">
                 {isRegister ? "Create Account" : "Welcome Back"}
               </h2>
-              <p className="text-xs text-neutral-400 max-w-xs mx-auto">
+              <p className="text-xs text-neutral-400 max-w-xs mx-auto leading-relaxed">
                 {isRegister
                   ? "Start interactive AI roleplays for study, education & fun."
                   : "Sign in to jump back into roleplay study & fun sessions."}
@@ -284,18 +292,17 @@ export default function LoginForm() {
             </div>
 
             {/* Mode Switcher Tabs */}
-            <div className="grid grid-cols-2 gap-1 p-1 bg-neutral-900/80 rounded-2xl border border-neutral-800">
+            <div className="grid grid-cols-2 gap-1 p-1 bg-neutral-950/90 rounded-xl sm:rounded-2xl border border-neutral-800/80">
               <button
                 type="button"
                 onClick={() => {
                   setIsRegister(false);
                   setError("");
                 }}
-                className={`py-2 text-xs font-extrabold rounded-xl transition-all ${
-                  !isRegister
-                    ? "bg-purple-600 text-white shadow-md"
-                    : "text-neutral-400 hover:text-white"
-                }`}
+                className={`py-2 sm:py-2.5 text-xs font-extrabold rounded-lg sm:rounded-xl transition-all cursor-pointer ${!isRegister
+                  ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
+                  : "text-neutral-400 hover:text-white"
+                  }`}
               >
                 Sign In
               </button>
@@ -305,11 +312,10 @@ export default function LoginForm() {
                   setIsRegister(true);
                   setError("");
                 }}
-                className={`py-2 text-xs font-extrabold rounded-xl transition-all ${
-                  isRegister
-                    ? "bg-purple-600 text-white shadow-md"
-                    : "text-neutral-400 hover:text-white"
-                }`}
+                className={`py-2 sm:py-2.5 text-xs font-extrabold rounded-lg sm:rounded-xl transition-all cursor-pointer ${isRegister
+                  ? "bg-purple-600 text-white shadow-md shadow-purple-600/30"
+                  : "text-neutral-400 hover:text-white"
+                  }`}
               >
                 Create Account
               </button>
@@ -414,6 +420,25 @@ export default function LoginForm() {
                 )}
               </button>
             </form>
+
+            {/* Terms & Privacy Policy Notice */}
+            <p className="text-[11px] text-center text-neutral-400 pt-2 leading-relaxed border-t border-neutral-800/60">
+              By continuing, you agree to NextAiChat's{" "}
+              <Link
+                href="/terms"
+                className="text-purple-400 hover:text-purple-300 font-semibold underline underline-offset-2 transition-colors"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                className="text-purple-400 hover:text-purple-300 font-semibold underline underline-offset-2 transition-colors"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
           </div>
         )}
 
@@ -483,7 +508,7 @@ export default function LoginForm() {
         {/* STEP 3: GEN-Z ANIMATED AGENT INITIALIZATION SCREEN */}
         {step === "generating" && (
           <div className="w-full max-w-md space-y-6 cyber-glass-card p-6 sm:p-8 rounded-3xl border-purple-500/50 shadow-[0_0_80px_rgba(147,51,234,0.4)] animate-in fade-in duration-300 text-center">
-            
+
             {/* Pulsing Central Agent Orb */}
             <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
               <div className="absolute inset-0 bg-gradient-to-tr from-purple-600 to-cyan-500 rounded-full animate-ping opacity-30" />
@@ -523,11 +548,10 @@ export default function LoginForm() {
                 return (
                   <div
                     key={idx}
-                    className={`p-2.5 rounded-xl border flex items-center justify-between transition-all duration-300 ${
-                      isReady
-                        ? "bg-purple-950/70 border-purple-500/50 text-white shadow-sm"
-                        : "bg-neutral-900/40 border-neutral-800 text-neutral-500 opacity-60"
-                    }`}
+                    className={`p-2.5 rounded-xl border flex items-center justify-between transition-all duration-300 ${isReady
+                      ? "bg-purple-950/70 border-purple-500/50 text-white shadow-sm"
+                      : "bg-neutral-900/40 border-neutral-800 text-neutral-500 opacity-60"
+                      }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <span className="text-lg">{agent.icon}</span>
@@ -553,10 +577,23 @@ export default function LoginForm() {
                 );
               })}
             </div>
-
           </div>
         )}
 
+        {/* Mobile & Desktop Footer Links */}
+        <div className="flex items-center justify-center gap-3 text-xs text-neutral-500 pt-4 pb-2">
+          <Link href="/privacy" className="hover:text-purple-300 transition-colors">
+            Privacy Policy
+          </Link>
+          <span>•</span>
+          <Link href="/terms" className="hover:text-purple-300 transition-colors">
+            Terms of Service
+          </Link>
+          <span>•</span>
+          <Link href="/contact" className="hover:text-purple-300 transition-colors">
+            Contact Support
+          </Link>
+        </div>
       </div>
     </div>
   );

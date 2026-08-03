@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Sparkles, Scale, AlertTriangle, ShieldCheck, HelpCircle, ArrowLeft, Mail } from "lucide-react";
+import { Sparkles, Scale, AlertTriangle, ShieldCheck, HelpCircle, Mail } from "lucide-react";
+import PublicNavbar from "@/components/PublicNavbar";
 
 export const metadata = {
-  title: "Terms of Service | Gemini AI Roleplay",
+  title: "Terms of Service | NextAiChat",
   description: "Terms and conditions governing the use of our multi-character AI roleplay platform.",
 };
 
@@ -13,34 +14,8 @@ export default function TermsPage() {
       <div className="fixed top-0 right-1/4 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 left-1/4 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Fixed Sticky Header (Shrink-0) */}
-      <header className="shrink-0 z-50 backdrop-blur-md bg-neutral-950/85 border-b border-neutral-800/80 px-6 py-3.5">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <Link
-            href="/login"
-            className="flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span>Back to Login</span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white shadow-lg">
-              <Sparkles className="w-4 h-4 fill-current" />
-            </div>
-            <span className="font-semibold tracking-tight text-white">Gemini Chat</span>
-          </div>
-
-          <div className="flex items-center gap-4 text-xs font-medium">
-            <Link href="/privacy" className="text-neutral-400 hover:text-white transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/contact" className="text-blue-400 hover:text-blue-300 transition-colors">
-              Contact Support
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Pro Shared Public Navbar */}
+      <PublicNavbar activePage="terms" />
 
       {/* Main Content (Flex-1 & Scrollable) */}
       <main className="flex-1 w-full overflow-y-auto px-6 py-8 sm:py-12 relative z-10">
@@ -66,11 +41,11 @@ export default function TermsPage() {
                 <h2 className="text-base sm:text-lg font-bold text-white">1. Nature of AI Roleplay Services</h2>
               </div>
               <p className="mb-3 text-xs sm:text-sm">
-                Gemini Chat is an interactive multi-character roleplay platform powered by Generative AI:
+                NextAiChat is an interactive multi-character roleplay, study tutor, and conversational platform powered by Generative AI:
               </p>
               <ul className="list-disc list-inside space-y-2 text-neutral-400 text-xs sm:text-sm pl-2">
                 <li>All dialogue, character responses, and narratives are generated automatically by AI language models.</li>
-                <li>Responses do not represent the views, beliefs, or advice of the platform operators.</li>
+                <li>Responses do not represent the views, beliefs, or advice of NextAiChat operators.</li>
                 <li><strong className="text-neutral-200">No Professional Advice:</strong> Character dialogue must not be relied upon for medical, psychological, legal, or financial advice.</li>
               </ul>
             </section>
@@ -82,11 +57,11 @@ export default function TermsPage() {
                 <h2 className="text-base sm:text-lg font-bold text-white">2. User-Generated Characters & Intellectual Property</h2>
               </div>
               <p className="mb-3 text-xs sm:text-sm">
-                Users are solely responsible for custom characters, stories, and prompt inputs created on the platform:
+                Users are solely responsible for custom characters, stories, and prompt inputs created on NextAiChat:
               </p>
               <ul className="list-disc list-inside space-y-2 text-neutral-400 text-xs sm:text-sm pl-2">
                 <li><strong className="text-neutral-200">Respect Third-Party IP:</strong> You agree not to create characters, upload avatars, or share content that infringes upon third-party trademarks, copyrights, or rights of publicity.</li>
-                <li><strong className="text-neutral-200">DMCA Takedowns:</strong> If you believe content hosted on our service infringes your copyright, submit a DMCA notice via our <Link href="/contact" className="text-blue-400 underline">Contact Form</Link>.</li>
+                <li><strong className="text-neutral-200">DMCA Takedowns:</strong> If you believe content hosted on NextAiChat infringes your copyright, submit a DMCA notice via our <Link href="/contact" className="text-blue-400 underline">Contact Desk</Link>.</li>
               </ul>
             </section>
 
@@ -97,7 +72,7 @@ export default function TermsPage() {
                 <h2 className="text-base sm:text-lg font-bold text-white">3. Prohibited Conduct & Content Rules</h2>
               </div>
               <p className="mb-3 text-xs sm:text-sm">
-                You agree not to use the platform to generate, promote, or facilitate:
+                You agree not to use NextAiChat to generate, promote, or facilitate:
               </p>
               <ul className="list-disc list-inside space-y-2 text-neutral-400 text-xs sm:text-sm pl-2">
                 <li>Hate speech, harassment, severe violence, or self-harm encouragement.</li>
@@ -113,7 +88,7 @@ export default function TermsPage() {
                 <h2 className="text-base sm:text-lg font-bold text-white">4. Limitation of Liability</h2>
               </div>
               <p className="text-neutral-400 text-xs sm:text-sm">
-                The service is provided "AS IS" without warranties of any kind. Under no circumstances shall the platform operators be liable for indirect, incidental, or consequential damages resulting from AI responses or service interruptions.
+                The NextAiChat service is provided "AS IS" without warranties of any kind. Under no circumstances shall NextAiChat operators be liable for indirect, incidental, or consequential damages resulting from AI responses or service interruptions.
               </p>
             </section>
 
@@ -121,7 +96,7 @@ export default function TermsPage() {
             <div className="bg-gradient-to-r from-blue-900/40 via-indigo-900/40 to-purple-900/40 border border-blue-500/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <h3 className="text-sm font-semibold text-white">Questions about our Terms?</h3>
-                <p className="text-xs text-neutral-400">Reach out to our legal and support team via the contact desk.</p>
+                <p className="text-xs text-neutral-400">Reach out to the NextAiChat legal and support team via our contact desk.</p>
               </div>
               <Link
                 href="/contact"
@@ -137,7 +112,7 @@ export default function TermsPage() {
 
       {/* Fixed Navigation Footer (Shrink-0) */}
       <footer className="shrink-0 z-50 backdrop-blur-md bg-neutral-950/85 border-t border-neutral-800/80 py-3.5 px-6 text-center text-xs text-neutral-500">
-        <p>© 2026 Gemini AI Roleplay Platform. All rights reserved.</p>
+        <p>© 2026 NextAiChat Platform. All rights reserved.</p>
       </footer>
     </div>
   );

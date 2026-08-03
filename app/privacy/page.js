@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { Sparkles, Shield, Lock, Eye, FileText, ArrowLeft, Mail } from "lucide-react";
+import { Sparkles, Shield, Lock, Eye, FileText, Mail } from "lucide-react";
+import PublicNavbar from "@/components/PublicNavbar";
 
 export const metadata = {
-  title: "Privacy Policy | Gemini AI Roleplay",
+  title: "Privacy Policy | NextAiChat",
   description: "Learn how we collect, protect, and handle your data and AI character roleplay conversations.",
 };
 
@@ -13,34 +14,8 @@ export default function PrivacyPage() {
       <div className="fixed top-0 left-1/4 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
       <div className="fixed bottom-0 right-1/4 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Fixed Sticky Navigation Header (Shrink-0) */}
-      <header className="shrink-0 z-50 backdrop-blur-md bg-neutral-950/85 border-b border-neutral-800/80 px-6 py-3.5">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <Link
-            href="/login"
-            className="flex items-center gap-2 text-sm text-neutral-400 hover:text-white transition-colors group"
-          >
-            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            <span>Back to Login</span>
-          </Link>
-
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-purple-500 to-blue-500 flex items-center justify-center text-white shadow-lg">
-              <Sparkles className="w-4 h-4 fill-current" />
-            </div>
-            <span className="font-semibold tracking-tight text-white">Gemini Chat</span>
-          </div>
-
-          <div className="flex items-center gap-4 text-xs font-medium">
-            <Link href="/terms" className="text-neutral-400 hover:text-white transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/contact" className="text-purple-400 hover:text-purple-300 transition-colors">
-              Contact Support
-            </Link>
-          </div>
-        </div>
-      </header>
+      {/* Pro Shared Public Navbar */}
+      <PublicNavbar activePage="privacy" />
 
       {/* Main Content Container (Flex-1 & Scrollable) */}
       <main className="flex-1 w-full overflow-y-auto px-6 py-8 sm:py-12 relative z-10">
@@ -68,13 +43,13 @@ export default function PrivacyPage() {
                 <h2 className="text-base sm:text-lg font-bold text-white">1. Information We Collect</h2>
               </div>
               <p className="mb-3 text-xs sm:text-sm">
-                When you register and use Gemini Chat, we collect minimal data necessary to deliver multi-character roleplay experiences:
+                When you register and use NextAiChat, we collect minimal data necessary to deliver zero-latency multi-character roleplay and AI tutor experiences:
               </p>
               <ul className="list-disc list-inside space-y-2 text-neutral-400 text-xs sm:text-sm pl-2">
-                <li><strong className="text-neutral-200">Account Credentials:</strong> Username and encrypted password hash (stored via salted bcrypt).</li>
+                <li><strong className="text-neutral-200">Account Credentials:</strong> Username, email (for Google Auth users), and encrypted password hash (stored via salted bcrypt).</li>
                 <li><strong className="text-neutral-200">Character Profiles & Stories:</strong> Custom character personas, backstories, avatars, and reusable snippets you create.</li>
                 <li><strong className="text-neutral-200">Roleplay Chat Logs:</strong> Conversation turns and transcripts generated during roleplay sessions.</li>
-                <li><strong className="text-neutral-200">Technical Logs:</strong> IP address, browser user-agent, and session cookies for authentication.</li>
+                <li><strong className="text-neutral-200">Technical Logs & Usage:</strong> Daily API call counters, IP address, browser user-agent, and session cookies for authentication.</li>
               </ul>
             </section>
 
@@ -85,7 +60,7 @@ export default function PrivacyPage() {
                 <h2 className="text-base sm:text-lg font-bold text-white">2. AI Processing & Google Gemini API Disclosure</h2>
               </div>
               <p className="mb-3 text-xs sm:text-sm">
-                Our platform uses Google Gemini Generative AI models (`@google/genai`) to generate dynamic character roleplay turns:
+                NextAiChat uses Google Gemini Generative AI models (`@google/genai`) to generate dynamic character roleplay turns and responses:
               </p>
               <ul className="list-disc list-inside space-y-2 text-neutral-400 text-xs sm:text-sm pl-2">
                 <li>Your prompts, scene story settings, and participating character personas are transmitted to Google API endpoints strictly to compute roleplay replies.</li>
@@ -116,7 +91,7 @@ export default function PrivacyPage() {
                 <h2 className="text-base sm:text-lg font-bold text-white">4. Your Data Rights (GDPR & CCPA)</h2>
               </div>
               <p className="mb-3 text-xs sm:text-sm">
-                Regardless of your location, you hold full rights over your data:
+                Regardless of your location, you hold full rights over your data on NextAiChat:
               </p>
               <ul className="list-disc list-inside space-y-2 text-neutral-400 text-xs sm:text-sm pl-2">
                 <li><strong className="text-neutral-200">Right to Delete:</strong> You can delete any chat session, message, or character profile at any time.</li>
@@ -128,7 +103,7 @@ export default function PrivacyPage() {
             <div className="bg-gradient-to-r from-purple-900/40 via-indigo-900/40 to-blue-900/40 border border-purple-500/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div>
                 <h3 className="text-sm font-semibold text-white">Have Privacy Questions?</h3>
-                <p className="text-xs text-neutral-400">Our support team and data controller are ready to assist you.</p>
+                <p className="text-xs text-neutral-400">Our NextAiChat support team and data controller are ready to assist you.</p>
               </div>
               <Link
                 href="/contact"
@@ -144,7 +119,7 @@ export default function PrivacyPage() {
 
       {/* Fixed Navigation Footer (Shrink-0) */}
       <footer className="shrink-0 z-50 backdrop-blur-md bg-neutral-950/85 border-t border-neutral-800/80 py-3.5 px-6 text-center text-xs text-neutral-500">
-        <p>© 2026 Gemini AI Roleplay Platform. All rights reserved.</p>
+        <p>© 2026 NextAiChat Platform. All rights reserved.</p>
       </footer>
     </div>
   );

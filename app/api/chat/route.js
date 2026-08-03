@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import prisma from "@/lib/prisma";
 import RequireUser from "@/lib/RequireUser";
+import { trackAiUsage } from "@/lib/aiUsageTracker";
 
 // Helper to call Gemini API with automatic fallback to FALLBACK_GEMINI_API_KEY if primary key fails
 async function generateGeminiContentWithFallback({ modelName, contents, systemInstruction, temperature = 0.85 }) {
@@ -188,6 +189,9 @@ ${lengthInstruction}
       systemInstruction,
       temperature: 0.85,
     });
+
+    // Track Gemini API call usage for today
+    trackAiUsage(user.id).catch(() => {});
 
     const replyText = response.text || "No response generated.";
     const replyTokenEstimate = Math.ceil(replyText.length / 4);

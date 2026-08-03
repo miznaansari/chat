@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useLanguage } from "@/context/LanguageContext";
 import Tooltip from "@/components/Tooltip";
@@ -15,6 +15,14 @@ import {
   ShieldCheck,
   AlertCircle,
   KeyRound,
+  Activity,
+  BarChart3,
+  Calendar,
+  Zap,
+  TrendingUp,
+  Clock,
+  Filter,
+  Loader2,
 } from "lucide-react";
 
 export default function SettingPage() {
@@ -33,6 +41,60 @@ export default function SettingPage() {
   // Status feedback state
   const [status, setStatus] = useState({ type: null, message: "" });
   const [loading, setLoading] = useState(false);
+
+  // AI API Usage Analytics State
+  const [usageData, setUsageData] = useState({
+    today: "",
+    todayCount: 0,
+    totalCount: 0,
+    history7DaysCount: 0,
+    history30DaysCount: 0,
+    history: [],
+  });
+  const [loadingUsage, setLoadingUsage] = useState(true);
+  const [rangeFilter, setRangeFilter] = useState("today"); // "today" | "7days" | "30days" | "all"
+
+  useEffect(() => {
+    fetchAiUsage();
+  }, []);
+
+  const fetchAiUsage = async () => {
+    try {
+      setLoadingUsage(true);
+      const res = await fetch("/api/user/usage");
+      if (res.ok) {
+        const data = await res.json();
+        setUsageData(data);
+      }
+    } catch (err) {
+      console.error("Failed to load AI usage stats", err);
+    } finally {
+      setLoadingUsage(false);
+    }
+  };
+
+  const filteredHistory = useMemo(() => {
+    if (!usageData.history || usageData.history.length === 0) return [];
+    const now = new Date();
+
+    if (rangeFilter === "today") {
+      return usageData.history.filter((r) => r.date === usageData.today);
+    }
+    if (rangeFilter === "7days") {
+      const d7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      return usageData.history.filter((r) => r.date >= d7);
+    }
+    if (rangeFilter === "30days") {
+      const d30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      return usageData.history.filter((r) => r.date >= d30);
+    }
+    return usageData.history;
+  }, [usageData, rangeFilter]);
+
+  const maxCountInRange = useMemo(() => {
+    if (filteredHistory.length === 0) return 1;
+    return Math.max(...filteredHistory.map((r) => r.count), 1);
+  }, [filteredHistory]);
 
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
@@ -382,6 +444,215 @@ export default function SettingPage() {
                 </Tooltip>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Card 3: Gemini AI API Usage & Analytics */}
+        <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-5 sm:p-7 shadow-2xl backdrop-blur-md space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-neutral-800">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-2xl bg-gradient-to-tr from-purple-600/30 to-blue-600/30 border border-purple-500/40 text-purple-300 shadow-inner">
+                <Activity className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-bold text-white">
+                    Gemini AI API Call Analytics
+                  </h2>
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    Live Tracked
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-400">
+                  Daily API call hits counter & range-based usage history per user
+                </p>
+              </div>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex items-center bg-neutral-950 border border-neutral-800 p-1 rounded-2xl text-xs shrink-0">
+              <button
+                type="button"
+                onClick={() => setRangeFilter("today")}
+                className={`px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
+                  rangeFilter === "today"
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={() => setRangeFilter("7days")}
+                className={`px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
+                  rangeFilter === "7days"
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                Last 7 Days
+              </button>
+              <button
+                type="button"
+                onClick={() => setRangeFilter("30days")}
+                className={`px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
+                  rangeFilter === "30days"
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                30 Days
+              </button>
+              <button
+                type="button"
+                onClick={() => setRangeFilter("all")}
+                className={`px-3 py-1.5 rounded-xl font-semibold transition-all cursor-pointer ${
+                  rangeFilter === "all"
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                All Time
+              </button>
+            </div>
+          </div>
+
+          {/* Hero Metrics Cards Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-4 rounded-2xl bg-purple-950/40 border border-purple-500/30 space-y-1">
+              <span className="text-[10px] font-extrabold text-purple-400 uppercase tracking-wider block">
+                Today's Calls
+              </span>
+              <div className="text-2xl font-black text-white font-mono flex items-baseline gap-1">
+                <span>{usageData.todayCount}</span>
+                <span className="text-xs font-semibold text-purple-300">hits</span>
+              </div>
+              <span className="text-[10px] text-neutral-400 block">Initial default view</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-blue-950/40 border border-blue-500/30 space-y-1">
+              <span className="text-[10px] font-extrabold text-blue-400 uppercase tracking-wider block">
+                Last 7 Days
+              </span>
+              <div className="text-2xl font-black text-white font-mono flex items-baseline gap-1">
+                <span>{usageData.history7DaysCount}</span>
+                <span className="text-xs font-semibold text-blue-300">calls</span>
+              </div>
+              <span className="text-[10px] text-neutral-400 block">Past 7 days total</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-950/40 border border-amber-500/30 space-y-1">
+              <span className="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider block">
+                Last 30 Days
+              </span>
+              <div className="text-2xl font-black text-white font-mono flex items-baseline gap-1">
+                <span>{usageData.history30DaysCount}</span>
+                <span className="text-xs font-semibold text-amber-300">calls</span>
+              </div>
+              <span className="text-[10px] text-neutral-400 block">Monthly accumulated</span>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 space-y-1">
+              <span className="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider block">
+                All-Time Calls
+              </span>
+              <div className="text-2xl font-black text-white font-mono flex items-baseline gap-1">
+                <span>{usageData.totalCount}</span>
+                <span className="text-xs font-semibold text-emerald-300">total</span>
+              </div>
+              <span className="text-[10px] text-neutral-400 block">Lifetime API usages</span>
+            </div>
+          </div>
+
+          {/* Daily Usage History Breakdown & Progress Chart */}
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between text-xs font-semibold text-neutral-300">
+              <div className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4 text-purple-400" />
+                <span>
+                  Daily API Usage ({rangeFilter.toUpperCase()})
+                </span>
+              </div>
+              <span className="text-[11px] text-neutral-400 font-mono">
+                {filteredHistory.length} record(s) found
+              </span>
+            </div>
+
+            {loadingUsage ? (
+              <div className="p-8 text-center bg-neutral-950/80 rounded-2xl border border-neutral-800 space-y-2">
+                <Loader2 className="w-6 h-6 text-purple-400 animate-spin mx-auto" />
+                <span className="text-xs text-neutral-400 block font-semibold">Loading Gemini AI usage history...</span>
+              </div>
+            ) : filteredHistory.length === 0 ? (
+              <div className="p-8 text-center bg-neutral-950/80 rounded-2xl border border-neutral-800 space-y-1">
+                <Clock className="w-6 h-6 text-neutral-500 mx-auto mb-1" />
+                <span className="text-xs font-bold text-neutral-300 block">No API calls recorded for this range yet</span>
+                <span className="text-[11px] text-neutral-500 block">Start roleplaying or asking AI tutors to see daily call stats here!</span>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-72 overflow-y-auto pr-1">
+                {filteredHistory.map((item) => {
+                  const percent = Math.min(100, Math.round((item.count / maxCountInRange) * 100));
+                  const isToday = item.date === usageData.today;
+                  const dateFormatted = new Date(item.date).toLocaleDateString("en-US", {
+                    weekday: "short",
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  });
+
+                  return (
+                    <div
+                      key={item.id || item.date}
+                      className={`p-3 rounded-2xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 ${
+                        isToday
+                          ? "bg-purple-950/40 border-purple-500/50 shadow-md shadow-purple-900/10"
+                          : "bg-neutral-950 border-neutral-800/90 hover:border-neutral-700"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 shrink-0">
+                        <div className={`p-2 rounded-xl border font-mono text-xs font-bold shrink-0 ${
+                          isToday ? "bg-purple-900/80 border-purple-600 text-purple-200" : "bg-neutral-900 border-neutral-800 text-neutral-400"
+                        }`}>
+                          <Calendar className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-white text-xs sm:text-sm">{dateFormatted}</span>
+                            {isToday && (
+                              <span className="text-[9px] font-extrabold uppercase bg-purple-600 text-white px-2 py-0.5 rounded-full shadow-xs">
+                                Today
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-neutral-400 font-mono block">
+                            Raw Date: {item.date}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Call Progress Bar + Badge */}
+                      <div className="flex items-center gap-3 flex-1 sm:max-w-xs w-full">
+                        <div className="flex-1 bg-neutral-900 h-2.5 rounded-full overflow-hidden border border-neutral-800 p-0.5">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              isToday
+                                ? "bg-gradient-to-r from-purple-500 to-indigo-500"
+                                : "bg-gradient-to-r from-blue-500 to-cyan-500"
+                            }`}
+                            style={{ width: `${Math.max(5, percent)}%` }}
+                          />
+                        </div>
+                        <div className="px-2.5 py-1 rounded-xl bg-neutral-900 border border-neutral-800 font-mono text-xs font-extrabold text-white shrink-0 shadow-inner min-w-[70px] text-center">
+                          {item.count} hits
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </main>

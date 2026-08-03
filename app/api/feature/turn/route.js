@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import RequireUser from "@/lib/RequireUser";
 import { executeSingleCharacterTurn } from "@/feature/turnEngine";
+import { trackAiUsage } from "@/lib/aiUsageTracker";
 
 export async function POST(req) {
   try {
@@ -96,6 +97,9 @@ export async function POST(req) {
       characters: chatSession.sessionCharacters || [],
       responseLength,
     });
+
+    // Track Gemini API call usage for today
+    trackAiUsage(user.id).catch(() => {});
 
     const replyText = turnResult.formattedContent;
     const replyTokenEstimate = Math.ceil(replyText.length / 4);
