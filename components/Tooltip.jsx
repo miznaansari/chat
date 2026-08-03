@@ -21,10 +21,13 @@ export default function Tooltip({
   const { translate } = useLanguage();
 
   const handleMouseEnter = () => {
-    // Disable tooltips on mobile / touch devices (screen width < 768px or touch pointer)
+    // Completely disable tooltips on mobile screens (<768px) & touch devices
     if (
       typeof window !== "undefined" &&
-      (window.innerWidth < 768 || window.matchMedia("(pointer: coarse)").matches)
+      (window.innerWidth < 768 ||
+        "ontouchstart" in window ||
+        navigator.maxTouchPoints > 0 ||
+        window.matchMedia("(pointer: coarse)").matches)
     ) {
       return;
     }
@@ -53,8 +56,7 @@ export default function Tooltip({
       className={`relative inline-flex items-center ${className}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
-      onFocus={handleMouseEnter}
-      onBlur={handleMouseLeave}
+      onTouchStart={() => setIsVisible(false)}
     >
       {children}
 

@@ -168,11 +168,12 @@ const NarrativeTeaserCard = memo(function NarrativeTeaserCard({ text }) {
   );
 });
 
-// Helper to render single-quoted thoughts like 'ye dono kya kar rhe hai' with a distinct 💭 thought badge
+// Helper to render parenthetical thoughts like (Ab dekhte hai student kya choose karta hai...) with a distinct 💭 THOUGHT badge
 function renderContentWithThoughts(children) {
   if (typeof children === "string") {
-    if (!children.includes("'")) return children;
-    const regex = /'([^'\n]{2,})'/g;
+    if (!children.includes("(") || !children.includes(")")) return children;
+    // Match parenthetical text like (anything inside parentheses)
+    const regex = /\(([^)\n]{2,})\)/g;
     const parts = [];
     let lastIndex = 0;
     let match;
@@ -182,20 +183,28 @@ function renderContentWithThoughts(children) {
         parts.push(children.substring(lastIndex, match.index));
       }
 
-      const thoughtText = match[1];
-      parts.push(
-        <span
-          key={match.index}
-          className="inline-flex items-center gap-1 bg-purple-950/80 border border-purple-700/60 text-purple-200 px-2 py-0.5 rounded-lg font-serif italic text-[0.93em] my-0.5 mx-1 shadow-xs"
-          title="Character Inner Thought"
-        >
-          <span className="not-italic font-sans text-[10px] font-bold uppercase tracking-wider text-purple-400 bg-purple-900/90 px-1 py-0.2 rounded border border-purple-700/50 inline-flex items-center gap-0.5">
-            <span>💭</span>
-            <span className="hidden sm:inline">thought</span>
+      const innerContent = match[1].trim();
+      const wordCount = innerContent.split(/\s+/).filter(Boolean).length;
+
+      // Only treat parenthetical text as THOUGHT if it contains a full thought statement (>= 3 words)
+      // Short terms or abbreviations like (HLD) or (LLD) render as normal parenthetical text
+      if (wordCount >= 3) {
+        parts.push(
+          <span
+            key={match.index}
+            className="inline-flex items-center gap-1.5 bg-purple-950/80 border border-purple-700/60 text-purple-200 px-2.5 py-1 rounded-xl font-serif italic text-[0.93em] my-1 mx-1 shadow-md backdrop-blur-sm"
+            title="Character Inner Thought / Reflection"
+          >
+            <span className="not-italic font-sans text-[10px] font-bold uppercase tracking-wider text-purple-300 bg-purple-900/90 px-1.5 py-0.5 rounded-md border border-purple-700/60 inline-flex items-center gap-1 shadow-xs">
+              <span>💭</span>
+              <span>THOUGHT</span>
+            </span>
+            "{innerContent}"
           </span>
-          '{thoughtText}'
-        </span>
-      );
+        );
+      } else {
+        parts.push(`(${innerContent})`);
+      }
 
       lastIndex = regex.lastIndex;
     }
@@ -216,7 +225,7 @@ function renderContentWithThoughts(children) {
   return children;
 }
 
-// Memoized component to render message text with Markdown
+// Memoized component to render message text with Markdown & Tables
 const FormattedMessageContent = memo(function FormattedMessageContent({ content }) {
   if (!content) return null;
 
@@ -238,7 +247,7 @@ const FormattedMessageContent = memo(function FormattedMessageContent({ content 
             const isNarrativeHook =
               /^\s*[\(*]*\s*(ab dekhte|ab aage|dekhte hai|dekhte hain|aage kya|aage dekhte|story note|scene note|what happens next)[^)]*[\)*]*\s*$/i.test(
                 trimmed
-              ) || /^\s*\([^)]+\)\s*$/.test(trimmed);
+              );
 
             if (isNarrativeHook) {
               return <NarrativeTeaserCard text={trimmed} />;
@@ -261,15 +270,16 @@ const FormattedMessageContent = memo(function FormattedMessageContent({ content 
           ul: ({ children }) => <ul className="list-disc list-inside space-y-1 my-2 text-neutral-200">{children}</ul>,
           li: ({ children }) => <li className="my-0.5">{children}</li>,
           table: ({ children }) => (
-            <div className="overflow-x-auto my-3 border border-neutral-800 rounded-xl">
-              <table className="min-w-full divide-y divide-neutral-800 text-xs text-neutral-200">
+            <div className="overflow-x-auto my-3 border border-purple-500/30 rounded-2xl bg-neutral-950/80 backdrop-blur-md shadow-lg">
+              <table className="min-w-full divide-y divide-purple-500/20 text-xs text-neutral-200">
                 {children}
               </table>
             </div>
           ),
-          thead: ({ children }) => <thead className="bg-neutral-900">{children}</thead>,
-          th: ({ children }) => <th className="px-3 py-2 text-left font-semibold text-neutral-300 uppercase tracking-wider">{children}</th>,
-          td: ({ children }) => <td className="px-3 py-2 border-t border-neutral-800/60">{children}</td>,
+          thead: ({ children }) => <thead className="bg-purple-950/60 font-bold">{children}</thead>,
+          th: ({ children }) => <th className="px-4 py-2.5 text-left font-extrabold text-purple-200 uppercase tracking-wider text-[11px] border-b border-purple-500/30">{children}</th>,
+          td: ({ children }) => <td className="px-4 py-2.5 border-t border-white/5 text-neutral-300">{children}</td>,
+          tr: ({ children }) => <tr className="hover:bg-purple-900/20 transition-colors">{children}</tr>,
         }}
       >
         {content}
@@ -632,21 +642,10 @@ export default function ChatView({
     }
   }, []);
 
-  // Smart auto-scroll: When AI returns a long response, scroll to the TOP of the response so user reads from line 1
+  // Smooth auto-scroll to bottom as new messages and turns arrive
   useEffect(() => {
     if (messages.length === 0) return;
-
-    const lastMsg = messages[messages.length - 1];
-
-    if (lastMsg?.role === "user") {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    } else {
-      if (latestMessageRef.current) {
-        latestMessageRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-      } else {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-      }
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length, loading]);
 
   // Auto-expand textarea height as user types
@@ -729,7 +728,7 @@ export default function ChatView({
     };
   }, [messages]);
 
-  // Typewriter animation helper to stream text out smoothly before triggering next character turn
+  // Steady typewriter animation helper: Displays character name header immediately, streaming dialogue text afterwards
   const animateTypewriterMessage = (modelMessage) => {
     return new Promise((resolve) => {
       const fullContent = modelMessage.content || "";
@@ -738,30 +737,35 @@ export default function ChatView({
         return;
       }
 
-      // Append message with empty content initially
-      const emptyMsg = { ...modelMessage, content: "" };
+      // Detect character tag header prefix (e.g. [Prof. Ananya]: )
+      const tagMatch = /(?:^|\n)(?:\[([^\]]+)\]|\*\*([^*]+)\*\*|([A-Z][a-zA-Z0-9_\s]{1,20})):\s*/.exec(fullContent);
+      const startOffset = tagMatch && tagMatch.index === 0 ? tagMatch[0].length : 0;
+
+      // Render character tag prefix immediately so avatar badge displays instantly without letter-by-letter typing
+      const initialPrefix = fullContent.slice(0, startOffset);
+      const emptyMsg = { ...modelMessage, content: initialPrefix };
       setMessages((prev) => [...prev, emptyMsg]);
 
-      // Calculate typewriter step speed (slower, natural reading pace)
-      let index = 0;
-      const stepSize = Math.max(1, Math.ceil(fullContent.length / 140));
-      const intervalMs = 38;
+      let index = startOffset;
+      const remainingLength = fullContent.length - startOffset;
+      const stepSize = Math.max(1, Math.ceil(remainingLength / 220));
+      const intervalMs = 50;
 
       const timer = setInterval(() => {
         index += stepSize;
         if (index >= fullContent.length) {
           clearInterval(timer);
-          // Set full exact content
           setMessages((prev) =>
             prev.map((m) => (m.id === modelMessage.id ? { ...m, content: fullContent } : m))
           );
-          // Extended reading pause (1200ms) after typing finishes so user can comfortably read
-          setTimeout(resolve, 1200);
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          setTimeout(resolve, 400);
         } else {
           const partial = fullContent.slice(0, index);
           setMessages((prev) =>
             prev.map((m) => (m.id === modelMessage.id ? { ...m, content: partial } : m))
           );
+          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
         }
       }, intervalMs);
     });
@@ -774,6 +778,9 @@ export default function ChatView({
     const currentPrompt = inputPrompt;
     setInputPrompt("");
     setLoading(true);
+
+    const initialSpeaker = sessionChars.length > 0 ? sessionChars[0].name : "AI";
+    setTypingCharacter(initialSpeaker);
 
     const tempUserMsg = {
       id: "temp-" + Date.now(),
@@ -788,7 +795,8 @@ export default function ChatView({
 
     if (chatMode === "turn") {
       try {
-        setTypingCharacter("Thinking who speaks...");
+        setTypingCharacter(null);
+
         // Initial Turn API call with user prompt
         const res = await fetch("/api/feature/turn", {
           method: "POST",
@@ -812,7 +820,6 @@ export default function ChatView({
             .concat(data.userMessage ? [data.userMessage] : [])
         );
 
-        // Hide loading dots while character message is typing out
         setTypingCharacter(null);
 
         // Typewriter animation for 1st character response
@@ -825,16 +832,19 @@ export default function ChatView({
         let turnCount = 1;
         const MAX_CONSECUTIVE_TURNS = 6;
 
-        // Turn-by-Turn loop: execute subsequent character turns
+        // Turn-by-Turn loop: execute subsequent character turns ONLY when another response IS incoming
         while (
           !userTurnFlag &&
           currentNextSpeaker &&
           currentNextSpeaker !== "me" &&
+          currentNextSpeaker.toUpperCase() !== "USER" &&
           turnCount < MAX_CONSECUTIVE_TURNS
         ) {
+          // Display typing indicator ONLY because another character response IS coming!
           setTypingCharacter(currentNextSpeaker);
+
           // Small realistic pause before fetch
-          await new Promise((r) => setTimeout(r, 600));
+          await new Promise((r) => setTimeout(r, 400));
 
           const nextRes = await fetch("/api/feature/turn", {
             method: "POST",
@@ -849,7 +859,6 @@ export default function ChatView({
           const nextData = await nextRes.json();
           if (!nextRes.ok) break;
 
-          // Hide loading dots while character message is typing out
           setTypingCharacter(null);
 
           // Typewriter animation for next character response
@@ -871,6 +880,10 @@ export default function ChatView({
     } else {
       // Classic Mode
       try {
+        setTypingCharacter(
+          sessionChars.length > 0 ? sessionChars.map((c) => c.name).join(" & ") : "AI"
+        );
+
         const res = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -887,13 +900,22 @@ export default function ChatView({
           throw new Error(data.error || "Failed to send message");
         }
 
+        // Replace temp user message with actual saved user message
         setMessages((prev) =>
-          prev.filter((m) => m.id !== tempUserMsg.id).concat(data.userMessage, data.modelMessage)
+          prev
+            .filter((m) => m.id !== tempUserMsg.id)
+            .concat(data.userMessage ? [data.userMessage] : [])
         );
+
+        // Typewriter animation for classic response
+        if (data.modelMessage) {
+          await animateTypewriterMessage(data.modelMessage);
+        }
       } catch (err) {
         alert("Error sending message: " + err.message);
         setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
       } finally {
+        setTypingCharacter(null);
         setLoading(false);
       }
     }
@@ -1538,34 +1560,30 @@ export default function ChatView({
           </>
         )}
 
-        {loading && (
+        {loading && typingCharacter && (
           <div className="flex gap-4 max-w-3xl mx-auto justify-start animate-in fade-in duration-200">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-md shadow-purple-500/20">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-md shadow-purple-500/20">
               <Sparkles className="w-4 h-4 text-white animate-pulse" />
             </div>
             <div className="p-3.5 px-4 rounded-2xl bg-neutral-900/90 border border-neutral-800 text-neutral-300 text-sm flex items-center gap-3 shadow-lg rounded-tl-xs">
               {/* Bouncing 3-Dot Typing Animation */}
               <div className="flex items-center gap-1.5 px-1 py-1">
                 <span
-                  className="w-2 h-2 rounded-full bg-blue-400 animate-bounce"
+                  className="w-2 h-2 rounded-full bg-purple-400 animate-bounce"
                   style={{ animationDelay: "0ms" }}
                 />
                 <span
-                  className="w-2 h-2 rounded-full bg-purple-400 animate-bounce"
+                  className="w-2 h-2 rounded-full bg-indigo-400 animate-bounce"
                   style={{ animationDelay: "150ms" }}
                 />
                 <span
-                  className="w-2 h-2 rounded-full bg-pink-400 animate-bounce"
+                  className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce"
                   style={{ animationDelay: "300ms" }}
                 />
               </div>
 
-              <span className="text-xs text-neutral-400 font-medium tracking-wide">
-                {typingCharacter
-                  ? `${typingCharacter} is typing...`
-                  : sessionChars.length > 0
-                    ? `${sessionChars.map((c) => c.name).join(" & ")} are typing...`
-                    : "Generating response..."}
+              <span className="text-xs text-purple-300 font-bold tracking-wide font-mono">
+                {typingCharacter === "Thinking who speaks..." ? "Selecting next speaker..." : `${typingCharacter} is typing...`}
               </span>
             </div>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -14,10 +14,14 @@ import {
   ShieldCheck,
   Zap,
   Bot,
-  Mail,
-  FileText,
+  Languages,
+  CheckCircle2,
   BookOpen,
   Gamepad2,
+  Heart,
+  Brain,
+  MessageSquare,
+  Compass,
 } from "lucide-react";
 
 export default function LoginForm() {
@@ -28,6 +32,12 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // Onboarding Step State: "auth" | "language" | "generating"
+  const [step, setStep] = useState("auth");
+  const [selectedLang, setSelectedLang] = useState("hinglish");
+  const [progress, setProgress] = useState(0);
+  const [activeAgentIndex, setActiveAgentIndex] = useState(0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -48,8 +58,14 @@ export default function LoginForm() {
         throw new Error(data.error || "Authentication failed");
       }
 
-      router.push("/");
-      router.refresh();
+      // Check if user has completed first-time language selection & onboarding
+      if (data.user?.hasChosenLanguage) {
+        router.push("/");
+        router.refresh();
+      } else {
+        // Transition to Language Choice Modal
+        setStep("language");
+      }
     } catch (err) {
       setError(err.message);
     } finally {
@@ -57,9 +73,80 @@ export default function LoginForm() {
     }
   };
 
+  // Start Agent Seeding & Gen-Z Loading Animation
+  const startAgentSeeding = async (chosenLang) => {
+    setSelectedLang(chosenLang);
+    setStep("generating");
+    setProgress(5);
+    setActiveAgentIndex(0);
+
+    // Smooth Gen-Z progress animation interval
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 95) {
+          clearInterval(progressInterval);
+          return 95;
+        }
+        const nextProgress = prev + Math.floor(Math.random() * 8) + 4;
+        const currentAgent = Math.min(5, Math.floor((nextProgress / 100) * 6));
+        setActiveAgentIndex(currentAgent);
+        return nextProgress;
+      });
+    }, 150);
+
+    try {
+      // Call Onboarding API to seed the 6 DB sessions
+      const res = await fetch("/api/user/onboarding", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: chosenLang }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Onboarding failed");
+      }
+
+      // Finish progress bar to 100%
+      clearInterval(progressInterval);
+      setProgress(100);
+      setActiveAgentIndex(5);
+
+      setTimeout(() => {
+        router.push("/");
+        router.refresh();
+      }, 700);
+    } catch (err) {
+      clearInterval(progressInterval);
+      setError("Failed to create AI agents: " + err.message);
+      setStep("language");
+    }
+  };
+
+  const hinglishAgents = [
+    { name: "Prof. Ananya", role: "Subject & Exam Prep Tutor", icon: "⚛️", tag: "Exam Prep" },
+    { name: "Dr. Vikram", role: "Science & Math Master", icon: "🧮", tag: "Problem Solver" },
+    { name: "Coach Priya", role: "English Speaking & Fluency", icon: "🗣️", tag: "Spoken English" },
+    { name: "Coach Rohan", role: "Fluency & Interview Coach", icon: "💼", tag: "Interview Prep" },
+    { name: "Mentor Diya", role: "Calm Wellness & Anti-Depression", icon: "🧘", tag: "Wellness" },
+    { name: "Mentor Kabir", role: "Mindset & Stress Relief", icon: "⚡", tag: "Motivation" },
+  ];
+
+  const englishAgents = [
+    { name: "Prof. Sarah", role: "Subject & Exam Prep Tutor", icon: "⚛️", tag: "Exam Prep" },
+    { name: "Dr. Marcus", role: "Science & Math Master", icon: "🧮", tag: "Problem Solver" },
+    { name: "Coach Emma", role: "English Speaking & Fluency", icon: "🗣️", tag: "Spoken English" },
+    { name: "Coach Alex", role: "Fluency & Interview Coach", icon: "💼", tag: "Interview Prep" },
+    { name: "Mentor Maya", role: "Calm Wellness & Anti-Depression", icon: "🧘", tag: "Wellness" },
+    { name: "Mentor Julian", role: "Mindset & Stress Relief", icon: "⚡", tag: "Motivation" },
+  ];
+
+  const activeAgentList = selectedLang === "hinglish" ? hinglishAgents : englishAgents;
+
   return (
     <div className="min-h-dvh h-auto lg:h-[100dvh] w-full max-w-full bg-[#030712] text-neutral-100 flex flex-col lg:flex-row overflow-y-auto lg:overflow-hidden relative font-sans selection:bg-purple-500 selection:text-white bg-antigravity-grid">
-      {/* EXACT PREVIOUS ANTIGRAVITY FLOATING ORBS & ORBITAL RINGS */}
+      {/* ANTIGRAVITY FLOATING ORBS & ORBITAL RINGS */}
       <div className="fixed top-[-10%] left-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-purple-900/30 via-indigo-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
       <div className="fixed bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-blue-900/30 via-cyan-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
 
@@ -90,7 +177,6 @@ export default function LoginForm() {
 
         {/* Center Hero Visual Content */}
         <div className="my-auto space-y-6 max-w-lg">
-
           <div className="space-y-3">
             <h1 className="text-3xl xl:text-4xl font-extrabold tracking-tight text-white leading-tight">
               Interactive AI Roleplay for{" "}
@@ -98,241 +184,301 @@ export default function LoginForm() {
                 Study & Entertainment
               </span>
             </h1>
-            <p className="text-sm text-neutral-400 leading-relaxed">
-              Experience dynamic multi-character conversations. Roleplay for educational learning, study simulations, language practice, or pure fun and entertainment.
+
+            <p className="text-sm text-neutral-300 font-normal leading-relaxed">
+              Zero-latency AI tutors for exam prep, language practice & multi-character storytelling.
             </p>
           </div>
 
-          {/* Feature Highlights Grid */}
-          <div className="space-y-3 pt-1">
-            {/* Feature 1 */}
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-950/60 border border-neutral-800/60 backdrop-blur-md">
-              <div className="p-2 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-400 shrink-0">
-                <BookOpen className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-xs font-bold text-white">
-                  Study & Educational Roleplay
-                </h2>
-                {/* <p className="text-[11px] text-neutral-400 mt-0.5">
-                  Practice subject concepts, exam prep, historical personas, and tutor scenarios.
-                </p> */}
-              </div>
-            </div>
-
-            {/* Feature 2 */}
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-950/60 border border-neutral-800/60 backdrop-blur-md">
-              <div className="p-2 rounded-xl bg-pink-950/80 border border-pink-800/60 text-pink-400 shrink-0">
-                <Gamepad2 className="w-4 h-4" />
-              </div>
-              <div>
-                <h2 className="text-xs font-bold text-white">
-                  Fun & Entertainment Stories
-                </h2>
-                {/* <p className="text-[11px] text-neutral-400 mt-0.5">
-                  Dive into rich anime, fictional, movie, and custom multi-character dialogue worlds.
-                </p> */}
-              </div>
-            </div>
-
-            {/* Feature 3 */}
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl bg-neutral-950/60 border border-neutral-800/60 backdrop-blur-md">
-              <div className="p-2 rounded-xl bg-cyan-950/80 border border-cyan-800/60 text-cyan-400 shrink-0">
+          {/* Quick Feature Grid */}
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <div className="p-3.5 rounded-2xl bg-neutral-900/60 border border-purple-500/20 backdrop-blur-sm space-y-1">
+              <div className="flex items-center gap-2 text-purple-400 font-bold text-xs">
                 <Zap className="w-4 h-4" />
+                <span>Zero Latency</span>
               </div>
-              <div>
-                <h2 className="text-xs font-bold text-white">
-                  Turn-by-Turn Dynamic AI Engine
-                </h2>
-                {/* <p className="text-[11px] text-neutral-400 mt-0.5">
-                  Intelligent speaker turn management powered by Gemini Flash models.
-                </p> */}
+              <p className="text-[11px] text-neutral-400">Gemini 3.5 Flash Flash response engine.</p>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-neutral-900/60 border border-cyan-500/20 backdrop-blur-sm space-y-1">
+              <div className="flex items-center gap-2 text-cyan-400 font-bold text-xs">
+                <Bot className="w-4 h-4" />
+                <span>6 Seeded Tutors</span>
               </div>
+              <p className="text-[11px] text-neutral-400">Subject, Spoken English & Wellness mentors.</p>
             </div>
           </div>
         </div>
 
-        {/* Bottom Security Footer */}
-        <div className="flex items-center justify-between text-xs text-neutral-500 pt-3 border-t border-neutral-800/40">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Encrypted JWT Session • Private AI Context</span>
-          </div>
-          <span>NextAiChat v2.5</span>
+        {/* Footer info */}
+        <div className="flex items-center justify-between text-xs text-neutral-500 font-mono pt-4 border-t border-neutral-800/40">
+          <span>NextAiChat Matrix Engine</span>
+          <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            AI Online
+          </span>
         </div>
       </div>
 
-      {/* ================= SIDE 2: AUTHENTICATION CONSOLE ================= */}
-      <div className="w-full lg:w-1/2 min-h-dvh lg:h-full flex flex-col justify-between p-3 sm:p-6 xl:p-12 relative z-10 overflow-y-auto bg-neutral-950/50 backdrop-blur-md">
-        {/* Mobile Header */}
-        <div className="flex items-center justify-between lg:hidden py-1 mb-2">
-          <Link href="/">
-            <img
-              src="/logo-landspace.png"
-              alt="NextAiChat Logo"
-              className="h-20 sm:h-20 w-auto object-contain"
-            />
-          </Link>
-        </div>
-
-        {/* Center Form Glass Card */}
-        <div className="my-auto max-w-md w-full mx-auto bg-neutral-950/75 border border-purple-500/25 rounded-3xl p-5 sm:p-8 backdrop-blur-2xl shadow-[0_0_50px_rgba(147,51,234,0.15)] relative overflow-hidden group space-y-4 sm:space-y-5">
-          {/* Animated Top Shimmer Neon Line */}
-          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-cyan-500 via-purple-500 to-pink-500 text-shimmer" />
-
-          {/* Hero Header */}
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              {isRegister ? "Create Account" : "Welcome Back"}
-            </h2>
-            <p className="text-xs text-neutral-400 max-w-xs mx-auto">
-              {isRegister
-                ? "Start interactive AI roleplays for study, education & fun."
-                : "Sign in to jump back into roleplay study & fun sessions."}
-            </p>
-          </div>
-
-          {/* Mode Switcher Tabs */}
-          <div className="grid grid-cols-2 p-1 rounded-2xl bg-neutral-900/90 border border-neutral-800 text-xs font-bold shadow-inner">
-            <button
-              type="button"
-              onClick={() => {
-                setIsRegister(false);
-                setError("");
-              }}
-              className={`py-2 rounded-xl transition-all duration-300 cursor-pointer ${!isRegister
-                ? "bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md"
-                : "text-neutral-400 hover:text-white"
-                }`}
-            >
-              Sign In
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsRegister(true);
-                setError("");
-              }}
-              className={`py-2 rounded-xl transition-all duration-300 cursor-pointer ${isRegister
-                ? "bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white shadow-md"
-                : "text-neutral-400 hover:text-white"
-                }`}
-            >
-              Create Account
-            </button>
-          </div>
-
-          {/* Error Message */}
-          {error && (
-            <div className="p-3 rounded-2xl bg-red-950/80 border border-red-500/50 text-red-300 text-xs flex items-center gap-2.5 animate-in fade-in">
-              <div className="w-2 h-2 rounded-full bg-red-400 shrink-0 animate-ping" />
-              <span>{error}</span>
+      {/* ================= SIDE 2: AUTH / ONBOARDING STEPPER ================= */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-8 lg:p-12 relative z-10">
+        
+        {/* STEP 1: AUTHENTICATION FORM (LOGIN / REGISTER) */}
+        {step === "auth" && (
+          <div className="w-full max-w-md space-y-6 cyber-glass-card p-6 sm:p-8 rounded-3xl border-purple-500/30 shadow-[0_0_50px_rgba(147,51,234,0.2)]">
+            
+            {/* Header Title */}
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                {isRegister ? "Create Account" : "Welcome Back"}
+              </h2>
+              <p className="text-xs text-neutral-400 max-w-xs mx-auto">
+                {isRegister
+                  ? "Start interactive AI roleplays for study, education & fun."
+                  : "Sign in to jump back into roleplay study & fun sessions."}
+              </p>
             </div>
-          )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-neutral-300">
-                Username
-              </label>
-              <div className="relative">
-                <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Enter unique username"
-                  className="w-full bg-neutral-900 border border-neutral-800 focus:border-purple-500 rounded-xl py-2.5 pl-10 pr-4 text-base sm:text-sm text-neutral-100 placeholder-neutral-500 outline-none transition-colors"
+            {/* Mode Switcher Tabs */}
+            <div className="grid grid-cols-2 gap-1 p-1 bg-neutral-900/80 rounded-2xl border border-neutral-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegister(false);
+                  setError("");
+                }}
+                className={`py-2 text-xs font-extrabold rounded-xl transition-all ${
+                  !isRegister
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegister(true);
+                  setError("");
+                }}
+                className={`py-2 text-xs font-extrabold rounded-xl transition-all ${
+                  isRegister
+                    ? "bg-purple-600 text-white shadow-md"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                Create Account
+              </button>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 rounded-xl bg-red-950/80 border border-red-800 text-red-300 text-xs font-medium text-center animate-in fade-in duration-200">
+                {error}
+              </div>
+            )}
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Username</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Enter your username"
+                    className="w-full bg-neutral-900/90 border border-neutral-800 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Password</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-neutral-900/90 border border-neutral-800 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-all pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-extrabold text-sm shadow-[0_0_25px_rgba(147,51,234,0.4)] flex items-center justify-center gap-2 transition-all hover:scale-[1.02] active:scale-95 disabled:opacity-50 cursor-pointer mt-2"
+              >
+                {loading ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <>
+                    <span>{isRegister ? "Get Started" : "Sign In to Matrix"}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+        )}
+
+        {/* STEP 2: FIRST-TIME LANGUAGE CHOICE MODAL */}
+        {step === "language" && (
+          <div className="w-full max-w-md space-y-6 cyber-glass-card p-6 sm:p-8 rounded-3xl border-purple-500/40 shadow-[0_0_60px_rgba(147,51,234,0.3)] animate-in fade-in zoom-in-95 duration-300">
+            <div className="text-center space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950/90 border border-purple-500/40 text-purple-300 text-[11px] font-mono font-bold shadow-sm">
+                <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+                <span>FIRST-TIME AI SETUP</span>
+              </div>
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+                Choose Preferred Language
+              </h2>
+              <p className="text-xs text-neutral-300 max-w-xs mx-auto leading-relaxed">
+                Select how your 6 default AI Tutors, Coaches & Wellness Mentors should talk to you.
+              </p>
+            </div>
+
+            {/* Language Option Cards */}
+            <div className="space-y-3.5">
+              {/* Option 1: Hinglish (Indian Names) */}
+              <div
+                onClick={() => startAgentSeeding("hinglish")}
+                className="p-4 rounded-2xl bg-neutral-900/80 hover:bg-neutral-900 border border-purple-500/40 hover:border-purple-400 text-left space-y-2 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🇮🇳</span>
+                    <h3 className="text-base font-extrabold text-white group-hover:text-purple-300 transition-colors">
+                      Hinglish (Hindi + English)
+                    </h3>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-purple-950 border border-purple-700 text-purple-300 text-[10px] font-bold">
+                    Popular in India 🚀
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-300 leading-relaxed">
+                  Indian AI Personas (<strong className="text-purple-300">Prof. Ananya, Dr. Vikram, Coach Priya, Mentor Diya</strong>) with natural Hinglish dialogues.
+                </p>
+              </div>
+
+              {/* Option 2: English (Global Names) */}
+              <div
+                onClick={() => startAgentSeeding("en")}
+                className="p-4 rounded-2xl bg-neutral-900/80 hover:bg-neutral-900 border border-cyan-500/40 hover:border-cyan-400 text-left space-y-2 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🇬🇧</span>
+                    <h3 className="text-base font-extrabold text-white group-hover:text-cyan-300 transition-colors">
+                      English (Global Standard)
+                    </h3>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-cyan-950 border border-cyan-700 text-cyan-300 text-[10px] font-bold">
+                    Global Standard 🌐
+                  </span>
+                </div>
+                <p className="text-xs text-neutral-300 leading-relaxed">
+                  Global English AI Personas (<strong className="text-cyan-300">Prof. Sarah, Dr. Marcus, Coach Emma, Mentor Maya</strong>) with clear English dialogues.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* STEP 3: GEN-Z ANIMATED AGENT INITIALIZATION SCREEN */}
+        {step === "generating" && (
+          <div className="w-full max-w-md space-y-6 cyber-glass-card p-6 sm:p-8 rounded-3xl border-purple-500/50 shadow-[0_0_80px_rgba(147,51,234,0.4)] animate-in fade-in duration-300 text-center">
+            
+            {/* Pulsing Central Agent Orb */}
+            <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-tr from-purple-600 to-cyan-500 rounded-full animate-ping opacity-30" />
+              <div className="w-16 h-16 rounded-full bg-purple-950 border-2 border-purple-400 flex items-center justify-center text-purple-300 shadow-[0_0_30px_#a855f7] relative z-10">
+                <Bot className="w-8 h-8 animate-pulse text-purple-300" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <h2 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+                Preparing Your 6 AI Personas...
+              </h2>
+              <p className="text-xs text-purple-300 font-mono">
+                {selectedLang === "hinglish" ? "Configuring Indian AI Tutors & Mentors" : "Configuring Global English AI Tutors & Mentors"}
+              </p>
+            </div>
+
+            {/* Gen-Z Cyber Progress Bar */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs font-mono text-neutral-400">
+                <span>Initialization Matrix</span>
+                <span className="font-bold text-cyan-400">{progress}%</span>
+              </div>
+              <div className="w-full h-3 bg-neutral-900 rounded-full overflow-hidden p-0.5 border border-purple-500/30">
+                <div
+                  className="h-full bg-gradient-to-r from-purple-600 via-pink-500 to-cyan-400 rounded-full transition-all duration-200 ease-out shadow-[0_0_15px_#22d3ee]"
+                  style={{ width: `${progress}%` }}
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="block text-xs font-semibold text-neutral-300">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-purple-400" />
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="w-full bg-neutral-900 border border-neutral-800 focus:border-purple-500 rounded-xl py-2.5 pl-10 pr-10 text-base sm:text-sm text-neutral-100 placeholder-neutral-500 outline-none transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-                >
-                  {showPassword ? (
-                    <EyeOff className="w-4 h-4" />
-                  ) : (
-                    <Eye className="w-4 h-4" />
-                  )}
-                </button>
-              </div>
+            {/* Sequentially Illuminating Agent Cards List */}
+            <div className="space-y-2 text-left pt-2 max-h-60 overflow-y-auto pr-1">
+              {activeAgentList.map((agent, idx) => {
+                const isReady = idx <= activeAgentIndex;
+                const isCurrent = idx === activeAgentIndex;
+                return (
+                  <div
+                    key={idx}
+                    className={`p-2.5 rounded-xl border flex items-center justify-between transition-all duration-300 ${
+                      isReady
+                        ? "bg-purple-950/70 border-purple-500/50 text-white shadow-sm"
+                        : "bg-neutral-900/40 border-neutral-800 text-neutral-500 opacity-60"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="text-lg">{agent.icon}</span>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold truncate">{agent.name}</div>
+                        <div className="text-[10px] text-neutral-400 truncate">{agent.role}</div>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0">
+                      {isReady ? (
+                        <span className="flex items-center gap-1 text-[10px] font-mono font-bold text-emerald-400 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-700/60">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                          <span>Ready</span>
+                        </span>
+                      ) : (
+                        <span className="text-[10px] font-mono text-neutral-500">
+                          {isCurrent ? "Configuring..." : "Waiting..."}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full mt-2 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:opacity-95 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs sm:text-sm shadow-[0_0_30px_rgba(147,51,234,0.3)] transition-all cursor-pointer disabled:opacity-50"
-            >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin text-white" />
-              ) : (
-                <>
-                  <span>{isRegister ? "Launch Account" : "Sign In Now"}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-
-          {/* Bottom Security Info Badge */}
-          <div className="pt-3 border-t border-neutral-900 text-center">
-            <p className="text-[11px] text-neutral-500 flex items-center justify-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-              Encrypted JWT Session • Private AI Context
-            </p>
           </div>
-        </div>
+        )}
 
-        {/* Footer Legal Links */}
-        <footer className="pt-4 text-center shrink-0">
-          <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-neutral-400">
-            <Link
-              href="/privacy"
-              className="hover:text-purple-400 transition-colors flex items-center gap-1 font-medium"
-            >
-              <ShieldCheck className="w-3.5 h-3.5 text-purple-400" />
-              <span>Privacy Policy</span>
-            </Link>
-            <span className="text-neutral-800">•</span>
-            <Link
-              href="/terms"
-              className="hover:text-cyan-400 transition-colors flex items-center gap-1 font-medium"
-            >
-              <FileText className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Terms of Service</span>
-            </Link>
-            <span className="text-neutral-800">•</span>
-            <Link
-              href="/contact"
-              className="hover:text-pink-400 transition-colors flex items-center gap-1 font-medium"
-            >
-              <Mail className="w-3.5 h-3.5 text-pink-400" />
-              <span>Contact Support</span>
-            </Link>
-          </div>
-          <p className="text-[10px] text-neutral-600 mt-1.5 font-mono">
-            © {new Date().getFullYear()} NextAiChat Inc. All rights reserved.
-          </p>
-        </footer>
       </div>
     </div>
   );

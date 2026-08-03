@@ -60,25 +60,29 @@ ${characterListFormatted}
 === TURN-BY-TURN RULES ===
 1. You MUST generate the response for ONLY ONE character per API call.
 2. Select the character who naturally should speak next based on conversation flow, scene context, and previous dialogue.
-3. A character can speak in consecutive turns if they have a follow-up sentence or thought before someone else speaks!
+3. MULTI-PART & COMPLETE EXPLANATIONS (CRITICAL):
+   - When answering a user's question, syllabus request, or topic explanation (e.g. HLD topics, exam prep, rules), the character MUST NOT stop mid-way!
+   - If the answer requires multiple turns, tables, or follow-up details (e.g. syllabus points), set "nextSpeaker" to the SAME character name (e.g. "${characterNames[0] || "Prof. Ananya"}") and "isUserTurn": false so the character continues speaking in consecutive turns to complete their full explanation BEFORE handing back to the user!
 4. ${lengthDirective}
-5. CHARACTER INNER THOUGHTS: When a character thinks something in their mind, enclose the thought in single quotes like 'ye dono kya kar rhe hai' followed by spoken dialogue. Example: 'ye dono kya kar rhe hai' waise aaj ka kya plan hai
-6. CINEMATIC NARRATIVE HOOKS: At dramatic scene points, cliffhangers, or turn transitions, naturally include narrative notes in parentheses such as (Ab dekhte hai aage kya hota hai...) or (Ab aage kya hoga...) to build excitement!
+5. CHARACTER INNER THOUGHTS: Enclose inner thoughts strictly inside parentheses like (Ab dekhte hain student pehle kis topic par focus karta hai...). DO NOT use single quotes '...' for thoughts!
+6. CINEMATIC NARRATIVE HOOKS & TABLES:
+   - Use Markdown tables when presenting structured lists, syllabi, or options.
+   - Include scene notes in parentheses when relevant.
 7. Decide who should speak in the NEXT turn:
    - Name of another character (e.g. ${characterNames.join(", ")})
-   - Same character again if they have more to say immediately
-   - "USER" (or "me") if it is time for the user to respond.
+   - Same character again if their response/explanation is incomplete or has follow-up details!
+   - "USER" (or "me") ONLY when the character has COMPLETELY finished their thought, question, or full explanation.
 
 === CRITICAL JSON OUTPUT FORMAT ===
 You MUST return ONLY valid JSON matching this exact structure (no markdown fences, no plain text outside JSON):
 {
   "speakingCharacter": "Name of the character speaking in this turn",
-  "dialogue": "Spoken dialogue and actions for this character turn",
-  "nextSpeaker": "Exact name of the character who should speak next, OR 'USER' if user's turn",
+  "dialogue": "Spoken dialogue, explanation, tables, or actions for this character turn",
+  "nextSpeaker": "Exact name of the character who should speak next (same character if explanation is incomplete), OR 'USER' if turn is finished",
   "isUserTurn": true_or_false
 }
 
-Note: Set "isUserTurn": true ONLY if "nextSpeaker" is 'USER' or 'me', indicating the AI turn sequence should pause for user input.`;
+Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 100% complete and it is time for the user to reply.`;
 
   let lastError = null;
 

@@ -54,7 +54,12 @@ export async function POST(req) {
     const response = NextResponse.json({
       message: "User registered successfully",
       token,
-      user: { id: user.id, name: user.name },
+      user: {
+        id: user.id,
+        name: user.name,
+        language: user.language || "en",
+        hasChosenLanguage: user.hasChosenLanguage || false,
+      },
     });
 
     // Set HTTP-only cookie

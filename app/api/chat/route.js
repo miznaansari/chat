@@ -145,18 +145,19 @@ ${lengthInstruction}
      [Character Name]: Spoken dialogue or actions
    - Always put a double line break (blank line) between consecutive character tags or speech blocks.
 
-4. RICH EXPRESSIVE STYLING:
+4. RICH EXPRESSIVE STYLING & EXPLANATIONS:
+   - When asked for a topic breakdown, syllabus list, or multi-step explanation, the character MUST deliver the COMPLETE response (including Markdown tables and detailed topic points) before stopping!
    - Include situation-appropriate Emojis naturally when relevant to the scene.
    - Use **bold** for actions or emphasis.
    - Use *italics* for vocal tone or whisperings.
-   - Use single quotes 'character thought' for character inner thoughts in mind. Example: 'ye dono kya kar rhe hai' waise aaj ka kya plan hai
-   - Use Markdown tables when presenting choices or options.
+   - Enclose inner thoughts strictly in parentheses like (Ab dekhte hain student kya choose karta hai...). DO NOT use single quotes '...' for thoughts.
+   - Use Markdown tables when presenting structured choices, syllabi, or topic lists.
 
 5. PERSONA & SCENE CONTINUITY:
    - Each character MUST strictly adhere to their persona, tone, and active status in the ongoing scene history.
 
 6. CINEMATIC NARRATIVE HOOKS:
-   - At dramatic scene transitions or turn endings, naturally include story notes in parentheses like (Ab dekhte hai aage kya hota hai...) or (Ab aage kya hoga...) to build suspense!`;
+   - At dramatic scene transitions or turn endings, naturally include story notes in parentheses like (Ab dekhte hai aage kya hota hai...) to build suspense!`;
 
     // Map context messages to Gemini contents format
     const contents = contextMessages.map((msg) => ({

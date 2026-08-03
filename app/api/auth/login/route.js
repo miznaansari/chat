@@ -52,7 +52,12 @@ export async function POST(req) {
     const response = NextResponse.json({
       message: "Logged in successfully",
       token,
-      user: { id: user.id, name: user.name },
+      user: {
+        id: user.id,
+        name: user.name,
+        language: user.language || "en",
+        hasChosenLanguage: user.hasChosenLanguage || false,
+      },
     });
 
     response.cookies.set("auth_token", token, {

@@ -29,7 +29,7 @@ dev.db
 .DS_Store
 *.pem
 *.log
-
+nextaichat
 # env files
 .env
 .env.*
