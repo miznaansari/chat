@@ -41,3 +41,39 @@ export async function PATCH(req, { params }) {
     );
   }
 }
+
+// DELETE message from database
+export async function DELETE(req, { params }) {
+  try {
+    const user = await RequireUser(req);
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { id, messageId } = await params;
+
+    // Verify chat ownership
+    const chatSession = await prisma.chatSession.findUnique({
+      where: { id },
+    });
+
+    if (!chatSession || chatSession.userId !== user.id) {
+      return NextResponse.json({ error: "Forbidden: Access denied" }, { status: 403 });
+    }
+
+    await prisma.chatMessage.delete({
+      where: {
+        id: messageId,
+        chatSessionId: id,
+      },
+    });
+
+    return NextResponse.json({ success: true, messageId });
+  } catch (error) {
+    console.error("Delete Message Error:", error);
+    return NextResponse.json(
+      { error: "Failed to delete message" },
+      { status: 500 }
+    );
+  }
+}

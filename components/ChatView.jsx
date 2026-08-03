@@ -350,6 +350,7 @@ const ChatMessageItem = memo(function ChatMessageItem({
   sessionChars,
   onToggleContext,
   isToggling,
+  onRequestDelete,
 }) {
   const isUser = msg.role === "user";
   const charBlocks = useMemo(
@@ -378,7 +379,7 @@ const ChatMessageItem = memo(function ChatMessageItem({
               : `Scene Roleplay Dialogue (${sessionChars.map((c) => c.name).join(", ")})`}
           </span>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {!msg.includeInContext && (
               <span className="text-[10px] bg-amber-950/80 border border-amber-800 text-amber-300 px-1.5 py-0.5 rounded">
                 Excluded from AI context
@@ -409,6 +410,14 @@ const ChatMessageItem = memo(function ChatMessageItem({
               ) : (
                 <EyeOff className="w-3.5 h-3.5" />
               )}
+            </button>
+
+            <button
+              onClick={() => onRequestDelete(msg)}
+              className="p-1 rounded text-neutral-500 hover:text-red-400 hover:bg-neutral-900 transition-colors cursor-pointer"
+              title="Delete Message"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -1048,6 +1057,34 @@ export default function ChatView({
     }
   };
 
+  const [messageToDelete, setMessageToDelete] = useState(null);
+  const [isDeletingMessage, setIsDeletingMessage] = useState(false);
+
+  const handleConfirmDeleteMessage = async () => {
+    if (!messageToDelete || !activeChat) return;
+    const targetId = messageToDelete.id;
+    setIsDeletingMessage(true);
+
+    // Optimistically remove message from state
+    setMessages((prev) => prev.filter((m) => m.id !== targetId));
+
+    try {
+      const res = await fetch(`/api/chats/${activeChat.id}/messages/${targetId}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        throw new Error("Failed to delete message from database");
+      }
+    } catch (err) {
+      console.error("Delete message error", err);
+      alert("Failed to delete message: " + err.message);
+      fetchChatMessages(activeChat.id);
+    } finally {
+      setIsDeletingMessage(false);
+      setMessageToDelete(null);
+    }
+  };
+
   const [optimizingFieldEdit, setOptimizingFieldEdit] = useState(null);
 
   const handleOptimizeTextEdit = async (target, text, type = "persona") => {
@@ -1650,6 +1687,7 @@ export default function ChatView({
                   sessionChars={sessionChars}
                   onToggleContext={handleToggleContext}
                   isToggling={togglingContextIds.has(msg.id)}
+                  onRequestDelete={(m) => setMessageToDelete(m)}
                 />
               );
             })}
@@ -2086,6 +2124,45 @@ export default function ChatView({
                 className="px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white hover:bg-blue-500 transition-colors"
               >
                 Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Message Confirmation Modal Dialog */}
+      {messageToDelete && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center mx-auto mb-1">
+              <Trash2 className="w-6 h-6 text-red-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">Delete Message?</h3>
+              <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
+                Are you sure you want to delete this message? This action will permanently remove it from your chat history and database.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setMessageToDelete(null)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 bg-neutral-800 hover:bg-neutral-700 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingMessage}
+                onClick={handleConfirmDeleteMessage}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-red-600 hover:bg-red-500 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-red-900/30 cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingMessage ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <span>Delete</span>
+                )}
               </button>
             </div>
           </div>

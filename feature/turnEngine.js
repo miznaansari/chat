@@ -102,9 +102,17 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
           responseMimeType: "application/json",
         },
       });
-      console.timeEnd(timerLabel);
+      const candidate = response.candidates?.[0];
+      const finishReason = candidate?.finishReason;
+
+      if (finishReason === "SAFETY") {
+        throw new Error("Response was blocked by Gemini Safety Filters.");
+      }
 
       const responseText = response.text ? response.text.trim() : "";
+      if (!responseText) {
+        throw new Error("Gemini API returned an empty response. Rate limit or quota limit may have been reached.");
+      }
 
       // Robust JSON Extraction & Parsing
       let parsed = null;
@@ -121,11 +129,11 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
               parsed = JSON.parse(jsonMatch[0]);
             }
           } catch (e3) {
-            console.warn("Gemini turn output is not valid JSON. Using safe fallback parser.", responseText);
+            console.warn("Gemini turn output is raw text instead of JSON.", responseText);
             const defaultChar = characterNames[0] || "AI";
             parsed = {
               speakingCharacter: defaultChar,
-              dialogue: responseText || "(nods quietly)",
+              dialogue: responseText,
               nextSpeaker: "USER",
               isUserTurn: true,
             };
@@ -133,14 +141,8 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
         }
       }
 
-      if (!parsed) {
-        const defaultChar = characterNames[0] || "AI";
-        parsed = {
-          speakingCharacter: defaultChar,
-          dialogue: responseText || "(nods quietly)",
-          nextSpeaker: "USER",
-          isUserTurn: true,
-        };
+      if (!parsed || !parsed.dialogue) {
+        throw new Error("Failed to parse dialogue from Gemini API response.");
       }
 
       const speakingCharacter = parsed.speakingCharacter || characterNames[0] || "Character";
@@ -186,8 +188,14 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
         formattedContent: `[${speakingCharacter}]: ${dialogue}`,
       };
     } catch (err) {
-      console.warn(`Turn engine attempt failed using ${label}:`, err?.message || err);
-      lastError = err;
+      const errMsg = err?.message || String(err);
+      console.warn(`Turn engine attempt failed using ${label}:`, errMsg);
+
+      if (errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("429") || errMsg.includes("Quota") || errMsg.includes("quota")) {
+        lastError = new Error("Gemini API Rate Limit / Quota Exceeded (429). Please wait a few seconds or try again.");
+      } else {
+        lastError = err;
+      }
     }
   }
 
