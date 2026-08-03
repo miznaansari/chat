@@ -3,43 +3,52 @@ import prisma from "@/lib/prisma";
 export const revalidate = 3600; // Revalidate every hour
 
 export default async function sitemap() {
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.online";
+  const rawBaseUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://nextaichat.online";
+  // Strip trailing slashes to prevent double slash sitemap errors (e.g. https://domain.com//compare)
+  const baseUrl = rawBaseUrl.replace(/\/$/, "");
+  const now = new Date();
 
   // Static site routes
   const staticRoutes = [
     {
       url: `${baseUrl}`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "daily",
       priority: 1.0,
     },
     {
       url: `${baseUrl}/compare`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "weekly",
       priority: 0.9,
     },
     {
       url: `${baseUrl}/blog`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "daily",
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/privacy`,
-      lastModified: new Date(),
+      url: `${baseUrl}/contact`,
+      lastModified: now,
       changeFrequency: "monthly",
-      priority: 0.3,
+      priority: 0.7,
+    },
+    {
+      url: `${baseUrl}/privacy`,
+      lastModified: now,
+      changeFrequency: "monthly",
+      priority: 0.4,
     },
     {
       url: `${baseUrl}/terms`,
-      lastModified: new Date(),
+      lastModified: now,
       changeFrequency: "monthly",
-      priority: 0.3,
+      priority: 0.4,
     },
   ];
 
-  // Fetch dynamic published blog posts from Prisma DB
+  // Fetch dynamic published blog posts safely from Database
   let blogRoutes = [];
   try {
     const blogs = await prisma.blogPost.findMany({
@@ -47,12 +56,18 @@ export default async function sitemap() {
       select: { slug: true, updatedAt: true },
     });
 
-    blogRoutes = blogs.map((blog) => ({
-      url: `${baseUrl}/blog/${blog.slug}`,
-      lastModified: new Date(blog.updatedAt),
-      changeFrequency: "weekly",
-      priority: 0.7,
-    }));
+    blogRoutes = blogs
+      .filter((blog) => blog && blog.slug)
+      .map((blog) => {
+        const blogDate = blog.updatedAt ? new Date(blog.updatedAt) : now;
+        const validDate = isNaN(blogDate.getTime()) ? now : blogDate;
+        return {
+          url: `${baseUrl}/blog/${encodeURIComponent(blog.slug)}`,
+          lastModified: validDate,
+          changeFrequency: "weekly",
+          priority: 0.7,
+        };
+      });
   } catch (error) {
     console.error("Error generating blog sitemap entries:", error);
   }

@@ -1795,6 +1795,7 @@ export default function ChatView({
                     <div className="flex items-center gap-1.5 p-1 bg-neutral-950 border border-neutral-800 rounded-xl mb-2">
                       <input
                         type="text"
+                        tabIndex={-1}
                         placeholder="Type phrase or name..."
                         value={newSnippetInput}
                         onChange={(e) => setNewSnippetInput(e.target.value)}
@@ -1863,6 +1864,10 @@ export default function ChatView({
             onKeyDown={handleKeyDown}
             placeholder={`Speak to ${sessionChars.map((c) => c.name).join(", ")}...`}
             className="flex-1 bg-transparent text-base sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none max-h-40 min-h-[42px] py-2 leading-relaxed touch-manipulation cursor-text"
+            enterKeyHint="send"
+            inputMode="text"
+            autoComplete="off"
+            autoCorrect="off"
           />
 
           <div className="flex items-center gap-1 shrink-0 mb-1">

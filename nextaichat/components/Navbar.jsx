@@ -16,6 +16,7 @@ export default function Navbar() {
     { name: "Home", href: "/" },
     { name: "Compare (vs Character.ai)", href: "/compare" },
     { name: "Blog", href: "/blog" },
+    { name: "Contact", href: "/contact" },
   ];
 
   return (

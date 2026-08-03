@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import packageInfo from "@/package.json";
-import { Sparkles, ShieldCheck, FileText, LayoutDashboard, Cpu, Radio } from "lucide-react";
+import { Sparkles, ShieldCheck, FileText, LayoutDashboard, Cpu, Radio, Mail } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 export default function Footer() {
@@ -99,6 +99,12 @@ export default function Footer() {
               <Link href="/terms" className="hover:text-cyan-300 transition-colors flex items-center gap-2">
                 <FileText className="w-4 h-4 text-cyan-400" />
                 <span>{t("Terms of Service")}</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/contact" className="hover:text-pink-300 transition-colors flex items-center gap-2">
+                <Mail className="w-4 h-4 text-pink-400" />
+                <span>{t("Contact Support Desk")}</span>
               </Link>
             </li>
           </ul>
