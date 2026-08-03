@@ -826,17 +826,17 @@ export default function ChatView({
           setMessages((prev) =>
             prev.map((m) => (m.id === modelMessage.id ? { ...m, content: fullContent } : m))
           );
-          if (!userScrolledUp.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          if (!userScrolledUp.current && chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
           }
-          setTimeout(resolve, 400);
+          setTimeout(resolve, 150);
         } else {
           const partial = fullContent.slice(0, index);
           setMessages((prev) =>
             prev.map((m) => (m.id === modelMessage.id ? { ...m, content: partial } : m))
           );
-          if (!userScrolledUp.current) {
-            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          if (!userScrolledUp.current && chatContainerRef.current) {
+            chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
           }
         }
       }, intervalMs);
@@ -1162,10 +1162,10 @@ export default function ChatView({
   const sessionChars = activeChat.sessionCharacters || charactersEdit || [];
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-transparent text-neutral-100 overflow-hidden relative overscroll-none">
+    <div className="flex-1 flex flex-col h-full min-h-0 bg-transparent text-neutral-100 overflow-hidden relative">
 
       {/* Top Multi-Character Session Bar */}
-      <div className="h-14 border-b border-neutral-800/80 px-3 md:px-6 flex items-center justify-between bg-neutral-950/80 backdrop-blur-md z-10 shrink-0 touch-none select-none overscroll-none">
+      <div className="h-14 border-b border-neutral-800/80 px-3 md:px-6 flex items-center justify-between bg-neutral-950/80 backdrop-blur-md z-10 shrink-0 select-none">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
           <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xs shrink-0">
             <Users className="w-4 h-4" />
@@ -1558,7 +1558,7 @@ export default function ChatView({
       <div
         ref={chatContainerRef}
         onScroll={handleContainerScroll}
-        className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 touch-pan-y overscroll-contain relative"
+        className="flex-1 overflow-y-auto min-h-0 p-4 md:p-8 space-y-6 relative"
       >
         {fetchingMessages && messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center my-12">
