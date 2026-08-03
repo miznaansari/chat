@@ -434,7 +434,7 @@ export default function GeminiLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         {/* Top Header Bar matching Gemini UI screenshot */}
-        <header className="h-14 border-b border-purple-500/20 px-3 md:px-6 flex items-center justify-between bg-neutral-950/40 backdrop-blur-xl z-30 shrink-0 relative">
+        <header className="solid-fixed-header h-14 border-b border-purple-500/20 px-3 md:px-6 flex items-center justify-between bg-neutral-950 select-none">
 
 
           <div className="flex items-center gap-2">
@@ -514,7 +514,7 @@ export default function GeminiLayout({
         </header>
 
         {/* Content View */}
-        <main className="flex-1 flex overflow-hidden relative">{children}</main>
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">{children}</main>
       </div>
     </div>
   );
