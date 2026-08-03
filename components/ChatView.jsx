@@ -1687,10 +1687,6 @@ export default function ChatView({
       <div className="p-3 md:px-8 max-w-4xl mx-auto w-full z-10">
         <form
           onSubmit={handleSendMessage}
-          onContextMenu={(e) => {
-            e.preventDefault();
-            setShowSnippetsMenu(true);
-          }}
           className="relative bg-neutral-900 border border-neutral-800 rounded-2xl md:rounded-3xl p-2 px-3.5 shadow-2xl flex items-end gap-2.5 focus-within:border-neutral-700 transition-all"
         >
           {/* Quick Snippets & Instant Paste Button + Popover Menu */}
@@ -1705,7 +1701,7 @@ export default function ChatView({
                 ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20 rotate-45"
                 : "text-neutral-400 hover:text-white hover:bg-neutral-800"
                 }`}
-              title="Instant Paste Snippets & Menu (Right-click anywhere on screen to open)"
+              title="Instant Paste Snippets & Menu"
             >
               <Plus className="w-5 h-5 transition-transform" />
             </button>
@@ -1796,7 +1792,7 @@ export default function ChatView({
 
                   {/* Add Custom Snippet Inline Control */}
                   {showAddSnippetInput && (
-                    <div className="flex items-center gap-2 my-2 p-1.5 bg-neutral-950 rounded-xl border border-neutral-700/80 w-full">
+                    <div className="flex items-center gap-1.5 p-1 bg-neutral-950 border border-neutral-800 rounded-xl mb-2">
                       <input
                         type="text"
                         placeholder="Type phrase or name..."
@@ -1865,13 +1861,8 @@ export default function ChatView({
             value={inputPrompt}
             onChange={(e) => setInputPrompt(e.target.value)}
             onKeyDown={handleKeyDown}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              setShowSnippetsMenu(true);
-            }}
             placeholder={`Speak to ${sessionChars.map((c) => c.name).join(", ")}...`}
-            className="flex-1 bg-transparent text-base sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none max-h-40 min-h-[38px] py-2 leading-relaxed"
-            disabled={loading}
+            className="flex-1 bg-transparent text-base sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none max-h-40 min-h-[42px] py-2 leading-relaxed touch-manipulation cursor-text"
           />
 
           <div className="flex items-center gap-1 shrink-0 mb-1">
