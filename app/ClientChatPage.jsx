@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import GeminiLayout from "@/components/GeminiLayout";
 import ChatView from "@/components/ChatView";
+import HomeDiscoveryView from "@/components/HomeDiscoveryView";
 import NewSessionModal from "@/components/NewSessionModal";
 
 export default function ClientChatPage({ initialUser, initialChats = [] }) {
@@ -14,6 +15,7 @@ export default function ClientChatPage({ initialUser, initialChats = [] }) {
     initialChats && initialChats.length > 0 ? initialChats[0].id : null
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState("home"); // "home" | "chat"
 
   useEffect(() => {
     fetchChats();
@@ -43,6 +45,7 @@ export default function ClientChatPage({ initialUser, initialChats = [] }) {
   const handleSessionCreated = (newSession) => {
     setChats((prev) => [newSession, ...prev]);
     setActiveChatId(newSession.id);
+    setViewMode("chat");
   };
 
   const handleUpdateChat = (updatedSession) => {
@@ -66,6 +69,7 @@ export default function ClientChatPage({ initialUser, initialChats = [] }) {
         if (activeChatId === chatId) {
           const remaining = chats.filter((c) => c.id !== chatId);
           setActiveChatId(remaining.length > 0 ? remaining[0].id : null);
+          if (remaining.length === 0) setViewMode("home");
         }
       } else {
         alert("Failed to delete chat session.");
@@ -104,6 +108,7 @@ export default function ClientChatPage({ initialUser, initialChats = [] }) {
 
     if (activeChatId && targetSet.has(activeChatId)) {
       setActiveChatId(remaining.length > 0 ? remaining[0].id : null);
+      if (remaining.length === 0) setViewMode("home");
     }
 
     try {
@@ -128,19 +133,37 @@ export default function ClientChatPage({ initialUser, initialChats = [] }) {
       chats={chats}
       activeChatId={activeChatId}
       activeChat={activeChat}
+      viewMode={viewMode}
+      onSelectHome={() => setViewMode("home")}
       onUpdateChat={handleUpdateChat}
-      onSelectChat={(id) => setActiveChatId(id)}
+      onSelectChat={(id) => {
+        setActiveChatId(id);
+        setViewMode("chat");
+      }}
       onNewChat={() => setIsModalOpen(true)}
       onDeleteChat={handleDeleteChat}
       onBatchDeleteChats={handleBatchDeleteChats}
       onLogout={handleLogout}
     >
-      <ChatView
-        activeChat={activeChat}
-        onUpdateChat={handleUpdateChat}
-        onDeleteChat={handleDeleteChat}
-        onOpenNewModal={() => setIsModalOpen(true)}
-      />
+      {viewMode === "home" ? (
+        <HomeDiscoveryView
+          chats={chats}
+          onSelectChat={(id) => {
+            setActiveChatId(id);
+            setViewMode("chat");
+          }}
+          onSessionCreated={handleSessionCreated}
+          onOpenNewModal={() => setIsModalOpen(true)}
+          onSwitchToChatView={() => setViewMode("chat")}
+        />
+      ) : (
+        <ChatView
+          activeChat={activeChat}
+          onUpdateChat={handleUpdateChat}
+          onDeleteChat={handleDeleteChat}
+          onOpenNewModal={() => setIsModalOpen(true)}
+        />
+      )}
 
       <NewSessionModal
         isOpen={isModalOpen}

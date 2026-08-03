@@ -15,6 +15,11 @@ import {
   X,
   Settings,
   CheckSquare,
+  Home,
+  FileText,
+  Compass,
+  Heart,
+  User,
 } from "lucide-react";
 
 
@@ -23,6 +28,8 @@ export default function GeminiLayout({
   chats = [],
   activeChatId,
   activeChat,
+  viewMode = "home",
+  onSelectHome,
   onUpdateChat,
   onSelectChat,
   onNewChat,
@@ -227,6 +234,33 @@ export default function GeminiLayout({
               className={`p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800/60 transition-[opacity,max-width,padding,colors] duration-200 ease-out shrink-0 ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "md:opacity-100 md:max-w-[40px]"}`}
             >
               <SquarePen className="w-5 h-5" />
+            </button>
+          </Tooltip>
+        </div>
+
+        {/* Home & Discover Grid Button */}
+        <div className="px-2 sm:px-3 pt-2 shrink-0">
+          <Tooltip content="Home Character Showcase" position="right" badgeIcon="🏠" className="w-full">
+            <button
+              onClick={() => {
+                if (onSelectHome) onSelectHome();
+                setMobileOpen(false);
+              }}
+              className={`w-full font-medium py-2.5 px-3 rounded-xl flex items-center gap-3 justify-start transition-all duration-200 ease-out cursor-pointer touch-manipulation ${
+                viewMode === "home"
+                  ? "bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white shadow-md font-bold border border-purple-400"
+                  : "bg-neutral-900/60 hover:bg-neutral-800 text-neutral-300 border border-neutral-800"
+              }`}
+            >
+              <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
+              <span
+                className={`transition-[opacity,max-width] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen
+                  ? "md:opacity-0 md:max-w-0 md:pointer-events-none"
+                  : "md:opacity-100 md:max-w-[180px]"
+                  }`}
+              >
+                Discover Characters
+              </span>
             </button>
           </Tooltip>
         </div>
@@ -489,6 +523,41 @@ export default function GeminiLayout({
                 </div>
               )}
             </div>
+
+            {/* Desktop View Switcher Pills */}
+            <div className="hidden sm:flex items-center bg-neutral-900/80 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
+              <button
+                type="button"
+                onClick={() => {
+                  if (onSelectHome) onSelectHome();
+                }}
+                className={`px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold transition-all cursor-pointer ${
+                  viewMode === "home"
+                    ? "bg-purple-600 text-white shadow-sm font-bold"
+                    : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <Home className="w-3.5 h-3.5" />
+                <span>Discovery</span>
+              </button>
+
+              {activeChat && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onSelectChat) onSelectChat(activeChat.id);
+                  }}
+                  className={`px-3 py-1 rounded-full flex items-center gap-1.5 font-semibold transition-all cursor-pointer ${
+                    viewMode === "chat"
+                      ? "bg-purple-600 text-white shadow-sm font-bold"
+                      : "text-neutral-400 hover:text-white"
+                  }`}
+                >
+                  <MessageSquare className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="truncate max-w-[120px]">{activeChat.title}</span>
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Header Right Actions */}
@@ -515,6 +584,77 @@ export default function GeminiLayout({
 
         {/* Content View */}
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">{children}</main>
+
+        {/* Unified Antigravity Bottom Mobile Navigation Bar */}
+        <div className="md:hidden h-16 bg-[#030712]/95 backdrop-blur-xl border-t border-purple-500/20 flex items-center justify-around px-2 z-40 select-none shrink-0">
+          {/* Home Tab */}
+          <button
+            type="button"
+            onClick={() => {
+              if (onSelectHome) onSelectHome();
+            }}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors ${
+              viewMode === "home" ? "text-purple-400 font-bold" : "text-neutral-400 hover:text-white"
+            }`}
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-[10px]">Home</span>
+          </button>
+
+          {/* Prompts Tab */}
+          <button
+            type="button"
+            onClick={() => onNewChat()}
+            className="flex flex-col items-center gap-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <FileText className="w-5 h-5" />
+            <span className="text-[10px]">Prompts</span>
+          </button>
+
+          {/* Center Floating Discover Round Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (onSelectHome) onSelectHome();
+            }}
+            className="w-12 h-12 -mt-6 rounded-full bg-gradient-to-tr from-purple-600 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-purple-600/40 border-2 border-[#030712] hover:scale-105 active:scale-95 transition-all cursor-pointer"
+            title="Discover AI Characters"
+          >
+            <Compass className="w-6 h-6 animate-spin-slow" />
+          </button>
+
+          {/* Favorites / Chats Tab */}
+          <button
+            type="button"
+            onClick={() => {
+              if (chats.length > 0 && onSelectChat) {
+                onSelectChat(chats[0].id);
+              } else {
+                onNewChat();
+              }
+            }}
+            className={`flex flex-col items-center gap-1 cursor-pointer transition-colors relative ${
+              viewMode === "chat" ? "text-purple-400 font-bold" : "text-neutral-400 hover:text-white"
+            }`}
+          >
+            <Heart className="w-5 h-5" />
+            <span className="text-[10px]">Favorites</span>
+            {chats.length > 0 && (
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-purple-600 text-white font-bold text-[9px] flex items-center justify-center">
+                {chats.length}
+              </span>
+            )}
+          </button>
+
+          {/* Profile Tab */}
+          <Link
+            href="/setting"
+            className="flex flex-col items-center gap-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+          >
+            <User className="w-5 h-5" />
+            <span className="text-[10px]">Profile</span>
+          </Link>
+        </div>
       </div>
     </div>
   );

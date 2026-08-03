@@ -102,12 +102,10 @@ export default function LoginForm() {
         throw new Error(data.error || "Authentication failed");
       }
 
-      // Check if user has completed first-time language selection & onboarding
       if (data.user?.hasChosenLanguage) {
         router.push("/");
         router.refresh();
       } else {
-        // Transition to Language Choice Modal
         setStep("language");
       }
     } catch (err) {
@@ -117,54 +115,23 @@ export default function LoginForm() {
     }
   };
 
-  // Start Agent Seeding & Gen-Z Loading Animation
-  const startAgentSeeding = async (chosenLang) => {
+  // Save Language Preference & Direct Redirect to Home Page
+  const handleSaveLanguage = async (chosenLang) => {
     setSelectedLang(chosenLang);
-    setStep("generating");
-    setProgress(5);
-    setActiveAgentIndex(0);
-
-    // Smooth Gen-Z progress animation interval
-    const progressInterval = setInterval(() => {
-      setProgress((prev) => {
-        if (prev >= 95) {
-          clearInterval(progressInterval);
-          return 95;
-        }
-        const nextProgress = prev + Math.floor(Math.random() * 8) + 4;
-        const currentAgent = Math.min(5, Math.floor((nextProgress / 100) * 6));
-        setActiveAgentIndex(currentAgent);
-        return nextProgress;
-      });
-    }, 150);
+    setLoading(true);
 
     try {
-      // Call Onboarding API to seed the 6 DB sessions
-      const res = await fetch("/api/user/onboarding", {
+      await fetch("/api/user/language", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language: chosenLang }),
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Onboarding failed");
-      }
-
-      // Finish progress bar to 100%
-      clearInterval(progressInterval);
-      setProgress(100);
-      setActiveAgentIndex(5);
-
-      setTimeout(() => {
-        router.push("/");
-        router.refresh();
-      }, 700);
     } catch (err) {
-      clearInterval(progressInterval);
-      setError("Failed to create AI agents: " + err.message);
-      setStep("language");
+      console.error("Error saving user language", err);
+    } finally {
+      setLoading(false);
+      router.push("/");
+      router.refresh();
     }
   };
 
@@ -462,7 +429,7 @@ export default function LoginForm() {
             <div className="space-y-3.5">
               {/* Option 1: Hinglish (Indian Names) */}
               <div
-                onClick={() => startAgentSeeding("hinglish")}
+                onClick={() => handleSaveLanguage("hinglish")}
                 className="p-4 rounded-2xl bg-neutral-900/80 hover:bg-neutral-900 border border-purple-500/40 hover:border-purple-400 text-left space-y-2 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
               >
                 <div className="flex items-center justify-between">
@@ -483,7 +450,7 @@ export default function LoginForm() {
 
               {/* Option 2: English (Global Names) */}
               <div
-                onClick={() => startAgentSeeding("en")}
+                onClick={() => handleSaveLanguage("en")}
                 className="p-4 rounded-2xl bg-neutral-900/80 hover:bg-neutral-900 border border-cyan-500/40 hover:border-cyan-400 text-left space-y-2 cursor-pointer transition-all hover:scale-[1.02] shadow-md group"
               >
                 <div className="flex items-center justify-between">
