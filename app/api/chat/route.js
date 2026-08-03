@@ -107,11 +107,13 @@ export async function POST(req) {
 
     let lengthInstruction = "";
     if (responseLength === "veryshort") {
-      lengthInstruction = `\n=== MANDATORY ULTRA-SHORT RESPONSE DIRECTIVE ===\nKeep responses EXTREMELY SHORT (Strictly MAXIMUM 1 single short sentence per speech block). Be lightning-fast, direct, and ultra-concise.`;
+      lengthInstruction = `\n=== MANDATORY ULTRA-SHORT RESPONSE DIRECTIVE (VERY SHORT) ===\nKeep responses EXTREMELY SHORT (Strictly MAXIMUM 1 short sentence under 10 words total per speech block). Absolutely NO long explanations or extra sentences!`;
     } else if (responseLength === "short") {
-      lengthInstruction = `\n=== MANDATORY SHORT RESPONSE DIRECTIVE ===\nKeep character dialogue short and concise (Maximum 1 to 2 short sentences per speech block). Be punchy and fast-paced.`;
+      lengthInstruction = `\n=== MANDATORY SHORT RESPONSE DIRECTIVE (SHORT) ===\nKeep character dialogue short and concise (Maximum 1 to 2 short sentences per speech block). Be punchy, fast-paced, and direct!`;
     } else if (responseLength === "detailed") {
-      lengthInstruction = `\n=== MANDATORY DETAILED RESPONSE DIRECTIVE ===\nProvide detailed, highly descriptive, and immersive roleplay responses with rich character actions, extended dialogue, and inner thoughts.`;
+      lengthInstruction = `\n=== MANDATORY DETAILED RESPONSE DIRECTIVE (DETAILED) ===\nProvide detailed, highly descriptive, and extended roleplay responses with rich character actions, full dialogue, and inner thoughts.`;
+    } else {
+      lengthInstruction = `\n=== MANDATORY BALANCED RESPONSE DIRECTIVE (NORMAL) ===\nKeep responses natural, engaging, and balanced (around 2-3 sentences per character block).`;
     }
 
     const systemInstruction = `You are roleplaying a scene with MULTIPLE CHARACTERS in the following roleplay story scenario:
@@ -145,12 +147,12 @@ ${lengthInstruction}
      [Character Name]: Spoken dialogue or actions
    - Always put a double line break (blank line) between consecutive character tags or speech blocks.
 
-4. RICH EXPRESSIVE STYLING & EXPLANATIONS:
+4. CHARACTER.AI STANDARD ROLEPLAY FORMATTING RULES:
+   - SPOKEN DIALOGUE (CRITICAL): Put all spoken dialogue inside double quotes "...". Example: "P-pucho... kya puchna hai?"
+   - CHARACTER ACTIONS & BODY LANGUAGE: Put physical actions, expressions, gestures, or voice tone inside parentheses (...) or asterisks *...*. Example: (Apni notebook band karke Shan ki taraf dekhti hai) or (Nervous voice)
+   - CHARACTER INNER THOUGHTS: Put inner thoughts strictly inside (thought: '...'). Example: (thought: 'Haye Allah, yeh achanak kya poochne wala hai?')
+   - STORY SCENE HOOKS: Put dramatic scene transitions on standalone lines in parentheses. Example: (Ab dekhte hai aage Shan is naye hukm par kaise react karta hai...)
    - When asked for a topic breakdown, syllabus list, or multi-step explanation, the character MUST deliver the COMPLETE response (including Markdown tables and detailed topic points) before stopping!
-   - Include situation-appropriate Emojis naturally when relevant to the scene.
-   - Use **bold** for actions or emphasis.
-   - Use *italics* for vocal tone or whisperings.
-   - Enclose inner thoughts strictly in parentheses like (Ab dekhte hain student kya choose karta hai...). DO NOT use single quotes '...' for thoughts.
    - Use Markdown tables when presenting structured choices, syllabi, or topic lists.
 
 5. PERSONA & SCENE CONTINUITY:

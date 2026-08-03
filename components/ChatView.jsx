@@ -154,26 +154,29 @@ const NarrativeTeaserCard = memo(function NarrativeTeaserCard({ text }) {
   const cleanText = text.replace(/^\s*[\(*_]+\s*|\s*[\)*_]+\s*$/g, "").trim();
 
   return (
-    <div className="my-2.5 p-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-950/80 via-amber-950/50 to-neutral-900 border border-purple-500/40 text-amber-200/90 shadow-xl backdrop-blur-md flex items-center gap-3 animate-in fade-in duration-200 group hover:border-purple-400/60 transition-all">
-      <div className="w-7 h-7 rounded-xl bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-300 shrink-0 shadow-inner">
-        <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
-      </div>
-      <div className="text-xs sm:text-sm font-serif italic tracking-wide leading-relaxed">
-        <span className="font-semibold text-purple-300 not-italic mr-2 font-sans uppercase tracking-wider text-[10px] bg-purple-950/90 px-2 py-0.5 rounded-md border border-purple-700/60 shadow-xs">
+    <div className="my-2.5 p-3.5 px-4 rounded-2xl bg-gradient-to-r from-purple-950/90 via-amber-950/60 to-neutral-900 border border-purple-500/40 text-amber-200/90 shadow-xl backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 animate-in fade-in duration-200 group hover:border-purple-400/60 transition-all">
+      <div className="flex items-center gap-2 shrink-0">
+        <div className="w-6 h-6 rounded-lg bg-purple-500/20 border border-purple-400/40 flex items-center justify-center text-purple-300 shadow-inner">
+          <Sparkles className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
+        </div>
+        <span className="font-semibold text-purple-300 not-italic font-sans uppercase tracking-wider text-[10px] bg-purple-950/90 px-2 py-0.5 rounded-md border border-purple-700/60 shadow-xs">
           🎬 Story Scene Hook
         </span>
+      </div>
+      <div className="text-xs sm:text-sm font-serif italic tracking-wide leading-relaxed pl-0.5 sm:pl-0">
         "{cleanText}"
       </div>
     </div>
   );
 });
 
-// Helper to render parenthetical thoughts like (Ab dekhte hai student kya choose karta hai...) with a distinct 💭 THOUGHT badge
+// Helper to render Character.ai Standard Roleplay format (Thought, Action, Dialogue)
 function renderContentWithThoughts(children) {
   if (typeof children === "string") {
-    if (!children.includes("(") || !children.includes(")")) return children;
-    // Match parenthetical text like (anything inside parentheses)
-    const regex = /\(([^)\n]{2,})\)/g;
+    if (!children.includes("(")) return children;
+
+    // Match order: 1. Explicit (thought: '...') 2. Parenthetical (action/thought)
+    const regex = /\(\s*thought\s*:\s*['"]?([^'")\n]{2,})['"]?\s*\)|\(([^)\n]{2,})\)/gi;
     const parts = [];
     let lastIndex = 0;
     let match;
@@ -183,27 +186,66 @@ function renderContentWithThoughts(children) {
         parts.push(children.substring(lastIndex, match.index));
       }
 
-      const innerContent = match[1].trim();
-      const wordCount = innerContent.split(/\s+/).filter(Boolean).length;
+      const explicitThoughtText = match[1];
+      const parentheticalText = match[2];
 
-      // Only treat parenthetical text as THOUGHT if it contains a full thought statement (>= 3 words)
-      // Short terms or abbreviations like (HLD) or (LLD) render as normal parenthetical text
-      if (wordCount >= 3) {
+      if (explicitThoughtText !== undefined) {
+        // 💭 THOUGHT CARD (thought: '...')
+        const innerContent = explicitThoughtText.trim();
         parts.push(
           <span
             key={match.index}
-            className="inline-flex items-center gap-1.5 bg-purple-950/80 border border-purple-700/60 text-purple-200 px-2.5 py-1 rounded-xl font-serif italic text-[0.93em] my-1 mx-1 shadow-md backdrop-blur-sm"
+            className="my-1.5 p-3 rounded-2xl bg-purple-950/90 border border-purple-700/60 text-purple-200 font-serif italic text-xs sm:text-sm shadow-lg backdrop-blur-md flex flex-col items-start gap-1.5 w-full sm:w-auto sm:inline-flex"
             title="Character Inner Thought / Reflection"
           >
-            <span className="not-italic font-sans text-[10px] font-bold uppercase tracking-wider text-purple-300 bg-purple-900/90 px-1.5 py-0.5 rounded-md border border-purple-700/60 inline-flex items-center gap-1 shadow-xs">
+            <span className="not-italic font-sans text-[10px] font-bold uppercase tracking-wider text-purple-300 bg-purple-900/90 px-2 py-0.5 rounded-md border border-purple-700/60 inline-flex items-center gap-1 shadow-xs shrink-0">
               <span>💭</span>
               <span>THOUGHT</span>
             </span>
-            "{innerContent}"
+            <span className="leading-relaxed font-serif">"{innerContent}"</span>
           </span>
         );
-      } else {
-        parts.push(`(${innerContent})`);
+      } else if (parentheticalText !== undefined) {
+        const innerContent = parentheticalText.trim();
+        const wordCount = innerContent.split(/\s+/).filter(Boolean).length;
+
+        // Check if explicitly contains thought prefix or reflection
+        const isThought = /^thought\s*:/i.test(innerContent);
+
+        if (isThought) {
+          const cleanThought = innerContent.replace(/^thought\s*:\s*/i, "").replace(/^['"]|['"]$/g, "").trim();
+          parts.push(
+            <span
+              key={match.index}
+              className="my-1.5 p-3 rounded-2xl bg-purple-950/90 border border-purple-700/60 text-purple-200 font-serif italic text-xs sm:text-sm shadow-lg backdrop-blur-md flex flex-col items-start gap-1.5 w-full sm:w-auto sm:inline-flex"
+              title="Character Inner Thought / Reflection"
+            >
+              <span className="not-italic font-sans text-[10px] font-bold uppercase tracking-wider text-purple-300 bg-purple-900/90 px-2 py-0.5 rounded-md border border-purple-700/60 inline-flex items-center gap-1 shadow-xs shrink-0">
+                <span>💭</span>
+                <span>THOUGHT</span>
+              </span>
+              <span className="leading-relaxed font-serif">"{cleanThought}"</span>
+            </span>
+          );
+        } else if (wordCount >= 2) {
+          // 🎭 CHARACTER ACTION / MOVEMENT CARD (...)
+          parts.push(
+            <span
+              key={match.index}
+              className="my-1.5 p-2.5 px-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/30 text-emerald-200 font-sans text-xs sm:text-sm shadow-sm backdrop-blur-md inline-flex items-center gap-2 my-1"
+              title="Character Action & Movement"
+            >
+              <span className="not-italic font-sans text-[9px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-900/90 px-1.5 py-0.5 rounded-md border border-emerald-500/40 shrink-0">
+                🎭 ACTION
+              </span>
+              <span className="italic text-emerald-100 font-normal">
+                {innerContent}
+              </span>
+            </span>
+          );
+        } else {
+          parts.push(`(${innerContent})`);
+        }
       }
 
       lastIndex = regex.lastIndex;
@@ -247,7 +289,7 @@ const FormattedMessageContent = memo(function FormattedMessageContent({ content 
             const isNarrativeHook =
               /^\s*[\(*]*\s*(ab dekhte|ab aage|dekhte hai|dekhte hain|aage kya|aage dekhte|story note|scene note|what happens next)[^)]*[\)*]*\s*$/i.test(
                 trimmed
-              );
+              ) || /^\s*\([^)]+\)\s*$/.test(trimmed);
 
             if (isNarrativeHook) {
               return <NarrativeTeaserCard text={trimmed} />;
@@ -748,8 +790,9 @@ export default function ChatView({
 
       let index = startOffset;
       const remainingLength = fullContent.length - startOffset;
-      const stepSize = Math.max(1, Math.ceil(remainingLength / 220));
-      const intervalMs = 50;
+      // Relaxed, comfortable typewriter streaming pace
+      const stepSize = Math.max(1, Math.ceil(remainingLength / 350));
+      const intervalMs = 65;
 
       const timer = setInterval(() => {
         index += stepSize;

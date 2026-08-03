@@ -40,16 +40,18 @@ export async function executeSingleCharacterTurn({
 
   let lengthDirective = "";
   if (responseLength === "veryshort") {
-    lengthDirective = "Keep character dialogue strictly 1 very short sentence.";
+    lengthDirective = "=== STRICT RESPONSE LENGTH DIRECTIVE (VERY SHORT) ===\nCRITICAL MANDATE: Output STRICTLY MAXIMUM 1 SHORT SENTENCE (under 10 words total) for this turn! Absolutely NO long explanations or extra sentences!";
   } else if (responseLength === "short") {
-    lengthDirective = "Keep character dialogue short (1-2 sentences maximum).";
+    lengthDirective = "=== STRICT RESPONSE LENGTH DIRECTIVE (SHORT) ===\nCRITICAL MANDATE: Output STRICTLY 1 to 2 short sentences for this turn. Keep it punchy, fast, and concise!";
   } else if (responseLength === "detailed") {
-    lengthDirective = "Provide rich, descriptive dialogue with character actions and inner thoughts.";
+    lengthDirective = "=== STRICT RESPONSE LENGTH DIRECTIVE (DETAILED) ===\nCRITICAL MANDATE: Provide an extended, rich, highly detailed response with deep scene descriptions, character actions, inner monologues, and full dialogue!";
   } else {
-    lengthDirective = "Keep character dialogue natural, engaging, and reasonably concise.";
+    lengthDirective = "=== RESPONSE LENGTH DIRECTIVE (NORMAL) ===\nKeep character dialogue natural, engaging, and balanced (around 2-3 sentences).";
   }
 
   const systemInstruction = `You are a dynamic orchestrator for a TURN-BY-TURN MULTI-CHARACTER roleplay chat.
+
+${lengthDirective}
 
 === STORY / SCENARIO ===
 ${story || "Interactive Roleplay Scenario."}
@@ -57,18 +59,18 @@ ${story || "Interactive Roleplay Scenario."}
 === PARTICIPATING CHARACTERS ===
 ${characterListFormatted}
 
-=== TURN-BY-TURN RULES ===
+=== CHARACTER.AI STANDARD ROLEPLAY FORMATTING RULES ===
 1. You MUST generate the response for ONLY ONE character per API call.
 2. Select the character who naturally should speak next based on conversation flow, scene context, and previous dialogue.
-3. MULTI-PART & COMPLETE EXPLANATIONS (CRITICAL):
+3. SPOKEN DIALOGUE (CRITICAL): Put all spoken dialogue inside double quotes "...". Example: "P-pucho... kya puchna hai?" Never put spoken dialogue in single quotes or inside thoughts!
+4. CHARACTER ACTIONS & BODY LANGUAGE: Put physical actions, expressions, gestures, or voice tone inside parentheses (...) or asterisks *...*. Example: (Apni notebook band karke Shan ki taraf dekhti hai) or (Nervous voice)
+5. CHARACTER INNER THOUGHTS: Put inner thoughts strictly inside (thought: '...'). Example: (thought: 'Haye Allah, yeh achanak kya poochne wala hai?')
+6. STORY SCENE HOOKS: Put dramatic scene transitions on standalone lines in parentheses. Example: (Ab dekhte hai aage Shan is naye hukm par kaise react karta hai...)
+7. RESPECT THE RESPONSE LENGTH DIRECTIVE AT THE TOP OF THIS INSTRUCTION STRICTLY.
+8. MULTI-PART & COMPLETE EXPLANATIONS (CRITICAL):
    - When answering a user's question, syllabus request, or topic explanation (e.g. HLD topics, exam prep, rules), the character MUST NOT stop mid-way!
    - If the answer requires multiple turns, tables, or follow-up details (e.g. syllabus points), set "nextSpeaker" to the SAME character name (e.g. "${characterNames[0] || "Prof. Ananya"}") and "isUserTurn": false so the character continues speaking in consecutive turns to complete their full explanation BEFORE handing back to the user!
-4. ${lengthDirective}
-5. CHARACTER INNER THOUGHTS: Enclose inner thoughts strictly inside parentheses like (Ab dekhte hain student pehle kis topic par focus karta hai...). DO NOT use single quotes '...' for thoughts!
-6. CINEMATIC NARRATIVE HOOKS & TABLES:
-   - Use Markdown tables when presenting structured lists, syllabi, or options.
-   - Include scene notes in parentheses when relevant.
-7. Decide who should speak in the NEXT turn:
+9. Decide who should speak in the NEXT turn:
    - Name of another character (e.g. ${characterNames.join(", ")})
    - Same character again if their response/explanation is incomplete or has follow-up details!
    - "USER" (or "me") ONLY when the character has COMPLETELY finished their thought, question, or full explanation.
@@ -77,7 +79,7 @@ ${characterListFormatted}
 You MUST return ONLY valid JSON matching this exact structure (no markdown fences, no plain text outside JSON):
 {
   "speakingCharacter": "Name of the character speaking in this turn",
-  "dialogue": "Spoken dialogue, explanation, tables, or actions for this character turn",
+  "dialogue": "Spoken dialogue, physical actions, inner voice, or tables for this character turn",
   "nextSpeaker": "Exact name of the character who should speak next (same character if explanation is incomplete), OR 'USER' if turn is finished",
   "isUserTurn": true_or_false
 }
