@@ -239,13 +239,13 @@ function renderContentWithThoughts(children) {
             parts.push(
               <span
                 key={match.index}
-                className="my-1.5 p-2.5 px-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/30 text-emerald-200 font-sans text-xs sm:text-sm shadow-sm backdrop-blur-md inline-flex items-center gap-2 my-1"
+                className="my-1.5 p-2.5 px-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/30 text-emerald-200 font-sans text-xs sm:text-sm shadow-sm backdrop-blur-md flex flex-col sm:flex-row items-start sm:items-center gap-1.5 sm:gap-2 my-1 w-full sm:w-auto"
                 title="Character Action & Movement"
               >
                 <span className="not-italic font-sans text-[9px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-900/90 px-1.5 py-0.5 rounded-md border border-emerald-500/40 shrink-0">
                   🎭 ACTION
                 </span>
-                <span className="italic text-emerald-100 font-normal">
+                <span className="italic text-emerald-100 font-normal leading-relaxed">
                   {innerContent}
                 </span>
               </span>
