@@ -27,6 +27,8 @@ import {
   Bookmark,
   MoreVertical,
   ChevronDown,
+  MessageSquare,
+  CornerDownLeft,
 } from "lucide-react";
 
 // Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
@@ -680,6 +682,23 @@ export default function ChatView({
     setContextMenuPos(null);
     if (textareaRef.current) {
       textareaRef.current.focus();
+    }
+  };
+
+  const handlePresetAction = (actionType) => {
+    let presetText = "";
+    if (actionType === "story") {
+      presetText = "(Ab dekhte hai aage kahani mein kya exciting turn aata hai...)";
+    } else if (actionType === "drama") {
+      presetText = "(Achanak scene mein ek bada aur dramatic twist aata hai!)";
+    } else if (actionType === "continue") {
+      presetText = "Aage kya hota hai? Apni baatein continue karo.";
+    } else if (actionType === "group") {
+      presetText = "Aap sab aapas mein is baat par charcha karo aur apna apna point of view rakho.";
+    }
+
+    if (presetText) {
+      handleInsertSnippet(presetText);
     }
   };
 

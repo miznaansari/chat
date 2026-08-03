@@ -106,14 +106,41 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
 
       const responseText = response.text ? response.text.trim() : "";
 
-      // Parse JSON output
+      // Robust JSON Extraction & Parsing
       let parsed = null;
       try {
         parsed = JSON.parse(responseText);
-      } catch (e) {
-        // Fallback cleanup if response contains markdown backticks
-        const cleaned = responseText.replace(/```json/gi, "").replace(/```/g, "").trim();
-        parsed = JSON.parse(cleaned);
+      } catch (e1) {
+        try {
+          const cleaned = responseText.replace(/```json/gi, "").replace(/```/g, "").trim();
+          parsed = JSON.parse(cleaned);
+        } catch (e2) {
+          try {
+            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+              parsed = JSON.parse(jsonMatch[0]);
+            }
+          } catch (e3) {
+            console.warn("Gemini turn output is not valid JSON. Using safe fallback parser.", responseText);
+            const defaultChar = characterNames[0] || "AI";
+            parsed = {
+              speakingCharacter: defaultChar,
+              dialogue: responseText || "(nods quietly)",
+              nextSpeaker: "USER",
+              isUserTurn: true,
+            };
+          }
+        }
+      }
+
+      if (!parsed) {
+        const defaultChar = characterNames[0] || "AI";
+        parsed = {
+          speakingCharacter: defaultChar,
+          dialogue: responseText || "(nods quietly)",
+          nextSpeaker: "USER",
+          isUserTurn: true,
+        };
       }
 
       const speakingCharacter = parsed.speakingCharacter || characterNames[0] || "Character";
