@@ -31,11 +31,11 @@ export async function executeSingleCharacterTurn({
   const characterListFormatted =
     characters.length > 0
       ? characters
-          .map(
-            (c, idx) =>
-              `${idx + 1}. [${c.name}]\nPersona: ${c.persona}`
-          )
-          .join("\n\n")
+        .map(
+          (c, idx) =>
+            `${idx + 1}. [${c.name}]\nPersona: ${c.persona}`
+        )
+        .join("\n\n")
       : "No characters specified.";
 
   let lengthDirective = "";
@@ -89,7 +89,9 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
   let lastError = null;
 
   for (const { key, label } of keysToTry) {
+    const timerLabel = `⏱️ [TurnEngine] Gemini API call (${modelName}) [${label}]`;
     try {
+      console.time(timerLabel);
       const ai = new GoogleGenAI({ apiKey: key });
       const response = await ai.models.generateContent({
         model: modelName,
@@ -100,9 +102,10 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
           responseMimeType: "application/json",
         },
       });
+      console.timeEnd(timerLabel);
 
       const responseText = response.text ? response.text.trim() : "";
-      
+
       // Parse JSON output
       let parsed = null;
       try {

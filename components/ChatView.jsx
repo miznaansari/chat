@@ -228,21 +228,30 @@ function renderContentWithThoughts(children) {
             </span>
           );
         } else if (wordCount >= 2) {
-          // 🎭 CHARACTER ACTION / MOVEMENT CARD (...)
-          parts.push(
-            <span
-              key={match.index}
-              className="my-1.5 p-2.5 px-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/30 text-emerald-200 font-sans text-xs sm:text-sm shadow-sm backdrop-blur-md inline-flex items-center gap-2 my-1"
-              title="Character Action & Movement"
-            >
-              <span className="not-italic font-sans text-[9px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-900/90 px-1.5 py-0.5 rounded-md border border-emerald-500/40 shrink-0">
-                🎭 ACTION
-              </span>
-              <span className="italic text-emerald-100 font-normal">
-                {innerContent}
-              </span>
-            </span>
+          // Check if parenthetical content describes explicit physical action / movement
+          const isAction = /\b(walks|smiles|laughs|nods|points|leans|looks|sighs|whispers|turns|stands|sits|jeb|haath|kaan|sargoshi|kadam|apne|apni|hua|hue|huye|nikalta|nikalti|paas|karita|dekhti|dekhta|muskurate|kehte|dekhne|pakadte|chute|baithte|chalte|action)\b/i.test(
+            innerContent
           );
+
+          if (isAction) {
+            // 🎭 CHARACTER ACTION / MOVEMENT CARD (...)
+            parts.push(
+              <span
+                key={match.index}
+                className="my-1.5 p-2.5 px-3.5 rounded-xl bg-emerald-950/70 border border-emerald-500/30 text-emerald-200 font-sans text-xs sm:text-sm shadow-sm backdrop-blur-md inline-flex items-center gap-2 my-1"
+                title="Character Action & Movement"
+              >
+                <span className="not-italic font-sans text-[9px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-900/90 px-1.5 py-0.5 rounded-md border border-emerald-500/40 shrink-0">
+                  🎭 ACTION
+                </span>
+                <span className="italic text-emerald-100 font-normal">
+                  {innerContent}
+                </span>
+              </span>
+            );
+          } else {
+            parts.push(`(${innerContent})`);
+          }
         } else {
           parts.push(`(${innerContent})`);
         }
@@ -838,7 +847,8 @@ export default function ChatView({
 
     if (chatMode === "turn") {
       try {
-        setTypingCharacter(null);
+        const initialSpeaker = sessionChars.length > 0 ? sessionChars[0].name : "AI";
+        setTypingCharacter(initialSpeaker);
 
         // Initial Turn API call with user prompt
         const res = await fetch("/api/feature/turn", {
@@ -1675,8 +1685,8 @@ export default function ChatView({
                     : undefined
                 }
                 className={`${contextMenuPos
-                    ? "z-[99999] shadow-2xl animate-in zoom-in-95 fade-in duration-150"
-                    : "absolute bottom-12 left-0 z-50 animate-in slide-in-from-bottom-2 fade-in duration-150"
+                  ? "z-[99999] shadow-2xl animate-in zoom-in-95 fade-in duration-150"
+                  : "absolute bottom-12 left-0 z-50 animate-in slide-in-from-bottom-2 fade-in duration-150"
                   } w-80 sm:w-96 bg-neutral-900/95 backdrop-blur-xl border border-neutral-800 rounded-2xl p-4 max-w-[calc(100vw-32px)] ring-1 ring-white/10`}
               >
                 <div className="flex items-center justify-between pb-2.5 border-b border-neutral-800 mb-3">

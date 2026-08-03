@@ -21,6 +21,8 @@ export default function GeminiLayout({
   user,
   chats = [],
   activeChatId,
+  activeChat,
+  onUpdateChat,
   onSelectChat,
   onNewChat,
   onDeleteChat,
@@ -44,8 +46,46 @@ export default function GeminiLayout({
 
   const [mobileOpen, setMobileOpen] = useState(false); // Mobile default CLOSED (no refresh flash)
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
-  const [activeModelName, setActiveModelName] = useState("Gemini 3.5 Flash Lite");
+
+  const getModelDisplayName = (modelId) => {
+    if (modelId === "gemini-3.1-flash-lite") return "Gemini 3.1 Flash Lite";
+    return "Gemini 3.5 Flash Lite";
+  };
+
+  const [activeModelName, setActiveModelName] = useState(() =>
+    getModelDisplayName(activeChat?.selectedModel)
+  );
   const modelDropdownRef = useRef(null);
+
+  // Synchronize dropdown title with activeChat.selectedModel
+  useEffect(() => {
+    if (activeChat?.selectedModel) {
+      setActiveModelName(getModelDisplayName(activeChat.selectedModel));
+    }
+  }, [activeChat?.selectedModel]);
+
+  const handleModelChange = async (modelId) => {
+    const displayName = getModelDisplayName(modelId);
+    setActiveModelName(displayName);
+    setModelDropdownOpen(false);
+
+    if (!activeChatId) return;
+
+    try {
+      const res = await fetch(`/api/chats/${activeChatId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedModel: modelId }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.chatSession && onUpdateChat) {
+        onUpdateChat(data.chatSession);
+      }
+    } catch (e) {
+      console.error("Failed to update selected model:", e);
+    }
+  };
 
   // Close model dropdown on click outside
   useEffect(() => {
@@ -311,33 +351,27 @@ export default function GeminiLayout({
               {modelDropdownOpen && (
                 <div className="absolute top-full left-0 mt-1.5 w-56 bg-neutral-900/95 backdrop-blur-xl border border-neutral-800 rounded-2xl shadow-2xl py-2 z-[9999] ring-1 ring-white/10">
                   <button
-                    onClick={() => {
-                      setActiveModelName("Gemini 3.5 Flash Lite");
-                      setModelDropdownOpen(false);
-                    }}
+                    onClick={() => handleModelChange("gemini-3.5-flash-lite")}
                     className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5 text-blue-400" />
                       <span className="font-semibold">3.5 Flash Lite</span>
                     </div>
-                    {activeModelName.includes("3.5") && (
+                    {(activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel || activeModelName.includes("3.5")) && (
                       <span className="w-2 h-2 rounded-full bg-blue-500 shadow-sm" />
                     )}
                   </button>
 
                   <button
-                    onClick={() => {
-                      setActiveModelName("Gemini 3.1 Flash Lite");
-                      setModelDropdownOpen(false);
-                    }}
+                    onClick={() => handleModelChange("gemini-3.1-flash-lite")}
                     className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-3.5 h-3.5 text-purple-400" />
                       <span className="font-semibold">3.1 Flash Lite</span>
                     </div>
-                    {activeModelName.includes("3.1") && (
+                    {activeChat?.selectedModel === "gemini-3.1-flash-lite" && (
                       <span className="w-2 h-2 rounded-full bg-purple-500 shadow-sm" />
                     )}
                   </button>

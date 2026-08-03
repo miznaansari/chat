@@ -21,7 +21,9 @@ async function generateGeminiContentWithFallback({ modelName, contents, systemIn
   let lastError = null;
 
   for (const { key, label } of keysToTry) {
+    const timerLabel = `⏱️ [ClassicChat] Gemini API call (${modelName}) [${label}]`;
     try {
+      console.time(timerLabel);
       const ai = new GoogleGenAI({ apiKey: key });
       const response = await ai.models.generateContent({
         model: modelName,
@@ -31,6 +33,7 @@ async function generateGeminiContentWithFallback({ modelName, contents, systemIn
           temperature,
         },
       });
+      console.timeEnd(timerLabel);
       return response;
     } catch (err) {
       console.warn(`Gemini API call failed using ${label}:`, err?.message || err);

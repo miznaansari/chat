@@ -92,6 +92,8 @@ export default function ClientChatPage({ initialUser, initialChats = [] }) {
       user={user}
       chats={chats}
       activeChatId={activeChatId}
+      activeChat={activeChat}
+      onUpdateChat={handleUpdateChat}
       onSelectChat={(id) => setActiveChatId(id)}
       onNewChat={() => setIsModalOpen(true)}
       onDeleteChat={handleDeleteChat}
