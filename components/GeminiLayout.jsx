@@ -14,6 +14,7 @@ import {
   ChevronDown,
   X,
   Settings,
+  CheckSquare,
 } from "lucide-react";
 
 
@@ -26,9 +27,41 @@ export default function GeminiLayout({
   onSelectChat,
   onNewChat,
   onDeleteChat,
+  onBatchDeleteChats,
   onLogout,
   children,
 }) {
+  const [isBatchMode, setIsBatchMode] = useState(false);
+  const [selectedChatIds, setSelectedChatIds] = useState(new Set());
+
+  const toggleSelectChat = (id) => {
+    setSelectedChatIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedChatIds.size === chats.length) {
+      setSelectedChatIds(new Set());
+    } else {
+      setSelectedChatIds(new Set(chats.map((c) => c.id)));
+    }
+  };
+
+  const handleBatchDeleteClick = () => {
+    if (selectedChatIds.size === 0) return;
+    if (onBatchDeleteChats) {
+      onBatchDeleteChats(Array.from(selectedChatIds));
+      setSelectedChatIds(new Set());
+      setIsBatchMode(false);
+    }
+  };
   // Synchronously initialize desktop sidebar state from localStorage on frame 0
   const [sidebarOpen, setSidebarOpen] = useState(() => {
     if (typeof window !== "undefined") {
@@ -225,9 +258,65 @@ export default function GeminiLayout({
 
         {/* Recent Chats List */}
         <div className="flex-1 overflow-y-auto px-2 py-2 space-y-1">
-          <div className={`px-3 py-1.5 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider transition-[opacity,max-width,height,padding] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:h-0 md:py-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
-            Recent Roleplays
+          <div className="flex items-center justify-between px-3 py-1.5">
+            <span className={`text-[11px] font-semibold text-neutral-500 uppercase tracking-wider transition-[opacity,max-width,height,padding] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:h-0 md:py-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
+              Recent Roleplays
+            </span>
+
+            {chats.length > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsBatchMode(!isBatchMode);
+                  setSelectedChatIds(new Set());
+                }}
+                className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
+                  isBatchMode
+                    ? "bg-purple-600 text-white border-purple-500 shadow-md"
+                    : "bg-purple-950/60 text-purple-300 border-purple-800/60 hover:bg-purple-900/80 hover:text-white"
+                }`}
+                title="Select chats for fast bulk deletion"
+              >
+                <CheckSquare className="w-3.5 h-3.5" />
+                <span>{isBatchMode ? "Cancel" : "Select Fast"}</span>
+              </button>
+            )}
           </div>
+
+          {/* Batch Selection Action Bar */}
+          {isBatchMode && sidebarOpen && (
+            <div className="mx-1 mb-2 p-2 rounded-xl bg-purple-950/80 border border-purple-800/60 flex items-center justify-between gap-1 text-xs animate-in fade-in duration-150">
+              <button
+                type="button"
+                onClick={toggleSelectAll}
+                className="text-[11px] text-purple-300 hover:text-white font-semibold flex items-center gap-1 cursor-pointer"
+              >
+                {selectedChatIds.size === chats.length ? "Deselect All" : "Select All"}
+              </button>
+
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  disabled={selectedChatIds.size === 0}
+                  onClick={handleBatchDeleteClick}
+                  className="px-2.5 py-1 rounded-lg bg-red-600 hover:bg-red-500 text-white font-semibold text-[11px] flex items-center gap-1 disabled:opacity-40 transition-all cursor-pointer shadow-sm"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  <span>Delete Selected ({selectedChatIds.size})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsBatchMode(false);
+                    setSelectedChatIds(new Set());
+                  }}
+                  className="px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-[11px] font-medium transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
 
           {chats.length === 0 ? (
             <div className={`px-3 py-4 text-center text-xs text-neutral-500 transition-[opacity,max-width,height,padding] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:h-0 md:py-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
@@ -236,17 +325,37 @@ export default function GeminiLayout({
           ) : (
             chats.map((chat) => {
               const isActive = chat.id === activeChatId;
+              const isSelected = selectedChatIds.has(chat.id);
               return (
                 <div
                   key={chat.id}
-                  onClick={() => handleSelectChatMobile(chat.id)}
-                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors duration-150 ease-out justify-start touch-manipulation ${isActive
-                    ? "bg-purple-950/60 border border-purple-800/60 text-white font-medium shadow-sm"
-                    : "text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200"
-                    }`}
+                  onClick={() => {
+                    if (isBatchMode) {
+                      toggleSelectChat(chat.id);
+                    } else {
+                      handleSelectChatMobile(chat.id);
+                    }
+                  }}
+                  className={`group relative flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors duration-150 ease-out justify-start touch-manipulation ${
+                    isSelected
+                      ? "bg-purple-900/80 border border-purple-600 text-white font-medium shadow-sm"
+                      : isActive
+                      ? "bg-purple-950/60 border border-purple-800/60 text-white font-medium shadow-sm"
+                      : "text-neutral-400 hover:bg-neutral-800/40 hover:text-neutral-200"
+                  }`}
                   title={chat.title}
                 >
-                  <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${isActive ? "text-purple-400" : "text-neutral-500"}`} />
+                  {isBatchMode ? (
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleSelectChat(chat.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-4 h-4 rounded accent-purple-600 cursor-pointer shrink-0"
+                    />
+                  ) : (
+                    <MessageSquare className={`w-4 h-4 shrink-0 transition-colors ${isActive ? "text-purple-400" : "text-neutral-500"}`} />
+                  )}
 
                   <div className={`flex-1 min-w-0 flex items-center justify-between gap-2 transition-[opacity,max-width] duration-200 ease-out whitespace-nowrap overflow-hidden origin-left ${!sidebarOpen ? "md:opacity-0 md:max-w-0 md:pointer-events-none" : "md:opacity-100 md:max-w-[200px]"}`}>
 
@@ -260,16 +369,18 @@ export default function GeminiLayout({
                     </div>
 
                     {/* Delete Chat Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteChat(chat.id);
-                      }}
-                      className="opacity-90 md:opacity-0 md:group-hover:opacity-100 p-1 text-neutral-500 hover:text-red-400 hover:bg-neutral-700/60 rounded transition-[opacity,color,background-color] shrink-0"
-                      title="Delete Chat"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {!isBatchMode && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteChat(chat.id);
+                        }}
+                        className="opacity-90 md:opacity-0 md:group-hover:opacity-100 p-1 text-neutral-500 hover:text-red-400 hover:bg-neutral-700/60 rounded transition-[opacity,color,background-color] shrink-0"
+                        title="Delete Chat"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
                 </div>
               );

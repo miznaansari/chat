@@ -86,6 +86,13 @@ You MUST return ONLY valid JSON matching this exact structure (no markdown fence
 
 Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 100% complete and it is time for the user to reply.`;
 
+  const safetySettings = [
+    { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+    { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+    { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+    { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+  ];
+
   let lastError = null;
 
   for (const { key, label } of keysToTry) {
@@ -100,18 +107,32 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
           systemInstruction,
           temperature: 0.85,
           responseMimeType: "application/json",
+          safetySettings,
         },
       });
+      console.timeEnd(timerLabel);
+
       const candidate = response.candidates?.[0];
       const finishReason = candidate?.finishReason;
 
-      if (finishReason === "SAFETY") {
-        throw new Error("Response was blocked by Gemini Safety Filters.");
+      let responseText = "";
+      try {
+        if (typeof response.text === "string" && response.text.trim()) {
+          responseText = response.text.trim();
+        }
+      } catch (e) {}
+
+      if (!responseText && candidate?.content?.parts) {
+        responseText = candidate.content.parts.map((p) => p.text || "").join("").trim();
       }
 
-      const responseText = response.text ? response.text.trim() : "";
+      console.log(`🤖 [TurnEngine] Raw Gemini API Response (${label}) [FinishReason: ${finishReason || "NORMAL"}]:\n`, responseText);
+
       if (!responseText) {
-        throw new Error("Gemini API returned an empty response. Rate limit or quota limit may have been reached.");
+        if (finishReason === "SAFETY") {
+          throw new Error("Gemini Safety Filter: Response was blocked due to safety policy.");
+        }
+        throw new Error(`Gemini API returned an empty response (FinishReason: ${finishReason || "UNKNOWN"}). Rate limit or quota limit may have been reached.`);
       }
 
       // Robust JSON Extraction & Parsing
@@ -129,7 +150,7 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
               parsed = JSON.parse(jsonMatch[0]);
             }
           } catch (e3) {
-            console.warn("Gemini turn output is raw text instead of JSON.", responseText);
+            console.warn("Gemini turn output is raw text instead of JSON:", responseText);
             const defaultChar = characterNames[0] || "AI";
             parsed = {
               speakingCharacter: defaultChar,
@@ -140,6 +161,8 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
           }
         }
       }
+
+      console.log(`✨ [TurnEngine] Parsed Turn Object:\n`, parsed);
 
       if (!parsed || !parsed.dialogue) {
         throw new Error("Failed to parse dialogue from Gemini API response.");
@@ -188,14 +211,8 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
         formattedContent: `[${speakingCharacter}]: ${dialogue}`,
       };
     } catch (err) {
-      const errMsg = err?.message || String(err);
-      console.warn(`Turn engine attempt failed using ${label}:`, errMsg);
-
-      if (errMsg.includes("RESOURCE_EXHAUSTED") || errMsg.includes("429") || errMsg.includes("Quota") || errMsg.includes("quota")) {
-        lastError = new Error("Gemini API Rate Limit / Quota Exceeded (429). Please wait a few seconds or try again.");
-      } else {
-        lastError = err;
-      }
+      console.warn(`Turn engine attempt failed using ${label}:`, err?.message || err);
+      lastError = err;
     }
   }
 

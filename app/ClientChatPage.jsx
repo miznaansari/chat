@@ -85,6 +85,41 @@ export default function ClientChatPage({ initialUser, initialChats = [] }) {
     }
   };
 
+  const handleBatchDeleteChats = async (chatIds) => {
+    if (!chatIds || chatIds.length === 0) return;
+
+    if (
+      !confirm(
+        `Are you sure you want to delete ${chatIds.length} selected chat session${
+          chatIds.length > 1 ? "s" : ""
+        }? All messages will be permanently deleted.`
+      )
+    ) {
+      return;
+    }
+
+    const targetSet = new Set(chatIds);
+    const remaining = chats.filter((c) => !targetSet.has(c.id));
+    setChats(remaining);
+
+    if (activeChatId && targetSet.has(activeChatId)) {
+      setActiveChatId(remaining.length > 0 ? remaining[0].id : null);
+    }
+
+    try {
+      await Promise.all(
+        chatIds.map((id) =>
+          fetch(`/api/chats/${id}`, {
+            method: "DELETE",
+          })
+        )
+      );
+    } catch (err) {
+      console.error("Failed to delete selected chats", err);
+      fetchChats();
+    }
+  };
+
   const activeChat = chats.find((c) => c.id === activeChatId) || null;
 
   return (
@@ -97,6 +132,7 @@ export default function ClientChatPage({ initialUser, initialChats = [] }) {
       onSelectChat={(id) => setActiveChatId(id)}
       onNewChat={() => setIsModalOpen(true)}
       onDeleteChat={handleDeleteChat}
+      onBatchDeleteChats={handleBatchDeleteChats}
       onLogout={handleLogout}
     >
       <ChatView

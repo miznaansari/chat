@@ -29,6 +29,7 @@ import {
   ChevronDown,
   MessageSquare,
   CornerDownLeft,
+  CheckSquare,
 } from "lucide-react";
 
 // Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
@@ -351,6 +352,9 @@ const ChatMessageItem = memo(function ChatMessageItem({
   onToggleContext,
   isToggling,
   onRequestDelete,
+  isBatchMode,
+  isSelected,
+  onToggleSelect,
 }) {
   const isUser = msg.role === "user";
   const charBlocks = useMemo(
@@ -361,9 +365,20 @@ const ChatMessageItem = memo(function ChatMessageItem({
   return (
     <div
       ref={isLatestMsg ? latestMessageRef : null}
-      className={`flex gap-4 max-w-3xl mx-auto group ${isUser ? "justify-end" : "justify-start"
+      className={`flex gap-3 max-w-3xl mx-auto group ${isUser ? "justify-end" : "justify-start"
         }`}
     >
+      {isBatchMode && (
+        <div className="flex items-center justify-center shrink-0 pt-2">
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={() => onToggleSelect(msg.id)}
+            className="w-4 h-4 rounded accent-purple-600 cursor-pointer"
+          />
+        </div>
+      )}
+
       {!isUser && (
         <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 via-purple-600 to-pink-500 flex items-center justify-center text-white shrink-0 text-xs font-bold shadow-md">
           <Users className="w-4 h-4" />
@@ -1085,6 +1100,58 @@ export default function ChatView({
     }
   };
 
+  const [isBatchSelectMessages, setIsBatchSelectMessages] = useState(false);
+  const [selectedMsgIds, setSelectedMsgIds] = useState(new Set());
+  const [showBatchDeleteModal, setShowBatchDeleteModal] = useState(false);
+
+  const toggleSelectMessage = (msgId) => {
+    setSelectedMsgIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(msgId)) {
+        next.delete(msgId);
+      } else {
+        next.add(msgId);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAllMessages = () => {
+    if (selectedMsgIds.size === messages.length) {
+      setSelectedMsgIds(new Set());
+    } else {
+      setSelectedMsgIds(new Set(messages.map((m) => m.id)));
+    }
+  };
+
+  const handleConfirmBatchDeleteMessages = async () => {
+    if (selectedMsgIds.size === 0 || !activeChat) return;
+    const idsToDelete = Array.from(selectedMsgIds);
+    setIsDeletingMessage(true);
+
+    // Optimistically update UI
+    setMessages((prev) => prev.filter((m) => !selectedMsgIds.has(m.id)));
+
+    try {
+      await Promise.all(
+        idsToDelete.map((id) =>
+          fetch(`/api/chats/${activeChat.id}/messages/${id}`, {
+            method: "DELETE",
+          })
+        )
+      );
+    } catch (err) {
+      console.error("Batch delete messages error", err);
+      alert("Failed to delete messages: " + err.message);
+      fetchChatMessages(activeChat.id);
+    } finally {
+      setIsDeletingMessage(false);
+      setShowBatchDeleteModal(false);
+      setSelectedMsgIds(new Set());
+      setIsBatchSelectMessages(false);
+    }
+  };
+
   const [optimizingFieldEdit, setOptimizingFieldEdit] = useState(null);
 
   const handleOptimizeTextEdit = async (target, text, type = "persona") => {
@@ -1363,6 +1430,27 @@ export default function ChatView({
               </span>
             </button>
           </Tooltip>
+
+          {/* Select Messages Batch Button */}
+          {messages.length > 0 && (
+            <Tooltip content="Select multiple messages for fast bulk deletion" position="bottom" badgeIcon="☑️">
+              <button
+                onClick={() => {
+                  setIsBatchSelectMessages(!isBatchSelectMessages);
+                  setSelectedMsgIds(new Set());
+                }}
+                className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-semibold transition-all cursor-pointer ${
+                  isBatchSelectMessages
+                    ? "bg-purple-600 text-white border border-purple-400 shadow-md"
+                    : "bg-neutral-900 border border-neutral-800 text-purple-300 hover:text-white hover:bg-neutral-800"
+                }`}
+              >
+                <CheckSquare className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">{isBatchSelectMessages ? "Done" : "Select Messages"}</span>
+                <span className="sm:hidden">{isBatchSelectMessages ? "Done" : "Select"}</span>
+              </button>
+            </Tooltip>
+          )}
 
           {/* Desktop Delete Button */}
           <Tooltip content="Delete Chat Session" position="bottom" badgeIcon="🗑️">
@@ -1664,6 +1752,47 @@ export default function ChatView({
           </div>
         ) : (
           <>
+            {/* Batch Messages Floating Action Bar */}
+            {isBatchSelectMessages && (
+              <div className="sticky top-2 z-30 max-w-3xl mx-auto my-2 p-2.5 px-4 rounded-2xl bg-purple-950/90 border border-purple-700/80 backdrop-blur-md shadow-2xl flex items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={toggleSelectAllMessages}
+                    className="text-xs font-semibold text-purple-300 hover:text-white flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <CheckSquare className="w-4 h-4 text-purple-400" />
+                    <span>{selectedMsgIds.size === messages.length ? "Deselect All" : "Select All"}</span>
+                  </button>
+                  <span className="text-[11px] text-purple-300/80 font-mono">
+                    ({selectedMsgIds.size} of {messages.length} selected)
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={selectedMsgIds.size === 0}
+                    onClick={() => setShowBatchDeleteModal(true)}
+                    className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40 transition-all cursor-pointer shadow-md"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Selected ({selectedMsgIds.size})</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsBatchSelectMessages(false);
+                      setSelectedMsgIds(new Set());
+                    }}
+                    className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-medium transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
             {messages.length > visibleCount && (
               <div className="flex justify-center my-3">
                 <button
@@ -1688,6 +1817,9 @@ export default function ChatView({
                   onToggleContext={handleToggleContext}
                   isToggling={togglingContextIds.has(msg.id)}
                   onRequestDelete={(m) => setMessageToDelete(m)}
+                  isBatchMode={isBatchSelectMessages}
+                  isSelected={selectedMsgIds.has(msg.id)}
+                  onToggleSelect={toggleSelectMessage}
                 />
               );
             })}
@@ -2162,6 +2294,44 @@ export default function ChatView({
                   <Loader2 className="w-4 h-4 animate-spin text-white" />
                 ) : (
                   <span>Delete</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Batch Messages Delete Confirmation Modal */}
+      {showBatchDeleteModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in zoom-in-95 duration-200 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center mx-auto mb-1">
+              <Trash2 className="w-6 h-6 text-red-400" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">Delete {selectedMsgIds.size} Messages?</h3>
+              <p className="text-xs text-neutral-400 mt-1 leading-relaxed">
+                Are you sure you want to delete these {selectedMsgIds.size} selected messages? They will be permanently removed from your chat history and database.
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowBatchDeleteModal(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-neutral-300 bg-neutral-800 hover:bg-neutral-700 transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isDeletingMessage}
+                onClick={handleConfirmBatchDeleteMessages}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-red-600 hover:bg-red-500 transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-red-900/30 cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingMessage ? (
+                  <Loader2 className="w-4 h-4 animate-spin text-white" />
+                ) : (
+                  <span>Delete Selected</span>
                 )}
               </button>
             </div>
