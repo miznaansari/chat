@@ -26,6 +26,7 @@ import {
   BookOpen,
   Bookmark,
   MoreVertical,
+  ChevronDown,
 } from "lucide-react";
 
 // Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
@@ -685,6 +686,9 @@ export default function ChatView({
   const messagesEndRef = useRef(null);
   const latestMessageRef = useRef(null);
   const textareaRef = useRef(null);
+  const chatContainerRef = useRef(null);
+  const userScrolledUp = useRef(false);
+  const [showScrollBottomBtn, setShowScrollBottomBtn] = useState(false);
   const [isMobileDevice, setIsMobileDevice] = useState(false);
 
   useEffect(() => {
@@ -693,11 +697,27 @@ export default function ChatView({
     }
   }, []);
 
-  // Smooth auto-scroll to bottom as new messages and turns arrive
+  const handleContainerScroll = () => {
+    if (!chatContainerRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = chatContainerRef.current;
+    const isNearBottom = scrollHeight - scrollTop - clientHeight < 150;
+    userScrolledUp.current = !isNearBottom;
+    setShowScrollBottomBtn(!isNearBottom);
+  };
+
+  const scrollToBottom = (behavior = "smooth") => {
+    userScrolledUp.current = false;
+    setShowScrollBottomBtn(false);
+    messagesEndRef.current?.scrollIntoView({ behavior });
+  };
+
+  // Auto-scroll to bottom ONLY when a new prompt is sent or initially loaded
   useEffect(() => {
     if (messages.length === 0) return;
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages.length, loading]);
+    if (!userScrolledUp.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages.length]);
 
   // Auto-expand textarea height as user types
   useEffect(() => {
@@ -749,10 +769,6 @@ export default function ChatView({
       setFetchingMessages(false);
     }
   };
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
 
   // Windowing & Performance Optimization for Large Message Histories
   const [visibleCount, setVisibleCount] = useState(50);
@@ -810,14 +826,18 @@ export default function ChatView({
           setMessages((prev) =>
             prev.map((m) => (m.id === modelMessage.id ? { ...m, content: fullContent } : m))
           );
-          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          if (!userScrolledUp.current) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          }
           setTimeout(resolve, 400);
         } else {
           const partial = fullContent.slice(0, index);
           setMessages((prev) =>
             prev.map((m) => (m.id === modelMessage.id ? { ...m, content: partial } : m))
           );
-          messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          if (!userScrolledUp.current) {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+          }
         }
       }, intervalMs);
     });
@@ -1535,7 +1555,11 @@ export default function ChatView({
       )}
 
       {/* Message Area */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 touch-pan-y overscroll-contain">
+      <div
+        ref={chatContainerRef}
+        onScroll={handleContainerScroll}
+        className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6 touch-pan-y overscroll-contain relative"
+      >
         {fetchingMessages && messages.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center my-12">
             <Loader2 className="w-8 h-8 text-blue-400 animate-spin mb-3" />
@@ -1644,6 +1668,20 @@ export default function ChatView({
 
         <div ref={messagesEndRef} />
       </div>
+
+      {/* Floating Scroll-to-Bottom Button */}
+      {showScrollBottomBtn && (
+        <div className="flex justify-center -mb-2 z-20">
+          <button
+            type="button"
+            onClick={() => scrollToBottom("smooth")}
+            className="px-3 py-1.5 rounded-full bg-neutral-900/90 border border-neutral-700 text-neutral-300 text-xs font-semibold hover:text-white hover:bg-neutral-800 shadow-xl backdrop-blur-md flex items-center gap-1.5 transition-all animate-in fade-in slide-in-from-bottom-2 cursor-pointer"
+          >
+            <ChevronDown className="w-3.5 h-3.5 text-blue-400" />
+            <span>Scroll to bottom</span>
+          </button>
+        </div>
+      )}
 
       {/* Floating Bottom Input Capsule Bar */}
       <div className="p-3 md:px-8 max-w-4xl mx-auto w-full z-10">
