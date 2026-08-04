@@ -2,13 +2,22 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import RequireUser from "@/lib/RequireUser";
 import { executeSingleCharacterTurn } from "@/feature/turnEngine";
-import { trackAiUsage } from "@/lib/aiUsageTracker";
+import { trackAiUsage, checkAiUsageLimit } from "@/lib/aiUsageTracker";
 
 export async function POST(req) {
   try {
     const user = await RequireUser(req);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check user's daily AI usage limit
+    const limitCheck = await checkAiUsageLimit(user.id, user.dailyLimit);
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: `Daily Gemini credit limit reached (${limitCheck.count}/${limitCheck.limit} credits today). Limit resets tomorrow, or contact admin to increase your limit.` },
+        { status: 429 }
+      );
     }
 
     const { chatSessionId, prompt, responseLength = "normal" } = await req.json();
@@ -98,6 +107,7 @@ export async function POST(req) {
       userPersonaName: chatSession.userPersonaName || user.name || "User",
       userPersonaDetails: chatSession.userPersonaDetails || "Standard roleplay participant.",
       responseLength,
+      language: user.language || "en",
     });
 
     // Track Gemini API call usage for today

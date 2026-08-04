@@ -25,6 +25,7 @@ import {
   AlertTriangle,
   UserCheck,
   Loader2,
+  Zap,
 } from "lucide-react";
 
 
@@ -37,7 +38,7 @@ export default function GeminiLayout({
   onSelectHome,
   onUpdateChat,
   onSelectChat,
-  onNewChat = () => {},
+  onNewChat = () => { },
   onDeleteChat,
   onBatchDeleteChats,
   onLogout,
@@ -46,6 +47,30 @@ export default function GeminiLayout({
   const pathname = usePathname();
   const [isBatchMode, setIsBatchMode] = useState(false);
   const [selectedChatIds, setSelectedChatIds] = useState(new Set());
+
+  // Daily Gemini Usage Limit State
+  const [usageLimitData, setUsageLimitData] = useState({
+    todayCount: 0,
+    dailyLimit: 100,
+    remainingCredits: 100,
+    isLimitReached: false,
+  });
+
+  useEffect(() => {
+    fetchUsageData();
+  }, [pathname, activeChatId]);
+
+  const fetchUsageData = async () => {
+    try {
+      const res = await fetch("/api/user/usage");
+      if (res.ok) {
+        const data = await res.json();
+        setUsageLimitData(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch user usage limit data", err);
+    }
+  };
 
   const isHomeActive = pathname === "/" && viewMode === "home";
   const isAddCharActive = pathname === "/character/add";
@@ -476,9 +501,8 @@ export default function GeminiLayout({
               <Tooltip content="App Settings" position="top" badgeIcon="⚙️" className="hidden md:block">
                 <Link
                   href="/setting"
-                  className={`hidden md:flex p-1.5 text-neutral-400 hover:text-purple-400 hover:bg-neutral-800 rounded-lg transition-colors items-center justify-center cursor-pointer ${
-                    !sidebarOpen ? "max-md:opacity-100 md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "opacity-100 max-w-[40px]"
-                  } ${isSettingActive ? "text-purple-400 bg-neutral-800" : ""}`}
+                  className={`hidden md:flex p-1.5 text-neutral-400 hover:text-purple-400 hover:bg-neutral-800 rounded-lg transition-colors items-center justify-center cursor-pointer ${!sidebarOpen ? "max-md:opacity-100 md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "opacity-100 max-w-[40px]"
+                    } ${isSettingActive ? "text-purple-400 bg-neutral-800" : ""}`}
                   title="App Settings"
                 >
                   <Settings className="w-4 h-4" />
@@ -515,10 +539,19 @@ export default function GeminiLayout({
             {/* Toggle Drawer button for Mobile Header */}
             <button
               onClick={handleToggleSidebar}
-              className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-900 transition-colors md:hidden touch-manipulation cursor-pointer"
+              className="p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-900 transition-colors md:hidden touch-manipulation cursor-pointer shrink-0"
             >
               <Menu className="w-5 h-5" />
             </button>
+
+            {/* Mobile Brand Logo on Left */}
+            <Link href="/" className="flex items-center md:hidden shrink-0">
+              <img
+                src="/logo-landspace.png"
+                alt="NextAiChat Logo"
+                className="h-20 w-auto object-contain max-w-[230px]"
+              />
+            </Link>
 
             {/* Top Left: Gemini Model Dropdown (when chat is active) */}
             {viewMode === "chat" && (
@@ -621,36 +654,40 @@ export default function GeminiLayout({
             </div>
           </div>
 
-          {/* Center Brand Logo (when chat is not active) */}
-          {viewMode !== "chat" && (
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center justify-center pointer-events-auto">
-              <Link href="/" className="flex items-center gap-2">
-                <img
-                  src="/logo-landspace.png"
-                  alt="NextAiChat Logo"
-                  className="h-20 sm:hidden w-auto object-contain"
-                />
-              </Link>
-            </div>
-          )}
-
           {/* Header Right Actions */}
           <div className="flex items-center gap-2">
-            <Tooltip content="App Settings" position="bottom" badgeIcon="⚙️" className="hidden md:block">
+            {/* Gemini Daily Credit Chip */}
+            <Tooltip
+              content={
+                usageLimitData?.isLimitReached
+                  ? "Daily limit reached (100 max)! Resets daily at midnight, or click to contact admin."
+                  : `${usageLimitData?.remainingCredits ?? 100} credits remaining out of ${usageLimitData?.dailyLimit ?? 100} today`
+              }
+              position="bottom"
+              badgeIcon="⚡"
+            >
               <Link
                 href="/setting"
-                className={`hidden md:flex p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors items-center justify-center cursor-pointer ${
-                  isSettingActive ? "text-purple-400 bg-neutral-800 border border-purple-500/30" : ""
-                }`}
-                title="App Settings"
+                className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold border transition-all shadow-sm cursor-pointer ${usageLimitData?.isLimitReached
+                  ? "bg-red-950/90 border-red-500/80 text-red-300 hover:bg-red-900/90 animate-pulse"
+                  : ((usageLimitData?.todayCount || 0) / (usageLimitData?.dailyLimit || 100)) >= 0.8
+                    ? "bg-amber-950/90 border-amber-500/80 text-amber-300 hover:bg-amber-900/90"
+                    : "bg-gradient-to-r from-purple-950/90 via-indigo-950/90 to-neutral-900 border-purple-500/40 text-purple-200 hover:border-purple-400 hover:shadow-purple-950/50"
+                  }`}
               >
-                <Settings className="w-4.5 h-4.5" />
+                <Zap className="w-3.5 h-3.5 text-amber-400 fill-current shrink-0" />
+                <span className="font-mono tracking-tight text-white">
+                  {usageLimitData?.todayCount ?? 0}/{usageLimitData?.dailyLimit ?? 100}
+                </span>
+                <span className="hidden sm:inline text-[10px] uppercase tracking-wider text-purple-300 font-black">
+                  Credits
+                </span>
               </Link>
             </Tooltip>
 
-            {/* User Initial Circle in Header */}
+            {/* User Initial Circle in Header (Hidden on mobile) */}
             <div
-              className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-inner shrink-0 cursor-default"
+              className="hidden md:flex w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold items-center justify-center text-xs shadow-inner shrink-0 cursor-default"
               title={`Logged in as ${user?.name || "User"}`}
             >
               {user?.name?.[0]?.toUpperCase() || "M"}
@@ -672,9 +709,8 @@ export default function GeminiLayout({
                 onClick={() => {
                   if (onSelectHome) onSelectHome();
                 }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors cursor-pointer ${
-                  isHomeActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
-                }`}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors cursor-pointer ${isHomeActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
+                  }`}
               >
                 <Home className="w-5 h-5 shrink-0" />
                 <span className="text-[10px] font-medium tracking-tight whitespace-nowrap">Home</span>
@@ -683,9 +719,8 @@ export default function GeminiLayout({
               {/* Add Character Tab */}
               <Link
                 href="/character/add"
-                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors cursor-pointer ${
-                  isAddCharActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
-                }`}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors cursor-pointer ${isAddCharActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
+                  }`}
               >
                 <UserPlus className="w-5 h-5 shrink-0" />
                 <span className="text-[10px] font-medium tracking-tight whitespace-nowrap">Add Char</span>
@@ -701,9 +736,8 @@ export default function GeminiLayout({
                     onNewChat();
                   }
                 }}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors relative cursor-pointer ${
-                  isHistoryActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
-                }`}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors relative cursor-pointer ${isHistoryActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
+                  }`}
               >
                 <div className="relative inline-flex items-center justify-center">
                   <History className="w-5 h-5 shrink-0" />
@@ -719,9 +753,8 @@ export default function GeminiLayout({
               {/* Setting Tab */}
               <Link
                 href="/setting"
-                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors cursor-pointer ${
-                  isSettingActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
-                }`}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-1 transition-colors cursor-pointer ${isSettingActive ? "text-purple-400 font-semibold" : "text-neutral-400 hover:text-white"
+                  }`}
               >
                 <Settings className="w-5 h-5 shrink-0" />
                 <span className="text-[10px] font-medium tracking-tight whitespace-nowrap">Setting</span>

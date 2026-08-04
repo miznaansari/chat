@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import prisma from "@/lib/prisma";
 import RequireUser from "@/lib/RequireUser";
-import { trackAiUsage } from "@/lib/aiUsageTracker";
+import { trackAiUsage, checkAiUsageLimit } from "@/lib/aiUsageTracker";
 
 // Helper to call Gemini API with automatic fallback to FALLBACK_GEMINI_API_KEY if primary key fails
 async function generateGeminiContentWithFallback({ modelName, contents, systemInstruction, temperature = 0.85 }) {
@@ -50,6 +50,15 @@ export async function POST(req) {
     const user = await RequireUser(req);
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Check user's daily AI usage limit
+    const limitCheck = await checkAiUsageLimit(user.id, user.dailyLimit);
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: `Daily Gemini credit limit reached (${limitCheck.count}/${limitCheck.limit} credits today). Limit resets tomorrow, or contact admin to increase your limit.` },
+        { status: 429 }
+      );
     }
 
     const { chatSessionId, prompt, responseLength = "normal" } = await req.json();
@@ -130,6 +139,13 @@ ${userPersonaDetails}
 
 * CRITICAL PERSONA DIRECTIVE: All characters in this roleplay scene are interacting with "${userPersonaName}". The characters MUST address the user by their name ("${userPersonaName}") and tailor their dialogue, tone, actions, and relationship dynamics to match the user's defined persona and background details.`;
 
+    let languageInstruction = "";
+    if (user.language === "hinglish") {
+      languageInstruction = `\n=== MANDATORY LANGUAGE DIRECTIVE (HINGLISH MODE) ===\nCRITICAL LANGUAGE MANDATE: The user has selected HINGLISH mode. All characters MUST generate their dialogue, physical actions, and inner thoughts strictly in natural HINGLISH (a natural blend of Hindi and English written in Latin/English script, e.g. "Main abhi busy hoon, tum batao kya chal raha hai?"). Use natural Indian conversational tone written in English script!`;
+    } else {
+      languageInstruction = `\n=== LANGUAGE DIRECTIVE (ENGLISH MODE) ===\nRespond in standard English unless character backstory specifies otherwise.`;
+    }
+
     const systemInstruction = `You are roleplaying a scene with MULTIPLE CHARACTERS in the following roleplay story scenario:
 
 ${userPersonaBlock}
@@ -140,6 +156,7 @@ ${chatSession.story || "Interactive roleplay scenario."}
 === AVAILABLE CHARACTERS IN THIS SCENE ===
 ${charactersList}
 ${lengthInstruction}
+${languageInstruction}
 
 === MANDATORY DYNAMIC ROLEPLAY & CHARACTER PARTICIPATION RULES ===
 1. DYNAMIC SITUATION-BASED RESPONSE (CRITICAL):

@@ -29,7 +29,9 @@ import {
   FileText,
   Clock,
   Eye,
-  Check
+  Check,
+  Zap,
+  AlertCircle,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -56,6 +58,15 @@ export default function AdminDashboardPage() {
   const [isBlogModalOpen, setIsBlogModalOpen] = useState(false);
   const [editingBlog, setEditingBlog] = useState(null);
   const [submittingBlog, setSubmittingBlog] = useState(false);
+
+  // User Credit Management States
+  const [users, setUsers] = useState([]);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  const [newLimitInput, setNewLimitInput] = useState("100");
+  const [submittingUserLimit, setSubmittingUserLimit] = useState(false);
 
   // Character Form State
   const [charFormData, setCharFormData] = useState({
@@ -100,10 +111,62 @@ export default function AdminDashboardPage() {
       setAdmin(data.admin);
       fetchAdminCharacters();
       fetchAdminBlogs();
+      fetchAdminUsers();
     } catch (err) {
       router.push("/admin/login");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAdminUsers = async (query = "") => {
+    try {
+      setLoadingUsers(true);
+      const res = await fetch(`/api/admin/users?q=${encodeURIComponent(query)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data.users || []);
+      }
+    } catch (err) {
+      console.error("Failed to load admin users", err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleOpenEditUserModal = (u) => {
+    setEditingUser(u);
+    setNewLimitInput(String(u.dailyLimit || 100));
+    setIsUserModalOpen(true);
+  };
+
+  const handleUpdateUserLimit = async (e) => {
+    e.preventDefault();
+    if (!editingUser) return;
+    setSubmittingUserLimit(true);
+
+    try {
+      const res = await fetch(`/api/admin/users/${editingUser.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dailyLimit: parseInt(newLimitInput, 10) }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setUsers((prev) =>
+          prev.map((u) => (u.id === editingUser.id ? { ...u, dailyLimit: data.user.dailyLimit } : u))
+        );
+        setIsUserModalOpen(false);
+        setEditingUser(null);
+      } else {
+        const err = await res.json();
+        alert(err.error || "Failed to update daily limit");
+      }
+    } catch (err) {
+      alert("Error updating user daily limit");
+    } finally {
+      setSubmittingUserLimit(false);
     }
   };
 
@@ -404,6 +467,14 @@ export default function AdminDashboardPage() {
     return b.category === selectedBlogCategory;
   });
 
+  const filteredUsers = users.filter((u) => {
+    const q = userSearchQuery.toLowerCase();
+    return (
+      u.name.toLowerCase().includes(q) ||
+      (u.email && u.email.toLowerCase().includes(q))
+    );
+  });
+
   // Calculate Metrics
   const totalChatsSum = characters.reduce((acc, curr) => acc + (curr.chatsCount || 0), 0);
   const publicCharCount = characters.filter((c) => c.isPublic).length;
@@ -480,6 +551,18 @@ export default function AdminDashboardPage() {
             <BookOpen className="w-4 h-4" />
             <span>Blog Articles ({blogs.length})</span>
           </button>
+
+          <button
+            onClick={() => setActiveModule("users")}
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold flex items-center gap-2 transition-all cursor-pointer ${
+              activeModule === "users"
+                ? "bg-purple-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.4)]"
+                : "text-neutral-400 hover:text-white"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            <span>User Credit Limits ({users.length})</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-3">
@@ -513,7 +596,7 @@ export default function AdminDashboardPage() {
           }`}
         >
           <Sparkles className="w-4 h-4" />
-          <span>AI Characters</span>
+          <span>AI</span>
         </button>
 
         <button
@@ -525,7 +608,19 @@ export default function AdminDashboardPage() {
           }`}
         >
           <BookOpen className="w-4 h-4" />
-          <span>Blog Posts</span>
+          <span>Blogs</span>
+        </button>
+
+        <button
+          onClick={() => setActiveModule("users")}
+          className={`flex-1 py-2.5 rounded-xl text-xs font-extrabold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            activeModule === "users"
+              ? "bg-purple-600 text-white shadow-[0_0_15px_rgba(168,85,247,0.4)]"
+              : "bg-neutral-900 text-neutral-400 border border-neutral-800"
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>Credits</span>
         </button>
       </div>
 
@@ -955,6 +1050,196 @@ export default function AdminDashboardPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* ==================== MODULE 3: USER CREDIT LIMITS ==================== */}
+        {activeModule === "users" && (
+          <>
+            {/* KPI Summary Banner for User Credit Limits */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="p-5 rounded-2xl bg-neutral-900/70 border border-purple-500/20 backdrop-blur-xl relative overflow-hidden group hover:border-purple-500/40 transition-all">
+                <div className="absolute top-0 right-0 p-4 text-purple-500/20 group-hover:text-purple-500/30 transition-colors">
+                  <Users className="w-8 h-8" />
+                </div>
+                <p className="text-xs font-mono text-neutral-400 uppercase tracking-wider">Total Registered Accounts</p>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">{users.length}</h3>
+                <p className="text-[11px] text-purple-400 mt-2 font-mono flex items-center gap-1">
+                  <Activity className="w-3 h-3" /> Account Directory
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-neutral-900/70 border border-emerald-500/20 backdrop-blur-xl relative overflow-hidden group hover:border-emerald-500/40 transition-all">
+                <div className="absolute top-0 right-0 p-4 text-emerald-500/20 group-hover:text-emerald-500/30 transition-colors">
+                  <CheckCircle2 className="w-8 h-8" />
+                </div>
+                <p className="text-xs font-mono text-neutral-400 uppercase tracking-wider">Active Today</p>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1">
+                  {users.filter((u) => u.todayCount > 0).length}
+                </h3>
+                <p className="text-[11px] text-emerald-400/80 mt-2 font-mono flex items-center gap-1">
+                  <Clock className="w-3 h-3" /> Sent Prompts Today
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-neutral-900/70 border border-cyan-500/20 backdrop-blur-xl relative overflow-hidden group hover:border-cyan-500/40 transition-all">
+                <div className="absolute top-0 right-0 p-4 text-cyan-500/20 group-hover:text-cyan-500/30 transition-colors">
+                  <Zap className="w-8 h-8" />
+                </div>
+                <p className="text-xs font-mono text-neutral-400 uppercase tracking-wider">Today's API Hits</p>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-cyan-400 mt-1">
+                  {users.reduce((acc, u) => acc + (u.todayCount || 0), 0)}
+                </h3>
+                <p className="text-[11px] text-cyan-400/80 mt-2 font-mono flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" /> Combined Gemini Calls
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-neutral-900/70 border border-amber-500/20 backdrop-blur-xl relative overflow-hidden group hover:border-amber-500/40 transition-all">
+                <div className="absolute top-0 right-0 p-4 text-amber-500/20 group-hover:text-amber-500/30 transition-colors">
+                  <SlidersHorizontal className="w-8 h-8" />
+                </div>
+                <p className="text-xs font-mono text-neutral-400 uppercase tracking-wider">Custom Limit Overrides</p>
+                <h3 className="text-2xl sm:text-3xl font-extrabold text-amber-400 mt-1">
+                  {users.filter((u) => u.dailyLimit !== 100).length}
+                </h3>
+                <p className="text-[11px] text-amber-400/80 mt-2 font-mono flex items-center gap-1">
+                  <Star className="w-3 h-3" /> Admin Custom Limits
+                </p>
+              </div>
+            </div>
+
+            {/* User Search & Management Hub */}
+            <div className="bg-neutral-900/60 backdrop-blur-2xl border border-neutral-800 p-4 sm:p-6 rounded-3xl shadow-2xl space-y-5">
+              <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+                {/* Search Input */}
+                <div className="flex items-center gap-3 flex-1 bg-neutral-950 border border-neutral-800 focus-within:border-purple-500/60 p-3 px-4 rounded-2xl transition-all shadow-inner">
+                  <Search className="w-4 h-4 text-purple-400 shrink-0" />
+                  <input
+                    type="text"
+                    placeholder="Search users by name or email..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    className="w-full bg-transparent text-sm text-white placeholder-neutral-500 focus:outline-none"
+                  />
+                  {userSearchQuery && (
+                    <button
+                      onClick={() => setUserSearchQuery("")}
+                      className="text-neutral-500 hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 font-mono text-xs text-neutral-400">
+                  <span className="px-3 py-1.5 rounded-xl bg-neutral-950 border border-neutral-800">
+                    Showing: <strong className="text-white">{filteredUsers.length}</strong> accounts
+                  </span>
+                </div>
+              </div>
+
+              {/* Users Grid */}
+              {loadingUsers ? (
+                <div className="flex items-center justify-center py-16 text-neutral-500 text-xs gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-purple-500" />
+                  <span>Loading user credit directory...</span>
+                </div>
+              ) : filteredUsers.length === 0 ? (
+                <div className="p-12 text-center bg-neutral-900/40 border border-dashed border-neutral-800 rounded-3xl space-y-3">
+                  <Users className="w-8 h-8 text-neutral-600 mx-auto" />
+                  <h3 className="text-base font-bold text-neutral-300">No users found</h3>
+                  <p className="text-xs text-neutral-500 max-w-sm mx-auto">
+                    No account matches your search phrase "{userSearchQuery}".
+                  </p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {filteredUsers.map((u) => {
+                    const isCustom = u.dailyLimit !== 100;
+                    const percentUsed = Math.min(
+                      100,
+                      Math.round(((u.todayCount || 0) / (u.dailyLimit || 100)) * 100)
+                    );
+                    const isReached = (u.todayCount || 0) >= (u.dailyLimit || 100);
+
+                    return (
+                      <div
+                        key={u.id}
+                        className="bg-neutral-950/80 border border-neutral-800 hover:border-purple-500/40 rounded-2xl p-5 space-y-4 transition-all shadow-lg backdrop-blur-xl relative flex flex-col justify-between"
+                      >
+                        <div className="space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-extrabold text-white text-base tracking-tight">
+                                  {u.name}
+                                </h4>
+                                {isCustom && (
+                                  <span className="px-2 py-0.5 rounded-full bg-amber-950/90 border border-amber-500/40 text-amber-300 text-[10px] font-extrabold uppercase">
+                                    Custom Limit
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-neutral-400 truncate">{u.email}</p>
+                            </div>
+                            <span className="px-2 py-1 rounded-lg bg-neutral-900 border border-neutral-800 text-[10px] font-mono text-neutral-400">
+                              {u.authProvider}
+                            </span>
+                          </div>
+
+                          {/* Daily Credit Progress Bar */}
+                          <div className="space-y-1.5 pt-1">
+                            <div className="flex items-center justify-between text-xs font-mono">
+                              <span className="text-neutral-400">Today's Usage</span>
+                              <span
+                                className={`font-bold ${
+                                  isReached ? "text-red-400" : "text-purple-300"
+                                }`}
+                              >
+                                {u.todayCount} / {u.dailyLimit} Credits
+                              </span>
+                            </div>
+
+                            <div className="w-full bg-neutral-900 rounded-full h-2.5 border border-neutral-800 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-300 ${
+                                  isReached
+                                    ? "bg-red-500"
+                                    : percentUsed >= 70
+                                    ? "bg-amber-500"
+                                    : "bg-purple-500"
+                                }`}
+                                style={{ width: `${percentUsed}%` }}
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between text-[10px] text-neutral-500 font-mono">
+                              <span>{u.remainingCredits} remaining</span>
+                              <span>{u.totalCount} total calls</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Action: Edit Limit */}
+                        <div className="pt-3 border-t border-neutral-900 flex items-center justify-between">
+                          <span className="text-[10px] text-neutral-500 font-mono">
+                            Limit: {u.dailyLimit}/day
+                          </span>
+                          <button
+                            onClick={() => handleOpenEditUserModal(u)}
+                            className="px-3 py-1.5 rounded-xl bg-purple-950/80 hover:bg-purple-900 border border-purple-800/60 hover:border-purple-500 text-purple-300 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                          >
+                            <SlidersHorizontal className="w-3.5 h-3.5 text-purple-400" />
+                            <span>Edit Daily Limit</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1464,6 +1749,110 @@ export default function AdminDashboardPage() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ==================== EDIT USER CREDIT LIMIT MODAL ==================== */}
+      {isUserModalOpen && editingUser && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[9999] flex items-center justify-center p-4">
+          <div className="relative w-full max-w-md bg-[#090d16] border border-purple-500/40 rounded-3xl overflow-hidden shadow-[0_0_80px_rgba(147,51,234,0.3)] my-auto">
+            {/* Modal Header */}
+            <div className="px-6 py-4 bg-neutral-950 border-b border-neutral-800 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-purple-950 border border-purple-500/40 text-purple-400">
+                  <SlidersHorizontal className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-white text-base">Adjust User Daily Limit</h3>
+                  <p className="text-xs text-neutral-400">{editingUser.name} ({editingUser.email})</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsUserModalOpen(false);
+                  setEditingUser(null);
+                }}
+                className="p-1.5 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleUpdateUserLimit} className="p-6 space-y-5">
+              <div className="space-y-2">
+                <label className="text-xs font-bold text-neutral-300 uppercase tracking-wider block">
+                  Daily Gemini API Credit Limit
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100000"
+                  value={newLimitInput}
+                  onChange={(e) => setNewLimitInput(e.target.value)}
+                  placeholder="e.g. 100, 250, 500, 1000"
+                  className="w-full bg-neutral-950 border border-neutral-800 focus:border-purple-500 rounded-xl px-4 py-3 text-white text-base font-bold outline-none transition-colors"
+                  required
+                />
+                <p className="text-[11px] text-neutral-400">
+                  Default is <strong>100 credits/day</strong>. Increasing this allows the user to make more Gemini AI calls per day before resetting.
+                </p>
+              </div>
+
+              {/* Quick Presets */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-neutral-400 block">Quick Limit Presets:</label>
+                <div className="flex flex-wrap gap-2">
+                  {[100, 250, 500, 1000, 5000].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setNewLimitInput(String(preset))}
+                      className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer ${
+                        String(newLimitInput) === String(preset)
+                          ? "bg-purple-600 border-purple-500 text-white shadow-md shadow-purple-950"
+                          : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700"
+                      }`}
+                    >
+                      {preset} / day {preset === 100 ? "(Default)" : ""}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsUserModalOpen(false);
+                    setEditingUser(null);
+                  }}
+                  className="px-4 py-2.5 rounded-xl bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white text-xs font-bold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={submittingUserLimit}
+                  className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-extrabold flex items-center gap-2 shadow-lg shadow-purple-600/30 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {submittingUserLimit ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Saving Limit...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check className="w-4 h-4" />
+                      <span>Save New Limit</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

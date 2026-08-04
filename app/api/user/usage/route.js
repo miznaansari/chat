@@ -35,9 +35,16 @@ export async function GET(req) {
       .filter((r) => r.date >= d30Date)
       .reduce((acc, r) => acc + r.count, 0);
 
+    const dailyLimit = user.dailyLimit && user.dailyLimit > 0 ? user.dailyLimit : 100;
+    const remainingCredits = Math.max(0, dailyLimit - todayCount);
+    const isLimitReached = todayCount >= dailyLimit;
+
     return NextResponse.json({
       today: todayDateStr,
       todayCount,
+      dailyLimit,
+      remainingCredits,
+      isLimitReached,
       totalCount,
       history7DaysCount,
       history30DaysCount,

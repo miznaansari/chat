@@ -13,6 +13,7 @@ export async function executeSingleCharacterTurn({
   userPersonaName = "User",
   userPersonaDetails = "Standard roleplay participant.",
   responseLength = "normal",
+  language = "en",
 }) {
   const primaryKey = process.env.GEMINI_API_KEY;
   const fallbackKey = process.env.FALLBACK_GEMINI_API_KEY;
@@ -51,6 +52,13 @@ export async function executeSingleCharacterTurn({
     lengthDirective = "=== RESPONSE LENGTH DIRECTIVE (NORMAL) ===\nKeep character dialogue natural, engaging, and balanced (around 2-3 sentences).";
   }
 
+  let languageDirective = "";
+  if (language === "hinglish") {
+    languageDirective = "=== MANDATORY LANGUAGE DIRECTIVE (HINGLISH MODE) ===\nCRITICAL LANGUAGE MANDATE: The user has selected HINGLISH mode. The speaking character MUST generate dialogue, physical actions, and inner thoughts strictly in natural HINGLISH (a natural blend of Hindi and English written in Latin/English script, e.g. 'Main abhi busy hoon, tum batao kya chal raha hai?'). Use natural Indian conversational tone written in English script!";
+  } else {
+    languageDirective = "=== LANGUAGE DIRECTIVE (ENGLISH MODE) ===\nRespond in standard English unless character backstory specifies otherwise.";
+  }
+
   const uName = userPersonaName || "User";
   const uDetails = userPersonaDetails || "Standard roleplay participant.";
   const userPersonaBlock = `=== USER PROFILE ("ME" PERSONA) ===
@@ -65,6 +73,8 @@ ${uDetails}
 ${userPersonaBlock}
 
 ${lengthDirective}
+
+${languageDirective}
 
 === STORY / SCENARIO ===
 ${story || "Interactive Roleplay Scenario."}

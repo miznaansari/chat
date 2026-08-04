@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import RequireUser from "@/lib/RequireUser";
+import { trackAiUsage, checkAiUsageLimit } from "@/lib/aiUsageTracker";
 
 // Helper to call Gemini API for text optimization with fallback key
 async function generateGeminiOptimization({ text, type = "persona" }) {
@@ -74,6 +75,15 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check user's daily AI usage limit
+    const limitCheck = await checkAiUsageLimit(user.id, user.dailyLimit);
+    if (!limitCheck.allowed) {
+      return NextResponse.json(
+        { error: `Daily Gemini credit limit reached (${limitCheck.count}/${limitCheck.limit} credits today). Limit resets tomorrow, or contact admin to increase your limit.` },
+        { status: 429 }
+      );
+    }
+
     const { text, type = "persona" } = await req.json();
 
     if (!text || !text.trim()) {
@@ -87,6 +97,9 @@ export async function POST(req) {
       text: text.trim(),
       type,
     });
+
+    // Track usage
+    trackAiUsage(user.id).catch(() => {});
 
     return NextResponse.json({ optimizedText });
   } catch (error) {

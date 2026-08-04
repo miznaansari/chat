@@ -15,6 +15,7 @@ model User {
   authProvider      String           @default("credentials")
   language          String           @default("en")
   hasChosenLanguage Boolean          @default(false)
+  dailyLimit        Int              @default(100)
   sessions          UserSession[]
   characters        ChatCharacter[]
   personas          UserPersona[]
