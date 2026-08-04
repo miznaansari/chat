@@ -26,6 +26,9 @@ export default function ClientChatPage() {
           onSelectChat={(id) => {
             setActiveChatId(id);
             setViewMode("chat");
+            if (typeof window !== "undefined" && window.location.pathname !== `/chat/${id}`) {
+              window.history.pushState(null, "", `/chat/${id}`);
+            }
           }}
           onSessionCreated={handleSessionCreated}
           onOpenNewModal={() => router.push("/character/add")}

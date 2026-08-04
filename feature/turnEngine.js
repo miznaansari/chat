@@ -10,6 +10,8 @@ export async function executeSingleCharacterTurn({
   contents = [],
   story = "",
   characters = [],
+  userPersonaName = "User",
+  userPersonaDetails = "Standard roleplay participant.",
   responseLength = "normal",
 }) {
   const primaryKey = process.env.GEMINI_API_KEY;
@@ -49,7 +51,18 @@ export async function executeSingleCharacterTurn({
     lengthDirective = "=== RESPONSE LENGTH DIRECTIVE (NORMAL) ===\nKeep character dialogue natural, engaging, and balanced (around 2-3 sentences).";
   }
 
+  const uName = userPersonaName || "User";
+  const uDetails = userPersonaDetails || "Standard roleplay participant.";
+  const userPersonaBlock = `=== USER PROFILE ("ME" PERSONA) ===
+User's Name: ${uName}
+User Persona & Background Details:
+${uDetails}
+
+* CRITICAL PERSONA DIRECTIVE: All characters in this turn-by-turn scene are interacting with "${uName}". The speaking character MUST address the user by name ("${uName}") and tailor their dialogue, tone, actions, and relationship dynamics to match the user's defined persona and background.`;
+
   const systemInstruction = `You are a dynamic orchestrator for a TURN-BY-TURN MULTI-CHARACTER roleplay chat.
+
+${userPersonaBlock}
 
 ${lengthDirective}
 

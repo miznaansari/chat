@@ -185,8 +185,13 @@ export default function HomeDiscoveryView({
   const [bannerTab, setBannerTab] = useState("Characters");
   const [selectedCharPreview, setSelectedCharPreview] = useState(null);
 
+  // User Persona State
+  const [userPersonas, setUserPersonas] = useState([]);
+  const [selectedPersonaId, setSelectedPersonaId] = useState("");
+
   useEffect(() => {
     fetchPublicCharacters();
+    fetchUserPersonas();
   }, []);
 
   const fetchPublicCharacters = async () => {
@@ -202,6 +207,23 @@ export default function HomeDiscoveryView({
       console.error("Failed to fetch public characters", err);
     } finally {
       setFetching(false);
+    }
+  };
+
+  const fetchUserPersonas = async () => {
+    try {
+      const res = await fetch("/api/user/personas");
+      if (res.ok) {
+        const data = await res.json();
+        const list = data.personas || [];
+        setUserPersonas(list);
+        if (list.length > 0) {
+          const def = list.find((p) => p.isDefault) || list[0];
+          setSelectedPersonaId(def.id);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch user personas", err);
     }
   };
 
@@ -226,8 +248,14 @@ export default function HomeDiscoveryView({
     }
   };
 
-  // Derive Dynamic Categories directly from actual characters in state
-  const dynamicCategories = ["All Showcase", ...Array.from(new Set(displayCharacters.map((c) => c.category).filter(Boolean)))];
+  // Derive Dynamic Categories with "WhatsApp Group" explicitly pinned at the top
+  const rawCategories = Array.from(new Set(displayCharacters.map((c) => c.category).filter(Boolean)));
+  const sortedCategories = rawCategories.sort((a, b) => {
+    if (a.toLowerCase().includes("whatsapp")) return -1;
+    if (b.toLowerCase().includes("whatsapp")) return 1;
+    return a.localeCompare(b);
+  });
+  const dynamicCategories = ["All Showcase", ...sortedCategories];
 
   const filteredCharacters = displayCharacters.filter((char) => {
     const matchesSearch =
@@ -264,10 +292,24 @@ export default function HomeDiscoveryView({
     try {
       const parsedCharacters = Array.isArray(char.characters) && char.characters.length > 0
         ? char.characters.map((c) => ({
-            name: c.name,
-            persona: c.persona || c.personality || "Interactive character persona.",
-          }))
+          name: c.name,
+          persona: c.persona || c.personality || "Interactive character persona.",
+        }))
         : [{ name: char.name, persona: char.tagline }];
+
+      // Attach selected "Me Persona" if available
+      let pId = null;
+      let pName = null;
+      let pDetails = null;
+
+      if (selectedPersonaId) {
+        const found = userPersonas.find((p) => p.id === selectedPersonaId);
+        if (found) {
+          pId = found.id;
+          pName = found.name;
+          pDetails = found.persona;
+        }
+      }
 
       const res = await fetch("/api/chats", {
         method: "POST",
@@ -277,6 +319,9 @@ export default function HomeDiscoveryView({
           story: char.story,
           selectedModel: "gemini-3.5-flash-lite",
           characters: parsedCharacters,
+          userPersonaId: pId,
+          userPersonaName: pName,
+          userPersonaDetails: pDetails,
         }),
       });
 
@@ -356,7 +401,7 @@ export default function HomeDiscoveryView({
 
   return (
     <div className="flex-1 strict-scroll-stream min-h-0 p-4 md:p-8 space-y-7 text-white font-sans relative touch-manipulation overscroll-contain">
-      
+
       {/* Standalone Search Bar & Create Persona Row */}
       <div className="flex flex-row items-center justify-between gap-2.5 md:gap-4">
         {/* Standalone Floating Search Capsule */}
@@ -400,11 +445,10 @@ export default function HomeDiscoveryView({
             <button
               key={cat}
               onClick={() => setSelectedFilter(cat)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer border ${
-                isActive
-                  ? "bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-600/30 font-bold"
-                  : "bg-neutral-900/60 text-neutral-400 hover:text-white border-neutral-800 hover:border-neutral-700"
-              }`}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shrink-0 transition-all cursor-pointer border ${isActive
+                ? "bg-purple-600 text-white border-purple-400 shadow-md shadow-purple-600/30 font-bold"
+                : "bg-neutral-900/60 text-neutral-400 hover:text-white border-neutral-800 hover:border-neutral-700"
+                }`}
             >
               <Sparkles className={`w-3.5 h-3.5 ${isActive ? "text-white" : "text-purple-400"}`} />
               <span>{cat}</span>
@@ -413,54 +457,31 @@ export default function HomeDiscoveryView({
         })}
       </div>
 
-      {/* Hero Showcase Banner (Desktop Only - Hidden on Mobile & Tablet) */}
-      <div className="hidden lg:flex relative rounded-3xl p-5 md:p-8 bg-gradient-to-r from-purple-950/90 via-indigo-950/90 to-slate-950 border border-purple-500/30 shadow-2xl overflow-hidden flex-col lg:flex-row items-start lg:items-center justify-between gap-6 group">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-600/15 rounded-full blur-3xl pointer-events-none" />
+      {/* Hero Showcase Banner (Desktop Only - Ultra-Slim Header) */}
+      <div className="hidden lg:flex relative rounded-2xl py-3 px-5 md:py-3.5 md:px-6 bg-gradient-to-r from-purple-950/90 via-indigo-950/90 to-slate-950 border border-purple-500/30 shadow-lg overflow-hidden items-center justify-between gap-4 group">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/15 rounded-full blur-2xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-cyan-600/10 rounded-full blur-2xl pointer-events-none" />
 
-        <div className="relative z-10 max-w-xl space-y-3.5">
-          <div className="flex items-center gap-2 text-purple-400 font-bold text-xs uppercase tracking-wider">
-            <Sparkles className="w-4 h-4 animate-pulse text-purple-400" />
+        <div className="relative z-10 max-w-2xl space-y-1.5">
+          <div className="flex items-center gap-2 text-purple-400 font-bold text-[10px] uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 animate-pulse text-purple-400" />
             <span>NextAiChat Discovery • Multi-Persona Roleplay Engine</span>
           </div>
 
-          <h1 className="text-xl md:text-3xl font-extrabold text-white leading-tight tracking-tight">
+          <h1 className="text-sm md:text-lg font-extrabold text-white leading-snug tracking-tight">
             Chat with Endless AI Personas & Interactive Group Debates
           </h1>
 
-          <p className="text-xs md:text-sm text-neutral-300 leading-relaxed max-w-lg">
-            Experience real-time AI roleplays powered by Gemini 3.5. Create custom personas, trigger dynamic multi-character dialogues, or explore featured community characters.
-          </p>
-
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={() => setBannerTab("Characters")}
-              className={`px-5 py-2 rounded-full text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                bannerTab === "Characters"
-                  ? "bg-purple-600 text-white shadow-lg shadow-purple-600/40 border border-purple-400"
-                  : "bg-neutral-900/80 text-neutral-300 hover:text-white border border-neutral-800"
-              }`}
-            >
-              <User className="w-4 h-4 text-purple-300" />
-              <span>Explore Characters</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setSelectedCharPreview(displayCharacters[1] || DEFAULT_CHARACTERS[1])}
-              className="px-5 py-2 rounded-full text-xs font-bold bg-neutral-900/80 text-purple-300 hover:text-white border border-purple-800/60 hover:bg-purple-900/50 flex items-center gap-2 transition-all cursor-pointer shadow-md"
-            >
-              <Users className="w-4 h-4 text-purple-400" />
-              <span>Launch Group Debate</span>
-            </button>
+          <div className="p-2 rounded-xl bg-purple-950/60 border border-purple-500/30 text-[11px] text-purple-200 flex items-center gap-2 shadow-inner">
+            <span className="font-extrabold text-amber-300 shrink-0">🔥 Highly Recommended:</span>
+            <span>Try our multi-character roleplay mode — it will blow your mind! 🤯</span>
           </div>
         </div>
 
-        <div className="relative shrink-0 hidden md:flex items-center gap-3">
+        <div className="relative shrink-0 hidden md:flex items-center gap-2.5">
           <div
             onClick={() => setSelectedCharPreview(displayCharacters[0] || DEFAULT_CHARACTERS[0])}
-            className="w-36 h-48 rounded-2xl overflow-hidden border-2 border-purple-500/40 shadow-2xl relative group/card cursor-pointer hover:scale-105 transition-all duration-300"
+            className="w-24 h-28 rounded-xl overflow-hidden border border-purple-500/40 shadow-md relative group/card cursor-pointer hover:scale-105 transition-all duration-300"
           >
             <img
               src={displayCharacters[0]?.avatar || DEFAULT_CHARACTERS[0].avatar}
@@ -468,15 +489,15 @@ export default function HomeDiscoveryView({
               className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-            <div className="absolute bottom-2 left-2 right-2 text-center">
-              <span className="text-[11px] font-bold text-white block truncate">{displayCharacters[0]?.name || "Prof. Ananya"}</span>
-              <span className="text-[9px] text-amber-400 font-mono font-semibold">★ {displayCharacters[0]?.rating || "4.9"}</span>
+            <div className="absolute bottom-1.5 left-1 right-1 text-center">
+              <span className="text-[9px] font-extrabold text-white block truncate">{displayCharacters[0]?.name || "Featured"}</span>
+              <span className="text-[8px] text-amber-400 font-mono font-semibold">★ {displayCharacters[0]?.rating || "4.9"}</span>
             </div>
           </div>
 
           <div
             onClick={() => setSelectedCharPreview(displayCharacters[1] || DEFAULT_CHARACTERS[1])}
-            className="w-36 h-48 rounded-2xl overflow-hidden border-2 border-cyan-500/40 shadow-2xl relative group/card cursor-pointer hover:scale-105 transition-all duration-300 translate-y-3"
+            className="w-24 h-28 rounded-xl overflow-hidden border border-cyan-500/40 shadow-md relative group/card cursor-pointer hover:scale-105 transition-all duration-300"
           >
             <img
               src={displayCharacters[1]?.avatar || DEFAULT_CHARACTERS[1].avatar}
@@ -484,9 +505,9 @@ export default function HomeDiscoveryView({
               className="w-full h-full object-cover group-hover/card:scale-110 transition-transform duration-500"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-            <div className="absolute bottom-2 left-2 right-2 text-center">
-              <span className="text-[11px] font-bold text-white block truncate">{displayCharacters[1]?.name || "Delhi Squad"}</span>
-              <span className="text-[9px] text-cyan-400 font-mono font-semibold">★ 5.0 • Duo</span>
+            <div className="absolute bottom-1.5 left-1 right-1 text-center">
+              <span className="text-[9px] font-extrabold text-white block truncate">{displayCharacters[1]?.name || "Duo"}</span>
+              <span className="text-[8px] text-cyan-400 font-mono font-semibold">★ 5.0</span>
             </div>
           </div>
         </div>
@@ -570,15 +591,15 @@ export default function HomeDiscoveryView({
 
       {/* CHARACTER PREVIEW & CONFIRMATION MODAL */}
       {selectedCharPreview && (
-        <div 
+        <div
           onClick={() => setSelectedCharPreview(null)}
           className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[999999] flex items-center justify-center p-3.5 sm:p-4 pt-16 pb-20 md:pt-6 md:pb-6 overflow-hidden"
         >
-          <div 
+          <div
             onClick={(e) => e.stopPropagation()}
             className="relative w-full max-w-xl bg-[#090d16] border border-purple-500/40 rounded-3xl overflow-hidden shadow-[0_0_90px_rgba(147,51,234,0.4)] my-auto flex flex-col h-auto max-h-[calc(100vh-140px)] md:max-h-[85vh] animate-fadeIn font-sans"
           >
-            
+
             {/* Modal Header Bar */}
             <div className="relative p-4 sm:p-5 bg-neutral-950/90 border-b border-neutral-800/80 shrink-0">
               <button
@@ -610,7 +631,7 @@ export default function HomeDiscoveryView({
 
             {/* Modal Scrollable Body */}
             <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 custom-scrollbar">
-              
+
               {/* Roleplay Storyline Background */}
               <div className="space-y-2">
                 <h4 className="text-[11px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -649,6 +670,43 @@ export default function HomeDiscoveryView({
                   ))}
                 </div>
               </div>
+
+              {/* Sleek Compact Persona Selector inside Modal */}
+              <div className="p-3.5 rounded-2xl bg-blue-950/20 border border-blue-500/30 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-blue-300 flex items-center gap-1.5 uppercase tracking-wider">
+                    <User className="w-3.5 h-3.5 text-blue-400" />
+                    <span>My "Me Persona" (Who you play as)</span>
+                  </span>
+                  {userPersonas.length === 0 && (
+                    <a
+                      href="/setting"
+                      className="text-[10px] text-purple-400 hover:underline font-semibold"
+                    >
+                      + Create in Settings
+                    </a>
+                  )}
+                </div>
+
+                {userPersonas.length > 0 ? (
+                  <select
+                    value={selectedPersonaId}
+                    onChange={(e) => setSelectedPersonaId(e.target.value)}
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
+                  >
+                    {userPersonas.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.name} {p.isDefault ? "(Default)" : ""} — {p.persona.substring(0, 40)}...
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <p className="text-[11px] text-neutral-400">
+                    No persona created yet. Using default account name. Create a "Me Persona" in <a href="/setting" className="text-blue-400 underline">Settings</a> to personalize your responses!
+                  </p>
+                )}
+              </div>
+
             </div>
 
             {/* Modal Fixed Footer Action Bar */}

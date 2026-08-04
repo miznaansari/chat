@@ -23,6 +23,14 @@ import {
   Clock,
   Filter,
   Loader2,
+  User,
+  Plus,
+  Trash2,
+  Edit3,
+  Star,
+  X,
+  UserCheck,
+  UserPlus,
 } from "lucide-react";
 
 export default function SettingPage() {
@@ -54,8 +62,24 @@ export default function SettingPage() {
   const [loadingUsage, setLoadingUsage] = useState(true);
   const [rangeFilter, setRangeFilter] = useState("today");
 
+  // User Personas ("Me" Persona) State
+  const [personas, setPersonas] = useState([]);
+  const [loadingPersonas, setLoadingPersonas] = useState(true);
+  const [personaModalOpen, setPersonaModalOpen] = useState(false);
+  const [editingPersona, setEditingPersona] = useState(null); // null for create, object for edit
+  const [personaForm, setPersonaForm] = useState({
+    name: "",
+    persona: "",
+    avatar: "",
+    isDefault: false,
+  });
+  const [savingPersona, setSavingPersona] = useState(false);
+  const [optimizingPersona, setOptimizingPersona] = useState(false);
+  const [personaStatus, setPersonaStatus] = useState({ type: null, message: "" });
+
   useEffect(() => {
     fetchAiUsage();
+    fetchPersonas();
   }, []);
 
   const fetchAiUsage = async () => {
@@ -70,6 +94,142 @@ export default function SettingPage() {
       console.error("Failed to load AI usage stats", err);
     } finally {
       setLoadingUsage(false);
+    }
+  };
+
+  const fetchPersonas = async () => {
+    try {
+      setLoadingPersonas(true);
+      const res = await fetch("/api/user/personas");
+      if (res.ok) {
+        const data = await res.json();
+        setPersonas(data.personas || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch personas", err);
+    } finally {
+      setLoadingPersonas(false);
+    }
+  };
+
+  const handleOpenCreatePersona = () => {
+    setEditingPersona(null);
+    setPersonaForm({
+      name: "",
+      persona: "",
+      avatar: "",
+      isDefault: personas.length === 0,
+    });
+    setPersonaStatus({ type: null, message: "" });
+    setPersonaModalOpen(true);
+  };
+
+  const handleOpenEditPersona = (p) => {
+    setEditingPersona(p);
+    setPersonaForm({
+      name: p.name || "",
+      persona: p.persona || "",
+      avatar: p.avatar || "",
+      isDefault: Boolean(p.isDefault),
+    });
+    setPersonaStatus({ type: null, message: "" });
+    setPersonaModalOpen(true);
+  };
+
+  const handleSavePersona = async (e) => {
+    e.preventDefault();
+    setPersonaStatus({ type: null, message: "" });
+
+    if (!personaForm.name.trim()) {
+      setPersonaStatus({ type: "error", message: "Persona name is required." });
+      return;
+    }
+    if (!personaForm.persona.trim()) {
+      setPersonaStatus({ type: "error", message: "Persona description is required." });
+      return;
+    }
+
+    setSavingPersona(true);
+
+    try {
+      const isEdit = Boolean(editingPersona);
+      const url = isEdit
+        ? `/api/user/personas/${editingPersona.id}`
+        : "/api/user/personas";
+      const method = isEdit ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(personaForm),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        setPersonaStatus({ type: "error", message: data.error || "Failed to save persona." });
+      } else {
+        setPersonaModalOpen(false);
+        fetchPersonas();
+      }
+    } catch (err) {
+      setPersonaStatus({ type: "error", message: "An unexpected error occurred." });
+    } finally {
+      setSavingPersona(false);
+    }
+  };
+
+  const handleDeletePersona = async (id) => {
+    if (!confirm("Are you sure you want to delete this 'Me Persona'?")) return;
+
+    try {
+      const res = await fetch(`/api/user/personas/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        fetchPersonas();
+      } else {
+        const data = await res.json();
+        alert(data.error || "Failed to delete persona.");
+      }
+    } catch (err) {
+      alert("Error deleting persona: " + err.message);
+    }
+  };
+
+  const handleSetDefaultPersona = async (id) => {
+    try {
+      const res = await fetch(`/api/user/personas/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isDefault: true }),
+      });
+      if (res.ok) {
+        fetchPersonas();
+      }
+    } catch (err) {
+      console.error("Failed to set default persona", err);
+    }
+  };
+
+  const handleOptimizePersonaText = async () => {
+    if (!personaForm.persona.trim()) return;
+    setOptimizingPersona(true);
+    try {
+      const res = await fetch("/api/characters/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: personaForm.persona, type: "persona" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.optimizedText) {
+        setPersonaForm((prev) => ({ ...prev, persona: data.optimizedText }));
+      } else {
+        alert("Failed to optimize: " + (data.error || "Unknown error"));
+      }
+    } catch (err) {
+      alert("Error optimizing text: " + err.message);
+    } finally {
+      setOptimizingPersona(false);
     }
   };
 
@@ -174,11 +334,142 @@ export default function SettingPage() {
           Settings & Preferences
         </h1>
         <p className="text-xs sm:text-sm text-neutral-400">
-          Manage your account security credentials and dynamic language preferences.
+          Manage your account security credentials, personal AI profiles ("Me Persona"), and language preferences.
         </p>
       </div>
 
-      {/* Settings Grid */}
+      {/* Section: My User Personas ("Me" Persona) */}
+      <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-5 sm:p-8 shadow-xl backdrop-blur-md space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800/80 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-gradient-to-tr from-blue-600/20 to-indigo-600/20 border border-blue-500/30 text-blue-400 shadow-sm">
+              <User className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-lg font-bold text-white tracking-tight">My User Personas ("Me Persona")</h2>
+                <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-950/80 text-blue-300 border border-blue-800/50">
+                  {personas.length} Saved
+                </span>
+              </div>
+              <p className="text-xs text-neutral-400 mt-0.5">
+                Define your name, backstory & role to improve AI roleplay quality and personalized responses
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleOpenCreatePersona}
+            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg transition-all cursor-pointer self-start sm:self-auto"
+          >
+            <UserPlus className="w-4 h-4" />
+            <span>Create New Persona</span>
+          </button>
+        </div>
+
+        {loadingPersonas ? (
+          <div className="flex items-center justify-center py-10 text-neutral-500 text-xs gap-2">
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+            <span>Loading user personas...</span>
+          </div>
+        ) : personas.length === 0 ? (
+          <div className="bg-neutral-950/50 border border-neutral-800/60 rounded-2xl p-8 text-center text-xs text-neutral-400 space-y-3">
+            <div className="w-12 h-12 rounded-2xl bg-blue-950/50 border border-blue-800/40 text-blue-400 flex items-center justify-center mx-auto">
+              <User className="w-6 h-6" />
+            </div>
+            <div className="space-y-1">
+              <p className="font-bold text-white text-sm">No "Me Persona" Created Yet</p>
+              <p className="text-neutral-400 max-w-md mx-auto">
+                Creating a User Persona tells AI characters who you are (your name, backstory, job, or personality), dramatically improving roleplay immersion and accuracy!
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleOpenCreatePersona}
+              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Your First Persona</span>
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {personas.map((p) => (
+              <div
+                key={p.id}
+                className={`bg-neutral-950 border rounded-2xl p-5 space-y-3 relative transition-all group ${
+                  p.isDefault
+                    ? "border-blue-500/60 shadow-lg shadow-blue-950/40 bg-gradient-to-b from-blue-950/20 to-neutral-950"
+                    : "border-neutral-800 hover:border-neutral-700"
+                }`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-neutral-800 border border-neutral-700 flex items-center justify-center font-bold text-white text-base shrink-0 overflow-hidden">
+                      {p.avatar ? (
+                        <span className="text-xl">{p.avatar}</span>
+                      ) : (
+                        <User className="w-5 h-5 text-blue-400" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-white text-sm">{p.name}</h3>
+                        {p.isDefault && (
+                          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-600 text-white flex items-center gap-1">
+                            <Star className="w-3 h-3 fill-current" />
+                            <span>Default</span>
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[10px] text-neutral-500 font-mono">
+                        Updated: {new Date(p.updatedAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center gap-1.5">
+                    {!p.isDefault && (
+                      <button
+                        type="button"
+                        onClick={() => handleSetDefaultPersona(p.id)}
+                        className="p-1.5 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-neutral-400 hover:text-amber-400 transition-colors"
+                        title="Set as Default Persona"
+                      >
+                        <Star className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEditPersona(p)}
+                      className="p-1.5 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+                      title="Edit Persona"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePersona(p.id)}
+                      className="p-1.5 rounded-lg bg-neutral-900 border border-neutral-800 hover:bg-red-950 hover:border-red-800 text-neutral-400 hover:text-red-400 transition-colors"
+                      title="Delete Persona"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+
+                <p className="text-xs text-neutral-300 line-clamp-3 bg-neutral-900/60 p-3 rounded-xl border border-neutral-800/80 font-normal leading-relaxed">
+                  {p.persona}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Settings Grid (Password & Language) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
         {/* Card 1: Change Password */}
         <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-5 sm:p-6 shadow-xl backdrop-blur-md flex flex-col justify-between">
@@ -532,6 +823,143 @@ export default function SettingPage() {
           )}
         </div>
       </div>
+
+      {/* Modal for Creating / Editing Persona */}
+      {personaModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                  <User className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">
+                    {editingPersona ? "Edit 'Me Persona'" : "Create New 'Me Persona'"}
+                  </h3>
+                  <p className="text-xs text-neutral-400">Your profile persona sent to AI characters</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setPersonaModalOpen(false)}
+                className="p-1.5 rounded-full hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {personaStatus.message && (
+              <div
+                className={`mt-4 p-3 rounded-xl border text-xs flex items-center gap-2 ${
+                  personaStatus.type === "error"
+                    ? "bg-red-950/70 border-red-800 text-red-300"
+                    : "bg-emerald-950/70 border-emerald-800 text-emerald-300"
+                }`}
+              >
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{personaStatus.message}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleSavePersona} className="space-y-4 pt-4">
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                  Persona / User Name <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Arjun / Alex / Detective Sam"
+                  value={personaForm.name}
+                  onChange={(e) => setPersonaForm((prev) => ({ ...prev, name: e.target.value }))}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-semibold text-neutral-300">
+                    Backstory, Bio & Role Details <span className="text-red-400">*</span>
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleOptimizePersonaText}
+                    disabled={!personaForm.persona.trim() || optimizingPersona}
+                    className="text-[11px] font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 px-2 py-0.5 rounded-lg transition-all disabled:opacity-40"
+                  >
+                    {optimizingPersona ? (
+                      <>
+                        <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+                        <span>Improving...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3 h-3 text-purple-400" />
+                        <span>✨ Improve with Gemini</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+                <textarea
+                  rows={4}
+                  required
+                  placeholder="Describe yourself, your personality, background, role, or preferred conversation tone..."
+                  value={personaForm.persona}
+                  onChange={(e) => setPersonaForm((prev) => ({ ...prev, persona: e.target.value }))}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-sm text-white placeholder-neutral-500 focus:border-blue-500 outline-none resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-neutral-300 mb-1">
+                  Avatar Emoji / Icon (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g. 🦸‍♂️ / 👑 / 💻 / 🕵️‍♂️"
+                  value={personaForm.avatar}
+                  onChange={(e) => setPersonaForm((prev) => ({ ...prev, avatar: e.target.value }))}
+                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2 text-sm text-white placeholder-neutral-500 focus:border-blue-500 outline-none"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="isDefaultCheckbox"
+                  checked={personaForm.isDefault}
+                  onChange={(e) => setPersonaForm((prev) => ({ ...prev, isDefault: e.target.checked }))}
+                  className="w-4 h-4 rounded bg-neutral-950 border-neutral-800 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="isDefaultCheckbox" className="text-xs text-neutral-300 font-medium cursor-pointer">
+                  Set as my Default "Me Persona" for new chats
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setPersonaModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-xs font-medium text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingPersona}
+                  className="px-5 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white shadow-lg transition-all flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {savingPersona ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <span>{editingPersona ? "Save Changes" : "Create Persona"}</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

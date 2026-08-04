@@ -89,12 +89,14 @@ export async function POST(req) {
         ? "gemini-3.1-flash-lite"
         : "gemini-3.5-flash-lite";
 
-    // Call single character turn engine
+    // Call single character turn engine with User Persona details
     const turnResult = await executeSingleCharacterTurn({
       modelName,
       contents,
       story: chatSession.story,
       characters: chatSession.sessionCharacters || [],
+      userPersonaName: chatSession.userPersonaName || user.name || "User",
+      userPersonaDetails: chatSession.userPersonaDetails || "Standard roleplay participant.",
       responseLength,
     });
 

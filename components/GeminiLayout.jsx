@@ -443,6 +443,18 @@ export default function GeminiLayout({
             </div>
 
             <div className="flex items-center gap-1">
+              <Tooltip content="App Settings" position="top" badgeIcon="⚙️">
+                <Link
+                  href="/setting"
+                  className={`p-1.5 text-neutral-400 hover:text-purple-400 hover:bg-neutral-800 rounded-lg transition-colors flex items-center justify-center cursor-pointer ${
+                    !sidebarOpen ? "max-md:opacity-100 md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "opacity-100 max-w-[40px]"
+                  } ${isSettingActive ? "text-purple-400 bg-neutral-800" : ""}`}
+                  title="App Settings"
+                >
+                  <Settings className="w-4 h-4" />
+                </Link>
+              </Tooltip>
+
               <Tooltip content="Sign Out Account" position="right" badgeIcon="🔒">
                 <button
                   type="button"
@@ -569,6 +581,18 @@ export default function GeminiLayout({
 
           {/* Header Right Actions */}
           <div className="flex items-center gap-2">
+            <Tooltip content="App Settings" position="bottom" badgeIcon="⚙️">
+              <Link
+                href="/setting"
+                className={`p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors flex items-center justify-center cursor-pointer ${
+                  isSettingActive ? "text-purple-400 bg-neutral-800 border border-purple-500/30" : ""
+                }`}
+                title="App Settings"
+              >
+                <Settings className="w-4.5 h-4.5" />
+              </Link>
+            </Tooltip>
+
             {/* User Initial Circle in Header */}
             <div
               className="w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white font-bold flex items-center justify-center text-xs shadow-inner shrink-0 cursor-default"

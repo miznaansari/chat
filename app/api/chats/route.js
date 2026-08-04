@@ -39,7 +39,7 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, story, characters, selectedModel } = await req.json();
+    const { title, story, characters, selectedModel, userPersonaId, userPersonaName, userPersonaDetails } = await req.json();
 
     if (!characters || !Array.isArray(characters) || characters.length === 0) {
       return NextResponse.json(
@@ -56,10 +56,40 @@ export async function POST(req) {
     const chatTitle =
       title || `Roleplay: ${characters.map((c) => c.name).join(", ")}`;
 
+    // Resolve user persona details
+    let finalPersonaId = userPersonaId || null;
+    let finalPersonaName = userPersonaName || null;
+    let finalPersonaDetails = userPersonaDetails || null;
+
+    if (finalPersonaId && (!finalPersonaName || !finalPersonaDetails)) {
+      const p = await prisma.userPersona.findUnique({ where: { id: finalPersonaId } });
+      if (p && p.userId === user.id) {
+        finalPersonaName = p.name;
+        finalPersonaDetails = p.persona;
+      }
+    }
+
+    if (!finalPersonaId && !finalPersonaName) {
+      // Find default user persona
+      const defaultP = await prisma.userPersona.findFirst({
+        where: { userId: user.id, isDefault: true },
+      });
+      if (defaultP) {
+        finalPersonaId = defaultP.id;
+        finalPersonaName = defaultP.name;
+        finalPersonaDetails = defaultP.persona;
+      } else {
+        // Fallback to user account name
+        finalPersonaName = user.name;
+      }
+    }
 
     const chatSession = await prisma.chatSession.create({
       data: {
         userId: user.id,
+        userPersonaId: finalPersonaId,
+        userPersonaName: finalPersonaName,
+        userPersonaDetails: finalPersonaDetails,
         title: chatTitle,
         story: story || "An interactive roleplay scenario.",
         selectedModel: validModel,

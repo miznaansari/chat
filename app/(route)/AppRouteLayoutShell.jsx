@@ -9,16 +9,50 @@ import { ChatLayoutContext } from "@/context/ChatLayoutContext";
 export default function AppRouteLayoutShell({ initialUser, initialChats = [], children }) {
   const router = useRouter();
   const pathname = usePathname();
+
+  const isChatRoute = pathname?.startsWith("/chat/");
+  const routeChatId = isChatRoute
+    ? pathname.replace("/chat/", "").split("?")[0].split("/")[0]
+    : null;
+
   const [user, setUser] = useState(initialUser);
   const [chats, setChats] = useState(initialChats);
-  const [activeChatId, setActiveChatId] = useState(
-    initialChats && initialChats.length > 0 ? initialChats[0].id : null
-  );
+  const [activeChatId, setActiveChatId] = useState(() => {
+    if (routeChatId) return routeChatId;
+    return initialChats && initialChats.length > 0 ? initialChats[0].id : null;
+  });
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState("home"); // "home" | "chat"
+  const [viewMode, setViewMode] = useState(() => {
+    if (isChatRoute) return "chat";
+    return "home";
+  }); // "home" | "chat"
+
+  const navigateUrl = (url) => {
+    if (typeof window !== "undefined" && window.location.pathname !== url) {
+      window.history.pushState(null, "", url);
+    }
+  };
 
   useEffect(() => {
     fetchChats();
+  }, []);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const currentPath = window.location.pathname;
+      if (currentPath.startsWith("/chat/")) {
+        const urlId = currentPath.replace("/chat/", "").split("?")[0].split("/")[0];
+        if (urlId) {
+          setActiveChatId(urlId);
+          setViewMode("chat");
+        }
+      } else if (currentPath === "/") {
+        setViewMode("home");
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   const fetchChats = async () => {
@@ -30,6 +64,13 @@ export default function AppRouteLayoutShell({ initialUser, initialChats = [], ch
         setChats(freshChats);
         if (freshChats.length > 0) {
           setActiveChatId((prev) => {
+            const currentPath = typeof window !== "undefined" ? window.location.pathname : pathname;
+            if (currentPath?.startsWith("/chat/")) {
+              const urlId = currentPath.replace("/chat/", "").split("?")[0].split("/")[0];
+              if (urlId && freshChats.some((c) => c.id === urlId)) {
+                return urlId;
+              }
+            }
             if (prev && freshChats.some((c) => c.id === prev)) {
               return prev;
             }
@@ -51,9 +92,7 @@ export default function AppRouteLayoutShell({ initialUser, initialChats = [], ch
     setActiveChatId(newSession.id);
     setViewMode("chat");
     setIsModalOpen(false);
-    if (pathname !== "/") {
-      router.push("/");
-    }
+    navigateUrl(`/chat/${newSession.id}`);
   };
 
   const handleUpdateChat = (updatedSession) => {
@@ -73,11 +112,18 @@ export default function AppRouteLayoutShell({ initialUser, initialChats = [], ch
       });
 
       if (res.ok) {
-        setChats((prev) => prev.filter((c) => c.id !== chatId));
+        const remaining = chats.filter((c) => c.id !== chatId);
+        setChats(remaining);
         if (activeChatId === chatId) {
-          const remaining = chats.filter((c) => c.id !== chatId);
-          setActiveChatId(remaining.length > 0 ? remaining[0].id : null);
-          if (remaining.length === 0) setViewMode("home");
+          if (remaining.length > 0) {
+            setActiveChatId(remaining[0].id);
+            setViewMode("chat");
+            navigateUrl(`/chat/${remaining[0].id}`);
+          } else {
+            setActiveChatId(null);
+            setViewMode("home");
+            navigateUrl("/");
+          }
         }
       } else {
         alert("Failed to delete chat session.");
@@ -115,8 +161,15 @@ export default function AppRouteLayoutShell({ initialUser, initialChats = [], ch
     setChats(remaining);
 
     if (activeChatId && targetSet.has(activeChatId)) {
-      setActiveChatId(remaining.length > 0 ? remaining[0].id : null);
-      if (remaining.length === 0) setViewMode("home");
+      if (remaining.length > 0) {
+        setActiveChatId(remaining[0].id);
+        setViewMode("chat");
+        navigateUrl(`/chat/${remaining[0].id}`);
+      } else {
+        setActiveChatId(null);
+        setViewMode("home");
+        navigateUrl("/");
+      }
     }
 
     try {
@@ -162,13 +215,13 @@ export default function AppRouteLayoutShell({ initialUser, initialChats = [], ch
         viewMode={viewMode}
         onSelectHome={() => {
           setViewMode("home");
-          if (pathname !== "/") router.push("/");
+          navigateUrl("/");
         }}
         onUpdateChat={handleUpdateChat}
         onSelectChat={(id) => {
           setActiveChatId(id);
           setViewMode("chat");
-          if (pathname !== "/") router.push("/");
+          navigateUrl(`/chat/${id}`);
         }}
         onNewChat={() => router.push("/character/add")}
         onDeleteChat={handleDeleteChat}

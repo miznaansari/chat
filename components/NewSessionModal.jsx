@@ -1,22 +1,103 @@
 "use client";
 
-import { useState } from "react";
-import { X, Sparkles, Plus, Trash2, Bot, ChevronRight, Loader2, Users } from "lucide-react";
+import { useState, useEffect } from "react";
+import {
+  X,
+  Sparkles,
+  Plus,
+  Trash2,
+  Bot,
+  ChevronRight,
+  Loader2,
+  Users,
+  User,
+  Check,
+  Star,
+  UserPlus,
+} from "lucide-react";
 
 export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
   const [sessionTitle, setSessionTitle] = useState("");
   const [story, setStory] = useState("");
   const [selectedModel, setSelectedModel] = useState("gemini-3.5-flash-lite");
 
-  // Dynamic Multi-Character List (starts clean and empty, no pre-filled text to erase)
+  // Dynamic Multi-Character List
   const [characters, setCharacters] = useState([
     { id: 1, name: "", persona: "" },
   ]);
 
+  // User Persona Selection state
+  const [userPersonas, setUserPersonas] = useState([]);
+  const [loadingPersonas, setLoadingPersonas] = useState(false);
+  const [selectedPersonaId, setSelectedPersonaId] = useState(""); // persona ID or "inline" or ""
+  
+  // Inline Persona Creation state (when user has no persona or wants to make one on the fly)
+  const [showInlinePersona, setShowInlinePersona] = useState(false);
+  const [inlineName, setInlineName] = useState("");
+  const [inlinePersona, setInlinePersona] = useState("");
+  const [savingInline, setSavingInline] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [optimizingField, setOptimizingField] = useState(null); // 'story' | charId | 'inlinePersona'
 
-  const [optimizingField, setOptimizingField] = useState(null); // 'story' | charId
+  useEffect(() => {
+    if (isOpen) {
+      fetchUserPersonas();
+    }
+  }, [isOpen]);
+
+  const fetchUserPersonas = async () => {
+    setLoadingPersonas(true);
+    try {
+      const res = await fetch("/api/user/personas");
+      if (res.ok) {
+        const data = await res.json();
+        const list = data.personas || [];
+        setUserPersonas(list);
+        if (list.length > 0) {
+          const def = list.find((p) => p.isDefault) || list[0];
+          setSelectedPersonaId(def.id);
+        } else {
+          setSelectedPersonaId("");
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load user personas", err);
+    } finally {
+      setLoadingPersonas(false);
+    }
+  };
+
+  const handleCreateInlinePersona = async () => {
+    if (!inlineName.trim() || !inlinePersona.trim()) return;
+    setSavingInline(true);
+    try {
+      const res = await fetch("/api/user/personas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: inlineName.trim(),
+          persona: inlinePersona.trim(),
+          isDefault: true,
+        }),
+      });
+      const data = await res.json();
+      if (res.ok && data.persona) {
+        setUserPersonas((prev) => [data.persona, ...prev]);
+        setSelectedPersonaId(data.persona.id);
+        setShowInlinePersona(false);
+        setInlineName("");
+        setInlinePersona("");
+      } else {
+        alert(data.error || "Failed to create persona");
+      }
+    } catch (err) {
+      alert("Error creating persona: " + err.message);
+    } finally {
+      setSavingInline(false);
+    }
+  };
 
   const handleOptimizeText = async (target, text, type = "persona") => {
     if (!text || !text.trim()) return;
@@ -33,6 +114,8 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
       if (res.ok && data.optimizedText) {
         if (target === "story") {
           setStory(data.optimizedText);
+        } else if (target === "inlinePersona") {
+          setInlinePersona(data.optimizedText);
         } else {
           handleCharacterChange(target, "persona", data.optimizedText);
         }
@@ -75,7 +158,7 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
     e.preventDefault();
     setError("");
 
-    // Filter characters that have non-empty name or persona
+    // Filter active session characters
     const activeCharacters = characters
       .map((c) => ({ name: c.name.trim(), persona: c.persona.trim() }))
       .filter((c) => c.name !== "" && c.persona !== "");
@@ -88,6 +171,20 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
     setLoading(true);
 
     try {
+      // Find selected persona data
+      let pId = null;
+      let pName = null;
+      let pDetails = null;
+
+      if (selectedPersonaId && selectedPersonaId !== "") {
+        const found = userPersonas.find((p) => p.id === selectedPersonaId);
+        if (found) {
+          pId = found.id;
+          pName = found.name;
+          pDetails = found.persona;
+        }
+      }
+
       const res = await fetch("/api/chats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -96,6 +193,9 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
           story: story.trim() || "An interactive roleplay scenario.",
           characters: activeCharacters,
           selectedModel,
+          userPersonaId: pId,
+          userPersonaName: pName,
+          userPersonaDetails: pDetails,
         }),
       });
 
@@ -115,6 +215,8 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
   };
 
   if (!isOpen) return null;
+
+  const activePersonaObj = userPersonas.find((p) => p.id === selectedPersonaId);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
@@ -145,6 +247,123 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
         )}
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto space-y-4 py-4 pr-1">
+          {/* USER PERSONA ("ME" PERSONA) SELECTION SECTION */}
+          <div className="p-4 rounded-2xl bg-blue-950/20 border border-blue-500/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4 text-blue-400" />
+                <label className="text-xs font-bold text-blue-300 uppercase tracking-wider">
+                  "Me Persona" (Who you are in this chat)
+                </label>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowInlinePersona(!showInlinePersona)}
+                className="text-[11px] font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-950/60 border border-blue-800/60 px-2.5 py-1 rounded-lg transition-all"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>{showInlinePersona ? "Hide Persona Creator" : "+ New Persona"}</span>
+              </button>
+            </div>
+
+            {/* Inline Persona Creator Form */}
+            {showInlinePersona && (
+              <div className="bg-neutral-950 border border-blue-800/60 rounded-xl p-3.5 space-y-3 animate-in fade-in duration-200">
+                <div className="text-xs font-bold text-white flex items-center justify-between">
+                  <span>Quick Create "Me Persona"</span>
+                  <span className="text-[10px] text-neutral-400 font-normal">Saves to your Settings</span>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Your Persona Name (e.g. Arjun / Alex)"
+                  value={inlineName}
+                  onChange={(e) => setInlineName(e.target.value)}
+                  className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-xs text-white placeholder-neutral-500 outline-none"
+                />
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[10px] text-neutral-400">Backstory / Role Details</label>
+                    <button
+                      type="button"
+                      onClick={() => handleOptimizeText("inlinePersona", inlinePersona, "persona")}
+                      disabled={!inlinePersona?.trim() || optimizingField === "inlinePersona"}
+                      className="text-[10px] font-semibold text-purple-400 flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>✨ Improve</span>
+                    </button>
+                  </div>
+                  <textarea
+                    rows={2}
+                    placeholder="Describe your background, personality, or job so AI characters know how to react..."
+                    value={inlinePersona}
+                    onChange={(e) => setInlinePersona(e.target.value)}
+                    className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl p-2 text-xs text-white placeholder-neutral-500 outline-none resize-none"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCreateInlinePersona}
+                  disabled={savingInline || !inlineName.trim() || !inlinePersona.trim()}
+                  className="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all disabled:opacity-40"
+                >
+                  {savingInline ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <span>Save & Select Persona</span>}
+                </button>
+              </div>
+            )}
+
+            {loadingPersonas ? (
+              <div className="text-xs text-neutral-400 flex items-center gap-2">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-400" />
+                <span>Loading your personas...</span>
+              </div>
+            ) : userPersonas.length === 0 ? (
+              <div className="text-xs text-neutral-400 space-y-1">
+                <p className="text-neutral-300 font-medium">No persona created yet.</p>
+                <p className="text-[11px] text-neutral-400">
+                  Click <span className="text-blue-400 font-semibold">+ New Persona</span> above to tell AI characters who you are and boost response quality!
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {userPersonas.map((p) => {
+                    const isSelected = selectedPersonaId === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setSelectedPersonaId(p.id)}
+                        className={`p-2.5 rounded-xl border text-left flex items-start justify-between transition-all ${
+                          isSelected
+                            ? "bg-blue-900/50 border-blue-500 text-white shadow-md"
+                            : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                        }`}
+                      >
+                        <div className="space-y-0.5 overflow-hidden">
+                          <div className="flex items-center gap-1.5">
+                            <span className="font-bold text-xs text-white truncate">{p.name}</span>
+                            {p.isDefault && (
+                              <Star className="w-3 h-3 text-amber-400 fill-current shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-[11px] text-neutral-400 line-clamp-1">{p.persona}</p>
+                        </div>
+                        {isSelected && <Check className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {activePersonaObj && (
+                  <div className="text-[11px] text-blue-300/90 bg-blue-950/40 p-2.5 rounded-xl border border-blue-800/40">
+                    <span className="font-bold text-blue-200">Active Me Persona:</span> "{activePersonaObj.name}" — {activePersonaObj.persona}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           {/* Session Title & Scenario */}
           <div>
             <label className="block text-xs font-medium text-neutral-400 mb-1 uppercase tracking-wider">
@@ -297,10 +516,11 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
               <button
                 type="button"
                 onClick={() => setSelectedModel("gemini-3.5-flash-lite")}
-                className={`p-3 rounded-xl border text-left transition-all ${selectedModel === "gemini-3.5-flash-lite"
-                  ? "bg-blue-950/40 border-blue-500 text-white"
-                  : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
-                  }`}
+                className={`p-3 rounded-xl border text-left transition-all ${
+                  selectedModel === "gemini-3.5-flash-lite"
+                    ? "bg-blue-950/40 border-blue-500 text-white"
+                    : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                }`}
               >
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
                   <Sparkles className="w-3.5 h-3.5 text-blue-400" />
@@ -312,10 +532,11 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
               <button
                 type="button"
                 onClick={() => setSelectedModel("gemini-3.1-flash-lite")}
-                className={`p-3 rounded-xl border text-left transition-all ${selectedModel === "gemini-3.1-flash-lite"
-                  ? "bg-blue-950/40 border-blue-500 text-white"
-                  : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
-                  }`}
+                className={`p-3 rounded-xl border text-left transition-all ${
+                  selectedModel === "gemini-3.1-flash-lite"
+                    ? "bg-blue-950/40 border-blue-500 text-white"
+                    : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                }`}
               >
                 <div className="flex items-center gap-1.5 text-xs font-semibold text-white">
                   <Sparkles className="w-3.5 h-3.5 text-purple-400" />

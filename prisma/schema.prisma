@@ -17,10 +17,26 @@ model User {
   hasChosenLanguage Boolean          @default(false)
   sessions          UserSession[]
   characters        ChatCharacter[]
+  personas          UserPersona[]
   chats             ChatSession[]
   snippets          ReusablePhrase[]
   aiUsages          AiUsage[]
   createdAt         DateTime         @default(now())
+}
+
+model UserPersona {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  persona     String        @db.Text
+  avatar      String?
+  isDefault   Boolean       @default(false)
+  chats       ChatSession[]
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([userId])
 }
 
 model UserSession {
@@ -46,16 +62,20 @@ model ChatCharacter {
 }
 
 model ChatSession {
-  id                String             @id @default(cuid())
-  userId            String
-  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  title             String
-  story             String             @default("Interactive Roleplay Scenario") @db.Text
-  selectedModel     String             @default("gemini-3.5-flash-lite")
-  sessionCharacters SessionCharacter[]
-  messages          ChatMessage[]
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
+  id                 String             @id @default(cuid())
+  userId             String
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userPersonaId      String?
+  userPersona        UserPersona?       @relation(fields: [userPersonaId], references: [id], onDelete: SetNull)
+  userPersonaName    String?
+  userPersonaDetails String?            @db.Text
+  title              String
+  story              String             @default("Interactive Roleplay Scenario") @db.Text
+  selectedModel      String             @default("gemini-3.5-flash-lite")
+  sessionCharacters  SessionCharacter[]
+  messages           ChatMessage[]
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
 
   @@index([userId, updatedAt])
 }

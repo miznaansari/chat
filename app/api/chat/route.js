@@ -120,7 +120,19 @@ export async function POST(req) {
       lengthInstruction = `\n=== MANDATORY BALANCED RESPONSE DIRECTIVE (NORMAL) ===\nKeep responses natural, engaging, and balanced (around 2-3 sentences per character block).`;
     }
 
+    // Build User Persona ("Me Persona") block
+    const userPersonaName = chatSession.userPersonaName || user.name || "User";
+    const userPersonaDetails = chatSession.userPersonaDetails || "Standard roleplay participant.";
+    const userPersonaBlock = `=== USER PROFILE ("ME" PERSONA) ===
+User's Name: ${userPersonaName}
+User Persona & Background Details:
+${userPersonaDetails}
+
+* CRITICAL PERSONA DIRECTIVE: All characters in this roleplay scene are interacting with "${userPersonaName}". The characters MUST address the user by their name ("${userPersonaName}") and tailor their dialogue, tone, actions, and relationship dynamics to match the user's defined persona and background details.`;
+
     const systemInstruction = `You are roleplaying a scene with MULTIPLE CHARACTERS in the following roleplay story scenario:
+
+${userPersonaBlock}
 
 === SCENARIO / STORY SETTING ===
 ${chatSession.story || "Interactive roleplay scenario."}
