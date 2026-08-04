@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import ProductShowcase from "@/components/ProductShowcase";
 import { useLanguage } from "@/context/LanguageContext";
@@ -23,6 +24,24 @@ import {
 export default function HomeClient({ blogs = [], characters = [], appUrl }) {
   const { t } = useLanguage();
   const [activeCategory, setActiveCategory] = useState("All");
+  const [selectedCharPreview, setSelectedCharPreview] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock background body scroll when preview modal is open
+  useEffect(() => {
+    if (selectedCharPreview) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [selectedCharPreview]);
 
   // Derive Dynamic Categories from Database Characters
   const dynamicCategories = ["All", ...Array.from(new Set(characters.map((c) => c.category).filter(Boolean)))];
@@ -261,7 +280,7 @@ export default function HomeClient({ blogs = [], characters = [], appUrl }) {
 
         {/* Character Showcase Grid with Touch-Pan-X Mobile Slider */}
         <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 overflow-x-auto sm:overflow-x-visible pb-3 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
-          {filteredCharacters.map((char) => {
+          {filteredCharacters.slice(0, 6).map((char) => {
             const parsedPersonas = Array.isArray(char.characters) ? char.characters : [];
             return (
               <div key={char.id} className="w-[180px] sm:w-auto shrink-0 snap-start flex flex-col">
@@ -334,107 +353,6 @@ export default function HomeClient({ blogs = [], characters = [], appUrl }) {
             );
           })}
         </div>
-
-        {/* CHARACTER PREVIEW MODAL */}
-        {selectedCharPreview && (
-          <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[9999] flex items-center justify-center p-3.5 sm:p-4 overflow-hidden">
-            <div className="relative w-full max-w-xl bg-[#090d16] border border-purple-500/40 rounded-3xl overflow-hidden shadow-[0_0_90px_rgba(147,51,234,0.4)] my-auto flex flex-col h-[calc(100dvh-28px)] sm:h-auto sm:max-h-[85vh] animate-fadeIn text-white font-sans">
-              
-              {/* Modal Header Bar */}
-              <div className="relative p-4 sm:p-5 bg-neutral-950/90 border-b border-neutral-800/80 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCharPreview(null)}
-                  className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-neutral-900 border border-neutral-700/60 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer z-10"
-                >
-                  <span className="text-sm font-bold">✕</span>
-                </button>
-
-                <div className="flex items-start gap-3 pr-10">
-                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-neutral-900 border border-purple-500/40 shrink-0 shadow-lg">
-                    <img src={selectedCharPreview.avatar} alt={selectedCharPreview.name} className="w-full h-full object-cover" />
-                  </div>
-
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-snug">
-                        {selectedCharPreview.name}
-                      </h3>
-                      <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-950 border border-purple-700 text-purple-300 shrink-0">
-                        {selectedCharPreview.category || "AI Persona"}
-                      </span>
-                    </div>
-                    <p className="text-[11px] sm:text-xs text-purple-300 font-medium truncate">{selectedCharPreview.tagline}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Scrollable Body */}
-              <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 custom-scrollbar">
-                
-                {/* Storyline Scenario */}
-                <div className="space-y-2">
-                  <h4 className="text-[11px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <BookOpen className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Roleplay Storyline & Scenario</span>
-                  </h4>
-                  <div className="p-3.5 sm:p-4 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 text-xs sm:text-sm text-neutral-200 leading-relaxed shadow-inner">
-                    {selectedCharPreview.story}
-                  </div>
-                </div>
-
-                {/* Personas Breakdown */}
-                <div className="space-y-2.5">
-                  <h4 className="text-[11px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                    <Users className="w-3.5 h-3.5 text-purple-400" />
-                    <span>Multi-Speaker Personas ({Array.isArray(selectedCharPreview.characters) ? selectedCharPreview.characters.length : 1})</span>
-                  </h4>
-
-                  <div className="space-y-2">
-                    {(Array.isArray(selectedCharPreview.characters) && selectedCharPreview.characters.length > 0
-                      ? selectedCharPreview.characters
-                      : [{ name: selectedCharPreview.name, persona: selectedCharPreview.tagline }]
-                    ).map((p, idx) => (
-                      <div key={idx} className="p-3 sm:p-3.5 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-extrabold text-purple-300 flex items-center gap-1.5">
-                            <span>🗣️</span>
-                            <span>{p.name}</span>
-                          </span>
-                          <span className="text-[9px] font-mono text-neutral-500">Speaker #{idx + 1}</span>
-                        </div>
-                        <p className="text-xs text-neutral-300 leading-relaxed">
-                          {p.persona || p.personality || "Interactive character persona."}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Fixed Footer Action Bar */}
-              <div className="p-4 sm:px-6 sm:py-4 bg-neutral-950/95 border-t border-neutral-800/80 flex items-center justify-between gap-2.5 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setSelectedCharPreview(null)}
-                  className="px-4 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white text-xs font-bold transition-all cursor-pointer border border-neutral-800 shrink-0"
-                >
-                  Cancel
-                </button>
-
-                <a
-                  href={appUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-purple-600/30 hover:opacity-95 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 tracking-wide whitespace-nowrap"
-                >
-                  <Sparkles className="w-4 h-4 text-purple-200" />
-                  <span>START ROLEPLAY CHAT</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
       </section>
 
       {/* COMPARE BANNER */}
@@ -517,6 +435,114 @@ export default function HomeClient({ blogs = [], characters = [], appUrl }) {
             ))}
           </div>
         </section>
+      )}
+
+      {/* CHARACTER PREVIEW MODAL (React Portal directly to document.body) */}
+      {mounted && selectedCharPreview && createPortal(
+        <div 
+          onClick={() => setSelectedCharPreview(null)}
+          className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[9999999] flex items-center justify-center p-3.5 sm:p-4 overflow-hidden"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-xl bg-[#090d16] border border-purple-500/40 rounded-3xl overflow-hidden shadow-[0_0_90px_rgba(147,51,234,0.4)] my-auto flex flex-col h-[calc(100dvh-28px)] sm:h-auto sm:max-h-[85vh] animate-fadeIn text-white font-sans"
+          >
+            
+            {/* Modal Header Bar */}
+            <div className="relative p-4 sm:p-5 bg-neutral-950/90 border-b border-neutral-800/80 shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedCharPreview(null)}
+                className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-neutral-900 border border-neutral-700/60 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer z-10"
+              >
+                <span className="text-sm font-bold">✕</span>
+              </button>
+
+              <div className="flex items-start gap-3 pr-10">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-neutral-900 border border-purple-500/40 shrink-0 shadow-lg">
+                  <img src={selectedCharPreview.avatar} alt={selectedCharPreview.name} className="w-full h-full object-cover" />
+                </div>
+
+                <div className="min-w-0 flex-1 space-y-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-snug">
+                      {selectedCharPreview.name}
+                    </h3>
+                    <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-950 border border-purple-700 text-purple-300 shrink-0">
+                      {selectedCharPreview.category || "AI Persona"}
+                    </span>
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-purple-300 font-medium truncate">{selectedCharPreview.tagline}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 custom-scrollbar">
+              
+              {/* Storyline Scenario */}
+              <div className="space-y-2">
+                <h4 className="text-[11px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Roleplay Storyline & Scenario</span>
+                </h4>
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 text-xs sm:text-sm text-neutral-200 leading-relaxed shadow-inner">
+                  {selectedCharPreview.story}
+                </div>
+              </div>
+
+              {/* Personas Breakdown */}
+              <div className="space-y-2.5">
+                <h4 className="text-[11px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <Users className="w-3.5 h-3.5 text-purple-400" />
+                  <span>Multi-Speaker Personas ({Array.isArray(selectedCharPreview.characters) ? selectedCharPreview.characters.length : 1})</span>
+                </h4>
+
+                <div className="space-y-2">
+                  {(Array.isArray(selectedCharPreview.characters) && selectedCharPreview.characters.length > 0
+                    ? selectedCharPreview.characters
+                    : [{ name: selectedCharPreview.name, persona: selectedCharPreview.tagline }]
+                  ).map((p, idx) => (
+                    <div key={idx} className="p-3 sm:p-3.5 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-extrabold text-purple-300 flex items-center gap-1.5">
+                          <span>🗣️</span>
+                          <span>{p.name}</span>
+                        </span>
+                        <span className="text-[9px] font-mono text-neutral-500">Speaker #{idx + 1}</span>
+                      </div>
+                      <p className="text-xs text-neutral-300 leading-relaxed">
+                        {p.persona || p.personality || "Interactive character persona."}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Fixed Footer Action Bar */}
+            <div className="p-4 sm:px-6 sm:py-4 bg-neutral-950/95 border-t border-neutral-800/80 flex items-center justify-between gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => setSelectedCharPreview(null)}
+                className="px-4 py-2.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white text-xs font-bold transition-all cursor-pointer border border-neutral-800 shrink-0"
+              >
+                Cancel
+              </button>
+
+              <a
+                href={appUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-extrabold text-xs sm:text-sm shadow-lg shadow-purple-600/30 hover:opacity-95 active:scale-95 transition-all cursor-pointer flex items-center justify-center gap-2 tracking-wide whitespace-nowrap"
+              >
+                <Sparkles className="w-4 h-4 text-purple-200" />
+                <span>START ROLEPLAY CHAT</span>
+              </a>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
     </div>

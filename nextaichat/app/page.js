@@ -30,6 +30,7 @@ export default async function HomePage() {
   try {
     const rawChars = await prisma.discoverCharacter.findMany({
       where: { isPublic: true },
+      take: 6,
       orderBy: { createdAt: "desc" },
     });
     

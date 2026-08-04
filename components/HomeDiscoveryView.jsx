@@ -570,8 +570,14 @@ export default function HomeDiscoveryView({
 
       {/* CHARACTER PREVIEW & CONFIRMATION MODAL */}
       {selectedCharPreview && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[999999] flex items-center justify-center p-3.5 sm:p-4 pt-16 pb-20 md:pt-6 md:pb-6 overflow-hidden">
-          <div className="relative w-full max-w-xl bg-[#090d16] border border-purple-500/40 rounded-3xl overflow-hidden shadow-[0_0_90px_rgba(147,51,234,0.4)] my-auto flex flex-col h-auto max-h-[calc(100vh-140px)] md:max-h-[85vh] animate-fadeIn font-sans">
+        <div 
+          onClick={() => setSelectedCharPreview(null)}
+          className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[999999] flex items-center justify-center p-3.5 sm:p-4 pt-16 pb-20 md:pt-6 md:pb-6 overflow-hidden"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-xl bg-[#090d16] border border-purple-500/40 rounded-3xl overflow-hidden shadow-[0_0_90px_rgba(147,51,234,0.4)] my-auto flex flex-col h-auto max-h-[calc(100vh-140px)] md:max-h-[85vh] animate-fadeIn font-sans"
+          >
             
             {/* Modal Header Bar */}
             <div className="relative p-4 sm:p-5 bg-neutral-950/90 border-b border-neutral-800/80 shrink-0">

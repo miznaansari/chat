@@ -14,7 +14,7 @@ export default function Footer() {
   if (pathname?.startsWith("/admin")) return null;
 
   return (
-    <footer className="w-full max-w-full overflow-hidden border-t border-purple-500/20 bg-neutral-950/90 backdrop-blur-2xl py-12 px-4 md:px-8 relative z-20 shrink-0 mt-auto shadow-[0_-10px_40px_rgba(0,0,0,0.9)]">
+    <footer className="w-full max-w-full overflow-hidden border-t border-purple-500/20 bg-neutral-950/90 backdrop-blur-2xl py-12 px-4 md:px-8 relative z-10 shrink-0 mt-auto shadow-[0_-10px_40px_rgba(0,0,0,0.9)]">
       {/* Background Subtle Ambient Glow */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[200px] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none" />
 
