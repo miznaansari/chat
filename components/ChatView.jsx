@@ -345,7 +345,6 @@ const FormattedMessageContent = memo(function FormattedMessageContent({ content 
   );
 });
 
-// Memoized Chat Message Row component to prevent re-rendering all messages on input typing
 const ChatMessageItem = memo(function ChatMessageItem({
   msg,
   isLatestMsg,
@@ -357,26 +356,67 @@ const ChatMessageItem = memo(function ChatMessageItem({
   isBatchMode,
   isSelected,
   onToggleSelect,
+  onLongPressSelect,
 }) {
   const isUser = msg.role === "user";
+  const touchTimerRef = useRef(null);
+
   const charBlocks = useMemo(
     () => (!isUser ? parseCharacterSpeechBlocks(msg.content) : []),
     [isUser, msg.content]
   );
 
+  const handleTouchStart = () => {
+    touchTimerRef.current = setTimeout(() => {
+      if (typeof window !== "undefined" && window.navigator?.vibrate) {
+        try {
+          window.navigator.vibrate(40);
+        } catch (e) {}
+      }
+      if (onLongPressSelect) {
+        onLongPressSelect(msg.id);
+      }
+    }, 450);
+  };
+
+  const handleTouchEnd = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+  };
+
+  const handleTouchMove = () => {
+    if (touchTimerRef.current) {
+      clearTimeout(touchTimerRef.current);
+      touchTimerRef.current = null;
+    }
+  };
+
   return (
     <div
       ref={isLatestMsg ? latestMessageRef : null}
-      className={`flex gap-3 max-w-3xl mx-auto group ${isUser ? "justify-end" : "justify-start"
-        }`}
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchMove}
+      onClick={isBatchMode ? () => onToggleSelect(msg.id) : undefined}
+      className={`flex gap-3 max-w-3xl mx-auto group transition-all duration-150 rounded-2xl p-1.5 ${
+        isUser ? "justify-end" : "justify-start"
+      } ${
+        isBatchMode ? "cursor-pointer hover:bg-neutral-900/60 select-none" : ""
+      } ${
+        isSelected
+          ? "bg-purple-950/40 border-2 border-purple-500/80 shadow-[0_0_15px_rgba(168,85,247,0.25)]"
+          : "border-2 border-transparent"
+      }`}
     >
       {isBatchMode && (
-        <div className="flex items-center justify-center shrink-0 pt-2">
+        <div className="flex items-center justify-center shrink-0 pt-2 px-1">
           <input
             type="checkbox"
             checked={isSelected}
             onChange={() => onToggleSelect(msg.id)}
-            className="w-4 h-4 rounded accent-purple-600 cursor-pointer"
+            className="w-5 h-5 rounded accent-purple-600 cursor-pointer"
           />
         </div>
       )}
@@ -546,6 +586,8 @@ export default function ChatView({
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [showLengthDropdown, setShowLengthDropdown] = useState(false);
   const lengthDropdownRef = useRef(null);
+  const [showMobileModelDropdown, setShowMobileModelDropdown] = useState(false);
+  const mobileModelDropdownRef = useRef(null);
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -556,10 +598,34 @@ export default function ChatView({
       ) {
         setShowLengthDropdown(false);
       }
+      if (
+        showMobileModelDropdown &&
+        mobileModelDropdownRef.current &&
+        !mobileModelDropdownRef.current.contains(e.target)
+      ) {
+        setShowMobileModelDropdown(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [showLengthDropdown]);
+  }, [showLengthDropdown, showMobileModelDropdown]);
+
+  const handleModelChangeInChat = async (modelId) => {
+    if (!activeChat?.id) return;
+    try {
+      const res = await fetch(`/api/chats/${activeChat.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ selectedModel: modelId }),
+      });
+      const data = await res.json();
+      if (res.ok && data.chatSession && onUpdateChat) {
+        onUpdateChat(data.chatSession);
+      }
+    } catch (e) {
+      console.error("Failed to update selected model:", e);
+    }
+  };
 
   // Quick Snippets & Instant Paste state
   const [showSnippetsMenu, setShowSnippetsMenu] = useState(false);
@@ -1307,13 +1373,13 @@ export default function ChatView({
       {/* Top Multi-Character Session Bar (Solid Fixed Header) */}
       <div className="solid-fixed-header h-14 border-b border-neutral-800 px-3 md:px-6 flex items-center justify-between bg-neutral-950 select-none shadow-md">
         <div className="flex items-center gap-2 md:gap-3 min-w-0">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold text-xs shrink-0">
+          <div className="hidden sm:flex w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 items-center justify-center text-blue-400 font-bold text-xs shrink-0">
             <Users className="w-4 h-4" />
           </div>
 
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 md:gap-2">
-              <span className="font-semibold text-xs md:text-sm text-white truncate max-w-[110px] sm:max-w-xs">
+              <span className="font-semibold text-xs md:text-sm text-white truncate max-w-[140px] sm:max-w-xs">
                 {activeChat.title}
               </span>
 
@@ -1347,6 +1413,79 @@ export default function ChatView({
 
         {/* Right Actions */}
         <div className="flex items-center gap-1.5 md:gap-2.5 shrink-0">
+          {/* Mobile Model Selector (Visible only on Mobile < sm) */}
+          <div ref={mobileModelDropdownRef} className="relative sm:hidden">
+            <Tooltip content="Select AI Model" position="bottom" badgeIcon="✨">
+              <button
+                type="button"
+                onClick={() => setShowMobileModelDropdown(!showMobileModelDropdown)}
+                className="px-2 py-1 rounded-full bg-purple-950/80 border border-purple-500/50 text-purple-200 text-[11px] font-semibold flex items-center gap-1 transition-all cursor-pointer shadow-sm active:scale-95"
+              >
+                <Sparkles className="w-3 h-3 text-blue-400 shrink-0 animate-pulse" />
+                <span className="truncate max-w-[80px]">
+                  {activeChat?.selectedModel === "gemini-3.1-flash-lite" ? "3.1 Flash" : "3.5 Flash"}
+                </span>
+                <ChevronDown className="w-3 h-3 text-neutral-400 shrink-0" />
+              </button>
+            </Tooltip>
+
+            {/* Dropdown Menu */}
+            {showMobileModelDropdown && (
+              <div className="absolute right-0 top-8 z-50 w-52 bg-neutral-900/95 backdrop-blur-xl border border-purple-500/30 rounded-2xl p-2 shadow-2xl ring-1 ring-white/10 space-y-1 text-xs">
+                <div className="px-2 py-1 text-[10px] font-mono tracking-wider uppercase text-purple-400 font-bold border-b border-neutral-800 mb-1">
+                  Select AI Model
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleModelChangeInChat("gemini-3.5-flash-lite");
+                    setShowMobileModelDropdown(false);
+                  }}
+                  className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                    activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel
+                      ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
+                      : "text-neutral-300 hover:bg-neutral-800"
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                      <span>3.5 Flash Lite</span>
+                    </div>
+                    <span className="text-[10px] text-neutral-400 ml-5">Recommended • Fast</span>
+                  </div>
+                  {(activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel) && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleModelChangeInChat("gemini-3.1-flash-lite");
+                    setShowMobileModelDropdown(false);
+                  }}
+                  className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                    activeChat?.selectedModel === "gemini-3.1-flash-lite"
+                      ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
+                      : "text-neutral-300 hover:bg-neutral-800"
+                  }`}
+                >
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                      <span>3.1 Flash Lite</span>
+                    </div>
+                    <span className="text-[10px] text-neutral-400 ml-5">Legacy Engine</span>
+                  </div>
+                  {activeChat?.selectedModel === "gemini-3.1-flash-lite" && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.8)]" />
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Mode Switcher Selector */}
           <div className="hidden md:flex items-center bg-neutral-900 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
             <Tooltip content="Gemini decides speaker turns dynamically" position="bottom" badgeIcon="🎭">
@@ -1444,7 +1583,7 @@ export default function ChatView({
             </button>
           </Tooltip>
 
-          {/* Select Messages Batch Button */}
+          {/* Select Messages Batch Button (Desktop Only - Mobile uses Long Press) */}
           {messages.length > 0 && (
             <Tooltip content="Select multiple messages for fast bulk deletion" position="bottom" badgeIcon="☑️">
               <button
@@ -1452,14 +1591,13 @@ export default function ChatView({
                   setIsBatchSelectMessages(!isBatchSelectMessages);
                   setSelectedMsgIds(new Set());
                 }}
-                className={`px-2.5 py-1 rounded-full flex items-center gap-1 text-[11px] font-semibold transition-all cursor-pointer ${isBatchSelectMessages
+                className={`hidden sm:flex px-2.5 py-1 rounded-full items-center gap-1 text-[11px] font-semibold transition-all cursor-pointer ${isBatchSelectMessages
                   ? "bg-purple-600 text-white border border-purple-400 shadow-md"
                   : "bg-neutral-900 border border-neutral-800 text-purple-300 hover:text-white hover:bg-neutral-800"
                   }`}
               >
                 <CheckSquare className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{isBatchSelectMessages ? "Done" : "Select Messages"}</span>
-                <span className="sm:hidden">{isBatchSelectMessages ? "Done" : "Select"}</span>
+                <span>{isBatchSelectMessages ? "Done" : "Select Messages"}</span>
               </button>
             </Tooltip>
           )}
@@ -1768,30 +1906,37 @@ export default function ChatView({
           <>
             {/* Batch Messages Floating Action Bar */}
             {isBatchSelectMessages && (
-              <div className="sticky top-2 z-30 max-w-3xl mx-auto my-2 p-2.5 px-4 rounded-2xl bg-purple-950/90 border border-purple-700/80 backdrop-blur-md shadow-2xl flex items-center justify-between gap-3 text-xs animate-in fade-in duration-200">
-                <div className="flex items-center gap-3">
+              <div className="sticky top-2 z-30 max-w-3xl mx-auto my-2 p-2 px-3 sm:px-4 rounded-2xl bg-purple-950/95 border border-purple-700/80 backdrop-blur-md shadow-2xl flex items-center justify-between gap-1.5 sm:gap-3 text-xs animate-in fade-in duration-200">
+                <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
                   <button
                     type="button"
                     onClick={toggleSelectAllMessages}
-                    className="text-xs font-semibold text-purple-300 hover:text-white flex items-center gap-1.5 cursor-pointer"
+                    className="text-xs font-semibold text-purple-300 hover:text-white flex items-center gap-1 cursor-pointer shrink-0"
                   >
-                    <CheckSquare className="w-4 h-4 text-purple-400" />
-                    <span>{selectedMsgIds.size === messages.length ? "Deselect All" : "Select All"}</span>
+                    <CheckSquare className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <span className="hidden sm:inline">
+                      {selectedMsgIds.size === messages.length ? "Deselect All" : "Select All"}
+                    </span>
+                    <span className="sm:hidden">
+                      {selectedMsgIds.size === messages.length ? "None" : "All"}
+                    </span>
                   </button>
-                  <span className="text-[11px] text-purple-300/80 font-mono">
-                    ({selectedMsgIds.size} of {messages.length} selected)
+                  <span className="text-[11px] text-purple-300/80 font-mono shrink-0">
+                    <span className="hidden sm:inline">({selectedMsgIds.size} of {messages.length} selected)</span>
+                    <span className="sm:hidden">({selectedMsgIds.size})</span>
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
                   <button
                     type="button"
                     disabled={selectedMsgIds.size === 0}
                     onClick={() => setShowBatchDeleteModal(true)}
-                    className="px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40 transition-all cursor-pointer shadow-md"
+                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40 transition-all cursor-pointer shadow-md"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Delete Selected ({selectedMsgIds.size})</span>
+                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                    <span className="hidden sm:inline">Delete Selected ({selectedMsgIds.size})</span>
+                    <span className="sm:hidden">Delete ({selectedMsgIds.size})</span>
                   </button>
                   <button
                     type="button"
@@ -1799,9 +1944,10 @@ export default function ChatView({
                       setIsBatchSelectMessages(false);
                       setSelectedMsgIds(new Set());
                     }}
-                    className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-medium transition-colors cursor-pointer"
+                    className="px-2 sm:px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-medium transition-colors cursor-pointer"
                   >
-                    Cancel
+                    <span className="hidden sm:inline">Cancel</span>
+                    <span className="sm:hidden">✕</span>
                   </button>
                 </div>
               </div>
@@ -1834,6 +1980,14 @@ export default function ChatView({
                   isBatchMode={isBatchSelectMessages}
                   isSelected={selectedMsgIds.has(msg.id)}
                   onToggleSelect={toggleSelectMessage}
+                  onLongPressSelect={(msgId) => {
+                    setIsBatchSelectMessages(true);
+                    setSelectedMsgIds((prev) => {
+                      const next = new Set(prev);
+                      next.add(msgId);
+                      return next;
+                    });
+                  }}
                 />
               );
             })}

@@ -535,6 +535,7 @@ export default function GeminiLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col h-full overflow-hidden min-w-0">
         <header className="solid-fixed-header !z-50 h-14 border-b border-purple-500/20 px-3 md:px-6 flex items-center justify-between bg-neutral-950 select-none relative">
+          {/* Header Left Navigation & View Pills */}
           <div className="flex items-center gap-2">
             {/* Toggle Drawer button for Mobile Header */}
             <button
@@ -552,50 +553,6 @@ export default function GeminiLayout({
                 className="h-20 w-auto object-contain max-w-[230px]"
               />
             </Link>
-
-            {/* Top Left: Gemini Model Dropdown (when chat is active) */}
-            {viewMode === "chat" && (
-              <div className="relative z-[9999]" ref={modelDropdownRef}>
-                <button
-                  onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-                  className="flex items-center gap-1.5 text-xs md:text-sm font-medium text-neutral-200 hover:bg-neutral-900 px-2.5 py-1.5 rounded-full transition-colors border border-neutral-800 md:border-transparent cursor-pointer touch-manipulation"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
-                  <span className="truncate max-w-[120px] sm:max-w-none">{activeModelName}</span>
-                  <ChevronDown className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                </button>
-
-                {modelDropdownOpen && (
-                  <div className="absolute top-full left-0 mt-1.5 w-56 bg-neutral-900 border border-neutral-800 rounded-2xl shadow-2xl py-2 z-[99999] ring-1 ring-white/10">
-                    <button
-                      onClick={() => handleModelChange("gemini-3.5-flash-lite")}
-                      className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-                        <span className="font-semibold">3.5 Flash Lite</span>
-                      </div>
-                      {(activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel || activeModelName.includes("3.5")) && (
-                        <span className="w-2 h-2 rounded-full bg-blue-500 shadow-sm" />
-                      )}
-                    </button>
-
-                    <button
-                      onClick={() => handleModelChange("gemini-3.1-flash-lite")}
-                      className="w-full px-4 py-2.5 text-left text-xs hover:bg-neutral-800/80 flex items-center justify-between text-neutral-200 cursor-pointer transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                        <span className="font-semibold">3.1 Flash Lite</span>
-                      </div>
-                      {activeChat?.selectedModel === "gemini-3.1-flash-lite" && (
-                        <span className="w-2 h-2 rounded-full bg-purple-500 shadow-sm" />
-                      )}
-                    </button>
-                  </div>
-                )}
-              </div>
-            )}
 
             {/* Desktop View Switcher Pills */}
             <div className="hidden sm:flex items-center bg-neutral-900/80 border border-neutral-800 rounded-full p-0.5 text-xs shadow-inner">
@@ -654,8 +611,68 @@ export default function GeminiLayout({
             </div>
           </div>
 
-          {/* Header Right Actions */}
+          {/* Header Right Actions & Model Dropdown */}
           <div className="flex items-center gap-2">
+            {/* Model Selector Dropdown (when chat is active - Desktop only) */}
+            {viewMode === "chat" && (
+              <div className="relative z-[9999] hidden sm:block" ref={modelDropdownRef}>
+                <button
+                  onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
+                  className="flex items-center gap-1.5 text-xs font-semibold text-purple-200 bg-neutral-900/90 hover:bg-neutral-800 px-3 py-1.5 rounded-full transition-all border border-purple-500/30 hover:border-purple-400/60 shadow-sm cursor-pointer touch-manipulation"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0 animate-pulse" />
+                  <span className="truncate max-w-[110px] sm:max-w-none">{activeModelName}</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                </button>
+
+                {modelDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-60 bg-neutral-900/95 border border-purple-500/30 rounded-2xl shadow-2xl py-2 z-[99999] backdrop-blur-xl ring-1 ring-white/10">
+                    <div className="px-3 py-1.5 mb-1 text-[10px] font-mono tracking-wider uppercase text-purple-400 font-bold border-b border-neutral-800">
+                      Select AI Model
+                    </div>
+                    <button
+                      onClick={() => handleModelChange("gemini-3.5-flash-lite")}
+                      className={`w-full px-4 py-2.5 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                        activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel || activeModelName.includes("3.5")
+                          ? "bg-purple-950/40 text-white font-bold"
+                          : "text-neutral-300 hover:bg-neutral-800/80"
+                      }`}
+                    >
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                          <span>3.5 Flash Lite</span>
+                        </div>
+                        <span className="text-[10px] text-neutral-400 ml-5">Recommended • Fast & Smart</span>
+                      </div>
+                      {(activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel || activeModelName.includes("3.5")) && (
+                        <span className="w-2 h-2 rounded-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.8)]" />
+                      )}
+                    </button>
+
+                    <button
+                      onClick={() => handleModelChange("gemini-3.1-flash-lite")}
+                      className={`w-full px-4 py-2.5 text-left text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                        activeChat?.selectedModel === "gemini-3.1-flash-lite"
+                          ? "bg-purple-950/40 text-white font-bold"
+                          : "text-neutral-300 hover:bg-neutral-800/80"
+                      }`}
+                    >
+                      <div className="flex flex-col">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                          <span>3.1 Flash Lite</span>
+                        </div>
+                        <span className="text-[10px] text-neutral-400 ml-5">Legacy Speed Engine</span>
+                      </div>
+                      {activeChat?.selectedModel === "gemini-3.1-flash-lite" && (
+                        <span className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_8px_rgba(192,132,252,0.8)]" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             {/* Gemini Daily Credit Chip */}
             <Tooltip
               content={

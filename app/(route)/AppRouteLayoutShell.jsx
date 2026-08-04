@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import GeminiLayout from "@/components/GeminiLayout";
 import NewSessionModal from "@/components/NewSessionModal";
+import SpaceAntiGravityChatLoader from "@/components/SpaceAntiGravityChatLoader";
 import { ChatLayoutContext } from "@/context/ChatLayoutContext";
 
 export default function AppRouteLayoutShell({ initialUser, initialChats = [], children }) {
@@ -251,6 +252,12 @@ export default function AppRouteLayoutShell({ initialUser, initialChats = [], ch
         onLogout={handleLogout}
       >
         {children}
+
+        <SpaceAntiGravityChatLoader
+          activeChatId={activeChatId}
+          activeChat={activeChat}
+          viewMode={viewMode}
+        />
 
         <NewSessionModal
           isOpen={isModalOpen}
