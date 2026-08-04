@@ -22,6 +22,9 @@ import {
   Heart,
   User,
   History,
+  AlertTriangle,
+  UserCheck,
+  Loader2,
 } from "lucide-react";
 
 
@@ -94,6 +97,20 @@ export default function GeminiLayout({
 
   const [mobileOpen, setMobileOpen] = useState(false); // Mobile default CLOSED (no refresh flash)
   const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const handleLogoutClick = async () => {
+    setIsLoggingOut(true);
+    setMobileOpen(false);
+    try {
+      if (onLogout) {
+        await onLogout();
+      }
+    } catch (err) {
+      console.error("Logout error", err);
+      setIsLoggingOut(false);
+    }
+  };
 
   const getModelDisplayName = (modelId) => {
     if (modelId === "gemini-3.1-flash-lite") return "Gemini 3.1 Flash Lite";
@@ -180,6 +197,19 @@ export default function GeminiLayout({
 
   return (
     <div className="flex h-[100dvh] w-full fixed inset-0 bg-[#030712] text-neutral-100 overflow-hidden overscroll-none font-sans bg-antigravity-grid relative">
+      {/* Full-Screen Logout Loading Overlay */}
+      {isLoggingOut && (
+        <div className="fixed inset-0 z-[999999] bg-black/85 backdrop-blur-md flex flex-col items-center justify-center space-y-4 animate-in fade-in duration-200">
+          <div className="w-16 h-16 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 shadow-2xl shadow-red-900/40">
+            <Loader2 className="w-8 h-8 animate-spin text-red-400" />
+          </div>
+          <div className="text-center space-y-1">
+            <h3 className="text-base font-bold text-white tracking-wide">Signing Out...</h3>
+            <p className="text-xs text-neutral-400">Securing your session and redirecting</p>
+          </div>
+        </div>
+      )}
+
       {/* ANTIGRAVITY FLOATING ORBS & ORBITAL RINGS (EXACT SAME AS /LOGIN) */}
       <div className="fixed top-[-10%] left-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-purple-900/30 via-indigo-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
       <div className="fixed bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-blue-900/30 via-cyan-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
@@ -443,10 +473,10 @@ export default function GeminiLayout({
             </div>
 
             <div className="flex items-center gap-1">
-              <Tooltip content="App Settings" position="top" badgeIcon="⚙️">
+              <Tooltip content="App Settings" position="top" badgeIcon="⚙️" className="hidden md:block">
                 <Link
                   href="/setting"
-                  className={`p-1.5 text-neutral-400 hover:text-purple-400 hover:bg-neutral-800 rounded-lg transition-colors flex items-center justify-center cursor-pointer ${
+                  className={`hidden md:flex p-1.5 text-neutral-400 hover:text-purple-400 hover:bg-neutral-800 rounded-lg transition-colors items-center justify-center cursor-pointer ${
                     !sidebarOpen ? "max-md:opacity-100 md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "opacity-100 max-w-[40px]"
                   } ${isSettingActive ? "text-purple-400 bg-neutral-800" : ""}`}
                   title="App Settings"
@@ -458,14 +488,16 @@ export default function GeminiLayout({
               <Tooltip content="Sign Out Account" position="right" badgeIcon="🔒">
                 <button
                   type="button"
-                  onClick={() => {
-                    setMobileOpen(false);
-                    if (onLogout) onLogout();
-                  }}
-                  className={`p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors flex items-center justify-center cursor-pointer ${!sidebarOpen ? "max-md:opacity-100 md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "opacity-100 max-w-[40px]"}`}
+                  disabled={isLoggingOut}
+                  onClick={handleLogoutClick}
+                  className={`p-1.5 text-neutral-400 hover:text-red-400 hover:bg-neutral-800 rounded-lg transition-colors flex items-center justify-center cursor-pointer disabled:opacity-70 ${!sidebarOpen ? "max-md:opacity-100 md:opacity-0 md:max-w-0 md:p-0 md:overflow-hidden md:pointer-events-none" : "opacity-100 max-w-[40px]"}`}
                   title="Sign Out Account"
                 >
-                  <LogOut className="w-4 h-4" />
+                  {isLoggingOut ? (
+                    <Loader2 className="w-4 h-4 text-red-400 animate-spin" />
+                  ) : (
+                    <LogOut className="w-4 h-4" />
+                  )}
                 </button>
               </Tooltip>
             </div>
@@ -563,6 +595,29 @@ export default function GeminiLayout({
                   <span className="truncate max-w-[120px]">{activeChat.title}</span>
                 </button>
               )}
+              {/* Active Persona Indicator / Missing Persona Warning Pill */}
+              {viewMode === "chat" && activeChat && (
+                <div className="hidden md:flex items-center">
+                  {activeChat.userPersonaName && activeChat.userPersonaDetails && activeChat.userPersonaDetails !== "Standard roleplay participant." ? (
+                    <Tooltip content={`Roleplay Persona: ${activeChat.userPersonaName}`} position="bottom" badgeIcon="🎭">
+                      <div className="flex items-center gap-1.5 bg-gradient-to-r from-purple-950/80 to-indigo-950/80 border border-purple-500/40 px-2.5 py-1 rounded-full text-[11px] font-bold text-purple-200 shadow-sm">
+                        <UserCheck className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                        <span>Playing as: <strong className="text-white font-extrabold">{activeChat.userPersonaName}</strong></span>
+                      </div>
+                    </Tooltip>
+                  ) : (
+                    <Tooltip content="No custom 'Me Persona' attached. Character responses may be unpersonalized." position="bottom" badgeIcon="⚠️">
+                      <Link
+                        href="/setting"
+                        className="flex items-center gap-1.5 bg-amber-950/80 border border-amber-500/50 hover:bg-amber-900/90 px-2.5 py-1 rounded-full text-[11px] font-bold text-amber-300 transition-all shadow-sm cursor-pointer"
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 animate-pulse" />
+                        <span>No "Me Persona" Added</span>
+                      </Link>
+                    </Tooltip>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -581,10 +636,10 @@ export default function GeminiLayout({
 
           {/* Header Right Actions */}
           <div className="flex items-center gap-2">
-            <Tooltip content="App Settings" position="bottom" badgeIcon="⚙️">
+            <Tooltip content="App Settings" position="bottom" badgeIcon="⚙️" className="hidden md:block">
               <Link
                 href="/setting"
-                className={`p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors flex items-center justify-center cursor-pointer ${
+                className={`hidden md:flex p-2 text-neutral-400 hover:text-white rounded-xl hover:bg-neutral-800 transition-colors items-center justify-center cursor-pointer ${
                   isSettingActive ? "text-purple-400 bg-neutral-800 border border-purple-500/30" : ""
                 }`}
                 title="App Settings"

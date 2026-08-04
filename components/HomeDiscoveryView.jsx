@@ -11,7 +11,9 @@ import {
   Users,
   X,
   BookOpen,
-  Star
+  Star,
+  AlertTriangle,
+  UserCheck
 } from "lucide-react";
 
 const DEFAULT_CHARACTERS = [
@@ -671,41 +673,89 @@ export default function HomeDiscoveryView({
                 </div>
               </div>
 
-              {/* Sleek Compact Persona Selector inside Modal */}
-              <div className="p-3.5 rounded-2xl bg-blue-950/20 border border-blue-500/30 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-blue-300 flex items-center gap-1.5 uppercase tracking-wider">
-                    <User className="w-3.5 h-3.5 text-blue-400" />
-                    <span>My "Me Persona" (Who you play as)</span>
-                  </span>
-                  {userPersonas.length === 0 && (
-                    <a
-                      href="/setting"
-                      className="text-[10px] text-purple-400 hover:underline font-semibold"
-                    >
-                      + Create in Settings
-                    </a>
-                  )}
-                </div>
+              {/* Highlighted "Me Persona" (Who you play as) & Warning Notice */}
+              {(() => {
+                const activePersona = userPersonas.find((p) => p.id === selectedPersonaId);
+                const hasPersona = Boolean(activePersona);
 
-                {userPersonas.length > 0 ? (
-                  <select
-                    value={selectedPersonaId}
-                    onChange={(e) => setSelectedPersonaId(e.target.value)}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3 py-2 text-xs text-white outline-none focus:border-blue-500"
-                  >
-                    {userPersonas.map((p) => (
-                      <option key={p.id} value={p.id}>
-                        {p.name} {p.isDefault ? "(Default)" : ""} — {p.persona.substring(0, 40)}...
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <p className="text-[11px] text-neutral-400">
-                    No persona created yet. Using default account name. Create a "Me Persona" in <a href="/setting" className="text-blue-400 underline">Settings</a> to personalize your responses!
-                  </p>
-                )}
-              </div>
+                return (
+                  <div className="space-y-3">
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/80 via-indigo-950/60 to-blue-950/80 border border-purple-500/50 space-y-3 shadow-xl relative overflow-hidden">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-xl pointer-events-none" />
+
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-extrabold text-purple-300 flex items-center gap-1.5 uppercase tracking-wider">
+                          <UserCheck className="w-4 h-4 text-purple-400 animate-pulse" />
+                          <span>Who You Play As ("Me Persona")</span>
+                        </span>
+                        <a
+                          href="/setting"
+                          className="text-[11px] font-bold text-purple-400 hover:text-purple-300 hover:underline flex items-center gap-1"
+                        >
+                          <span>+ Manage in Settings</span>
+                        </a>
+                      </div>
+
+                      {hasPersona ? (
+                        <div className="space-y-2.5">
+                          {/* Active Persona Highlight Card */}
+                          <div className="p-3 rounded-xl bg-neutral-950/90 border border-purple-400/40 space-y-1.5 shadow-inner">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-black text-white flex items-center gap-1.5">
+                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                <span>Playing as: <strong className="text-purple-300 font-extrabold">{activePersona.name}</strong></span>
+                              </span>
+                              {activePersona.isDefault && (
+                                <span className="text-[9px] font-extrabold font-mono px-2 py-0.5 rounded-full bg-purple-900/80 text-purple-200 border border-purple-600">
+                                  Default Persona
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-neutral-300 italic line-clamp-2 leading-relaxed bg-neutral-900/80 p-2 rounded-lg border border-neutral-800">
+                              "{activePersona.persona}"
+                            </p>
+                          </div>
+
+                          {/* Persona Switcher Dropdown (if user has multiple) */}
+                          {userPersonas.length > 1 && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-neutral-400 font-semibold shrink-0">Switch Persona:</span>
+                              <select
+                                value={selectedPersonaId}
+                                onChange={(e) => setSelectedPersonaId(e.target.value)}
+                                className="flex-1 bg-neutral-950 border border-purple-800/60 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none focus:border-purple-400 font-medium"
+                              >
+                                {userPersonas.map((p) => (
+                                  <option key={p.id} value={p.id}>
+                                    {p.name} {p.isDefault ? "(Default)" : ""}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        /* Warning Alert Banner inside Modal when NO Persona is created/selected */
+                        <div className="p-3.5 rounded-xl bg-amber-950/80 border border-amber-500/70 space-y-2 text-amber-200 shadow-md">
+                          <div className="flex items-center gap-2 font-extrabold text-xs text-amber-300">
+                            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 animate-bounce" />
+                            <span>⚠️ Warning: No "Me Persona" Added!</span>
+                          </div>
+                          <p className="text-[11px] leading-relaxed text-amber-100/90 font-medium">
+                            AI character responses will <strong className="text-white underline">not be personalized</strong> to your specific background, tone, or personality because you haven't created a "Me Persona". Characters may reply generically!
+                          </p>
+                          <a
+                            href="/setting"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all shadow-sm cursor-pointer mt-1"
+                          >
+                            <span>+ Create "Me Persona" Now</span>
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
             </div>
 

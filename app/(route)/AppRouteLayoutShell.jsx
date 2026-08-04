@@ -28,14 +28,36 @@ export default function AppRouteLayoutShell({ initialUser, initialChats = [], ch
   }); // "home" | "chat"
 
   const navigateUrl = (url) => {
-    if (typeof window !== "undefined" && window.location.pathname !== url) {
-      window.history.pushState(null, "", url);
+    if (typeof window !== "undefined") {
+      const currentPath = window.location.pathname;
+      if (currentPath !== url) {
+        const isClientChatPath = currentPath === "/" || currentPath.startsWith("/chat/");
+        const isTargetClientChatPath = url === "/" || url.startsWith("/chat/");
+
+        if (!isClientChatPath || !isTargetClientChatPath) {
+          router.push(url);
+        } else {
+          window.history.pushState(null, "", url);
+        }
+      }
     }
   };
 
   useEffect(() => {
     fetchChats();
   }, []);
+
+  useEffect(() => {
+    if (pathname?.startsWith("/chat/")) {
+      const urlId = pathname.replace("/chat/", "").split("?")[0].split("/")[0];
+      if (urlId) {
+        setActiveChatId(urlId);
+        setViewMode("chat");
+      }
+    } else if (pathname === "/") {
+      setViewMode("home");
+    }
+  }, [pathname]);
 
   useEffect(() => {
     const handlePopState = () => {

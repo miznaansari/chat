@@ -30,6 +30,8 @@ import {
   MessageSquare,
   CornerDownLeft,
   CheckSquare,
+  AlertTriangle,
+  UserCheck,
 } from "lucide-react";
 
 // Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
@@ -496,6 +498,7 @@ export default function ChatView({
   const [responseLength, setResponseLength] = useState("normal"); // "veryshort" | "short" | "normal" | "detailed"
   const [chatMode, setChatMode] = useState("turn"); // "turn" | "classic"
   const [typingCharacter, setTypingCharacter] = useState(null);
+  const [dismissPersonaWarning, setDismissPersonaWarning] = useState(false);
 
   // Load saved response length & chat mode from localStorage
   useEffect(() => {
@@ -1629,6 +1632,8 @@ export default function ChatView({
           </div>
         </div>
       </div>
+
+
 
       {/* Context Window Detailed Circular Gauge & Dashboard Banner */}
       {showContextInfo && (
