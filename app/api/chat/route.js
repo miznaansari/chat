@@ -23,7 +23,7 @@ async function generateGeminiContentWithFallback({ modelName, contents, systemIn
   let lastError = null;
 
   for (const { key, label } of keysToTry) {
-    const timerLabel = `⏱️ [ClassicChat] Gemini API call (${modelName}) [${label}]`;
+    const timerLabel = `⏱️ [ClassicChat] AI API call (${modelName}) [${label}]`;
     try {
       console.time(timerLabel);
       const ai = new GoogleGenAI({ apiKey: key });
@@ -38,12 +38,12 @@ async function generateGeminiContentWithFallback({ modelName, contents, systemIn
       console.timeEnd(timerLabel);
       return response;
     } catch (err) {
-      console.warn(`Gemini API call failed using ${label}:`, err?.message || err);
+      console.warn(`AI API call failed using ${label}:`, err?.message || err);
       lastError = err;
     }
   }
 
-  throw lastError || new Error("All configured Gemini API keys failed.");
+  throw lastError || new Error("All configured AI API keys failed.");
 }
 
 export async function POST(req) {
@@ -260,7 +260,7 @@ ${languageInstruction}
       }
     );
   } catch (error) {
-    console.error("Gemini Multi-Character Chat API Error:", error);
+    console.error("AI Multi-Character Chat API Error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to process chat response" },
       { status: 500 }

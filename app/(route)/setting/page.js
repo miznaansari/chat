@@ -345,7 +345,7 @@ export default function SettingPage() {
         {[
           { id: "all", label: "All Settings", icon: Sparkles },
           { id: "personas", label: "User Personas", icon: User, count: personas.length },
-          { id: "credits", label: "Gemini Credits", icon: Zap, count: `${usageData.todayCount}/${usageData.dailyLimit || 100}` },
+          { id: "credits", label: "AI Credits", icon: Zap, count: `${usageData.todayCount}/${usageData.dailyLimit || 100}` },
           { id: "password", label: "Change Password", icon: KeyRound },
           { id: "language", label: "System Language", icon: Globe, count: language.toUpperCase() },
         ].map((tab) => {
@@ -386,7 +386,7 @@ export default function SettingPage() {
           {[
             { id: "all", label: "All Settings", desc: "Complete overview of all options", icon: Sparkles },
             { id: "personas", label: "User Personas", desc: "Me Persona profiles for roleplay", icon: User, count: personas.length },
-            { id: "credits", label: "Gemini Credits", desc: "Daily limit & usage log", icon: Zap, count: `${usageData.todayCount}/${usageData.dailyLimit || 100}` },
+            { id: "credits", label: "AI Credits", desc: "Daily limit & usage log", icon: Zap, count: `${usageData.todayCount}/${usageData.dailyLimit || 100}` },
             { id: "password", label: "Change Password", desc: "Security & credentials", icon: KeyRound },
             { id: "language", label: "System Language", desc: "English & Hinglish modes", icon: Globe, count: language.toUpperCase() },
           ].map((tab) => {
@@ -1133,7 +1133,7 @@ export default function SettingPage() {
                     ) : (
                       <>
                         <Sparkles className="w-3 h-3 text-purple-400" />
-                        <span>✨ Improve with Gemini</span>
+                        <span>✨ Improve with AI</span>
                       </>
                     )}
                   </button>

@@ -1815,7 +1815,7 @@ export default function ChatView({
               <div className="flex items-center gap-2">
                 <Brain className="w-4.5 h-4.5 text-blue-400 shrink-0" />
                 <span className="font-semibold text-white text-sm">
-                  Gemini Context Capacity ({activeChat.selectedModel || "gemini-3.5-flash-lite"})
+                  AI Context Capacity ({activeChat.selectedModel || "gemini-3.5-flash-lite"})
                 </span>
               </div>
               <button
@@ -2367,7 +2367,7 @@ export default function ChatView({
                     ) : (
                       <>
                         <Sparkles className="w-3 h-3 text-purple-400" />
-                        <span>✨ Improve with Gemini</span>
+                        <span>✨ Improve with AI</span>
                       </>
                     )}
                   </button>
@@ -2457,7 +2457,7 @@ export default function ChatView({
                               ) : (
                                 <>
                                   <Sparkles className="w-3 h-3 text-purple-400" />
-                                  <span>✨ Improve with Gemini</span>
+                                  <span>✨ Improve with AI</span>
                                 </>
                               )}
                             </button>

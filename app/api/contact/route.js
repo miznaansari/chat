@@ -56,7 +56,7 @@ export async function POST(req) {
       const embedColor = embedCategoryColors[category] || 0x8B5CF6;
 
       const discordPayload = {
-        username: "Gemini Chat Support Bot",
+        username: "AI Chat Support Bot",
         avatar_url: "https://raw.githubusercontent.com/lucide-icons/lucide/main/icons/sparkles.png",
         embeds: [
           {
