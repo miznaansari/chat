@@ -6,6 +6,7 @@ import Link from "next/link";
 import {
   Sparkles,
   User,
+  Mail,
   Lock,
   ArrowRight,
   Loader2,
@@ -31,6 +32,7 @@ export default function LoginForm() {
   const router = useRouter();
   const [isRegister, setIsRegister] = useState(false);
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
@@ -93,7 +95,7 @@ export default function LoginForm() {
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, password }),
+        body: JSON.stringify({ name, password, email }),
       });
 
       const data = await res.json();
@@ -348,11 +350,40 @@ export default function LoginForm() {
                 </div>
               </div>
 
+              {isRegister && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+                    <Mail className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Email Address</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="email"
+                      required={isRegister}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="user@example.com"
+                      className="w-full bg-neutral-900/90 border border-neutral-800 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-sm text-white outline-none transition-all"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-1.5">
-                <label className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Password</span>
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-neutral-300 flex items-center gap-1.5">
+                    <Lock className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Password</span>
+                  </label>
+                  {!isRegister && (
+                    <Link
+                      href="/forgetPassword"
+                      className="text-[11px] font-semibold text-purple-400 hover:text-purple-300 transition-colors"
+                    >
+                      Forgot password?
+                    </Link>
+                  )}
+                </div>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}

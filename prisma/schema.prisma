@@ -12,6 +12,7 @@ model User {
   name              String           @unique
   password          String
   email             String?          @unique
+  emailVerified     Boolean          @default(false)
   authProvider      String           @default("credentials")
   language          String           @default("en")
   hasChosenLanguage Boolean          @default(false)

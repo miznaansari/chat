@@ -16,6 +16,7 @@ model User {
   language          String           @default("en")
   authProvider      String           @default("credentials")
   email             String?          @unique
+  emailVerified     Boolean          @default(false)
   dailyLimit        Int              @default(100)
   aiUsages          AiUsage[]
   characters        ChatCharacter[]

@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { createAuthToken } from "@/lib/jwt";
+import { sendVerificationEmail } from "@/lib/mailer";
 
 export async function POST(req) {
   try {
-    const { name, password } = await req.json();
+    const { name, password, email } = await req.json();
 
     if (!name || !password) {
       return NextResponse.json(
@@ -14,7 +15,7 @@ export async function POST(req) {
       );
     }
 
-    // Check if user already exists
+    // Check if username already exists
     const existingUser = await prisma.user.findUnique({
       where: { name },
     });
@@ -26,13 +27,29 @@ export async function POST(req) {
       );
     }
 
+    // Check if email already exists
+    if (email && email.trim() !== "") {
+      const existingEmail = await prisma.user.findUnique({
+        where: { email: email.trim().toLowerCase() },
+      });
+
+      if (existingEmail) {
+        return NextResponse.json(
+          { error: "Email address is already in use" },
+          { status: 409 }
+        );
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
+    const cleanEmail = email && email.trim() !== "" ? email.trim().toLowerCase() : null;
 
     // Create user
     const user = await prisma.user.create({
       data: {
         name,
         password: hashedPassword,
+        email: cleanEmail,
       },
     });
 
@@ -47,6 +64,15 @@ export async function POST(req) {
       },
     });
 
+    // Send verification email if email is provided
+    if (cleanEmail) {
+      sendVerificationEmail({
+        toEmail: cleanEmail,
+        name: user.name,
+        token,
+      }).catch((err) => console.error("Async verification email error:", err));
+    }
+
     const isHttps =
       req.headers.get("x-forwarded-proto") === "https" ||
       req.nextUrl?.protocol === "https:";
@@ -57,6 +83,7 @@ export async function POST(req) {
       user: {
         id: user.id,
         name: user.name,
+        email: user.email,
         language: user.language || "en",
         hasChosenLanguage: user.hasChosenLanguage || false,
       },
