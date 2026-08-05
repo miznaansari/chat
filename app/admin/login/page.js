@@ -6,8 +6,8 @@ import { ShieldCheck, Lock, Mail, ArrowRight, Loader2, Sparkles } from "lucide-r
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("nextaichatv1@gmail.com");
-  const [password, setPassword] = useState("123123123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -111,11 +111,7 @@ export default function AdminLoginPage() {
           </button>
         </form>
 
-        <div className="p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800 text-[11px] text-neutral-400 space-y-1 text-center font-mono">
-          <p className="text-purple-300 font-bold">Default Seed Admin Credentials:</p>
-          <p>Email: <span className="text-white font-bold">nextaichatv1@gmail.com</span></p>
-          <p>Password: <span className="text-white font-bold">123123123</span></p>
-        </div>
+
       </div>
     </div>
   );
