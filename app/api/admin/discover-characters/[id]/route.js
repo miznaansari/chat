@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import RequireAdmin from "@/lib/RequireAdmin";
 
-// PUT update character
-export async function PUT(req, { params }) {
+// PUT & PATCH update character
+async function updateCharacter(req, { params }) {
   try {
     const admin = await RequireAdmin(req);
     if (!admin) {
@@ -37,6 +37,8 @@ export async function PUT(req, { params }) {
     return NextResponse.json({ error: "Failed to update character" }, { status: 500 });
   }
 }
+
+export { updateCharacter as PUT, updateCharacter as PATCH };
 
 // DELETE character
 export async function DELETE(req, { params }) {

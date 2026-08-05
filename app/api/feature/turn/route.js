@@ -16,7 +16,7 @@ export async function POST(req) {
     const limitCheck = await checkAiUsageLimit(user.id, user.dailyLimit);
     if (!limitCheck.allowed) {
       return NextResponse.json(
-        { error: `Daily Gemini credit limit reached (${limitCheck.count}/${limitCheck.limit} credits today). Limit resets tomorrow, or contact admin to increase your limit.` },
+        { error: `Daily credit limit reached (${limitCheck.count}/${limitCheck.limit} credits today). Limit resets tomorrow, or contact admin to increase your limit.` },
         { status: 429 }
       );
     }

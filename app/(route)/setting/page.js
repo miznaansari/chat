@@ -840,7 +840,7 @@ export default function SettingPage() {
                 </div>
               </div>
 
-              {/* Daily Gemini Credit Allowance Card */}
+              {/* Daily Credit Allowance Card */}
               <div className="bg-neutral-950/80 border border-neutral-800/80 rounded-2xl p-5 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
