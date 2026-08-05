@@ -354,14 +354,16 @@ export default function HomeDiscoveryView({
   };
 
   const SkeletonCard = () => (
-    <div className="bg-neutral-900/40 backdrop-blur-xl border border-purple-500/10 rounded-2xl md:rounded-3xl overflow-hidden animate-pulse flex flex-col">
-      <div className="aspect-square w-full bg-neutral-800/60" />
-      <div className="p-3.5 space-y-2">
-        <div className="h-4 bg-neutral-800/80 rounded w-3/4" />
-        <div className="h-3 bg-neutral-800/40 rounded w-full" />
-        <div className="pt-2.5 flex items-center justify-between border-t border-neutral-800/40">
-          <div className="h-3 bg-neutral-800/50 rounded w-1/3" />
-          <div className="w-6 h-6 rounded-full bg-neutral-800/80" />
+    <div className="bg-neutral-900/80 backdrop-blur-xl border border-purple-500/20 rounded-2xl overflow-hidden animate-pulse flex flex-col h-full">
+      <div className="h-28 sm:h-36 w-full bg-neutral-800/70 shrink-0 relative" />
+      <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
+        <div className="space-y-1.5">
+          <div className="h-3.5 bg-neutral-800/80 rounded-md w-3/4" />
+          <div className="h-2.5 bg-neutral-800/50 rounded-md w-full" />
+        </div>
+        <div className="pt-2 border-t border-neutral-800/60 flex items-center justify-between">
+          <div className="h-2.5 bg-neutral-800/60 rounded-md w-12" />
+          <div className="h-5 w-14 rounded-lg bg-neutral-800/80" />
         </div>
       </div>
     </div>
@@ -526,8 +528,22 @@ export default function HomeDiscoveryView({
 
       {/* DYNAMIC CATEGORY SHOWCASE SECTIONS */}
       {fetching ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
-          <SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard /><SkeletonCard />
+        <div className="space-y-7">
+          {[1, 2].map((catIdx) => (
+            <div key={catIdx} className="space-y-3">
+              <div className="flex items-center justify-between border-b border-neutral-800/80 pb-2">
+                <div className="h-5 w-36 bg-neutral-800/60 rounded-lg animate-pulse" />
+                <div className="h-4 w-16 bg-neutral-800/40 rounded-lg animate-pulse" />
+              </div>
+              <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
+                {[1, 2, 3, 4, 5, 6].map((idx) => (
+                  <div key={idx} className="w-[155px] sm:w-auto shrink-0">
+                    <SkeletonCard />
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       ) : selectedFilter !== "all" && selectedFilter !== "All Showcase" ? (
         /* Filtered Single Category View */
@@ -599,6 +615,20 @@ export default function HomeDiscoveryView({
           })}
         </div>
       )}
+
+      {/* AI DISCLAIMER FOOTER NOTICE */}
+      <div className="mt-10 mb-6 pt-6 border-t border-neutral-800/60 text-center space-y-2">
+        <div className="inline-flex items-center justify-center gap-2 px-3 py-1 rounded-full bg-neutral-900/80 border border-neutral-800 text-[11px] text-neutral-400 font-medium">
+          <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+          <span>AI Generated Characters Disclaimer</span>
+        </div>
+        <p className="text-xs text-neutral-400 max-w-xl mx-auto leading-relaxed">
+          All characters on this platform are <span className="text-purple-300 font-semibold">AI-generated fictional personas</span> and do not represent real individuals, living or deceased.
+        </p>
+        <p className="text-[11px] text-neutral-400/80 font-mono">
+          © {new Date().getFullYear()} NextAIChat • AI Character Roleplay Platform
+        </p>
+      </div>
 
       {/* CHARACTER PREVIEW & CONFIRMATION MODAL */}
       {selectedCharPreview && (
