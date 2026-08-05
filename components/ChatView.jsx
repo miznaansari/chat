@@ -1025,6 +1025,10 @@ export default function ChatView({
           throw new Error(data.error || "Failed turn response");
         }
 
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("ai-usage-updated"));
+        }
+
         // Replace temp user message with actual saved user message
         setMessages((prev) =>
           prev
@@ -1070,6 +1074,10 @@ export default function ChatView({
 
           const nextData = await nextRes.json();
           if (!nextRes.ok) break;
+
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("ai-usage-updated"));
+          }
 
           setTypingCharacter(null);
 
@@ -1120,6 +1128,10 @@ export default function ChatView({
 
         if (!res.ok) {
           throw new Error(data.error || "Failed to send message");
+        }
+
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("ai-usage-updated"));
         }
 
         // Replace temp user message with actual saved user message

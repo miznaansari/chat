@@ -228,6 +228,9 @@ export default function SettingPage() {
       const data = await res.json();
       if (res.ok && data.optimizedText) {
         setPersonaForm((prev) => ({ ...prev, persona: data.optimizedText }));
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("ai-usage-updated"));
+        }
       } else {
         alert("Failed to optimize: " + (data.error || "Unknown error"));
       }

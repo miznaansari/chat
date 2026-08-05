@@ -61,6 +61,8 @@ model ChatSession {
   userPersonaDetails String?            @db.Text
   userPersonaId      String?
   userPersonaName    String?
+  discoverCharacterId String?
+  discoverCharacter   DiscoverCharacter? @relation(fields: [discoverCharacterId], references: [id], onDelete: SetNull)
   messages           ChatMessage[]
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   UserPersona        UserPersona?       @relation(fields: [userPersonaId], references: [id])
@@ -68,6 +70,7 @@ model ChatSession {
 
   @@index([userId, updatedAt])
   @@index([userId])
+  @@index([userId, discoverCharacterId])
   @@index([userPersonaId], map: "ChatSession_userPersonaId_fkey")
 }
 
@@ -183,6 +186,7 @@ model DiscoverCharacter {
   story       String   @db.Text
   characters  String   @db.LongText
   isPublic    Boolean  @default(true)
+  chatSessions ChatSession[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

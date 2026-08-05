@@ -81,6 +81,15 @@ export default function GeminiLayout({
 
   useEffect(() => {
     fetchUsageData();
+
+    const handleUsageUpdated = () => {
+      fetchUsageData();
+    };
+
+    window.addEventListener("ai-usage-updated", handleUsageUpdated);
+    return () => {
+      window.removeEventListener("ai-usage-updated", handleUsageUpdated);
+    };
   }, [pathname, activeChatId]);
 
   const fetchUsageData = async () => {

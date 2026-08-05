@@ -71,6 +71,8 @@ model ChatSession {
   userPersona        UserPersona?       @relation(fields: [userPersonaId], references: [id], onDelete: SetNull)
   userPersonaName    String?
   userPersonaDetails String?            @db.Text
+  discoverCharacterId String?
+  discoverCharacter   DiscoverCharacter? @relation(fields: [discoverCharacterId], references: [id], onDelete: SetNull)
   title              String
   story              String             @default("Interactive Roleplay Scenario") @db.Text
   selectedModel      String             @default("gemini-3.5-flash-lite")
@@ -80,6 +82,7 @@ model ChatSession {
   updatedAt          DateTime           @updatedAt
 
   @@index([userId, updatedAt])
+  @@index([userId, discoverCharacterId])
 }
 
 model SessionCharacter {
@@ -193,6 +196,7 @@ model DiscoverCharacter {
   story       String   @db.Text
   characters  Json     // Array of [{ name: string, persona: string }]
   isPublic    Boolean  @default(true)
+  chatSessions ChatSession[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

@@ -39,7 +39,19 @@ export async function POST(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { title, story, characters, selectedModel, userPersonaId, userPersonaName, userPersonaDetails } = await req.json();
+    const {
+      title,
+      story,
+      characters,
+      selectedModel,
+      userPersonaId,
+      userPersonaName,
+      userPersonaDetails,
+      discoverCharacterId,
+      discoveryChatId,
+    } = await req.json();
+
+    const charIdToLink = discoverCharacterId || discoveryChatId || null;
 
     if (!characters || !Array.isArray(characters) || characters.length === 0) {
       return NextResponse.json(
@@ -90,6 +102,7 @@ export async function POST(req) {
         userPersonaId: finalPersonaId,
         userPersonaName: finalPersonaName,
         userPersonaDetails: finalPersonaDetails,
+        discoverCharacterId: charIdToLink,
         title: chatTitle,
         story: story || "An interactive roleplay scenario.",
         selectedModel: validModel,
@@ -104,6 +117,22 @@ export async function POST(req) {
         sessionCharacters: true,
       },
     });
+
+    // Increment chatsCount on DiscoverCharacter if linked
+    if (charIdToLink) {
+      prisma.discoverCharacter.findFirst({
+        where: {
+          OR: [{ id: charIdToLink }, { name: title }],
+        },
+      }).then((existing) => {
+        if (existing) {
+          prisma.discoverCharacter.update({
+            where: { id: existing.id },
+            data: { chatsCount: { increment: 1 } },
+          }).catch((err) => console.error("Error incrementing chatsCount:", err));
+        }
+      }).catch((err) => console.error("Error finding DiscoverCharacter:", err));
+    }
 
     return NextResponse.json({ chatSession });
   } catch (error) {

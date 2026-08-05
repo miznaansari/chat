@@ -13,7 +13,10 @@ import {
   BookOpen,
   Star,
   AlertTriangle,
-  UserCheck
+  UserCheck,
+  MessageSquare,
+  RotateCcw,
+  History
 } from "lucide-react";
 
 const DEFAULT_CHARACTERS = [
@@ -191,6 +194,9 @@ export default function HomeDiscoveryView({
   const [userPersonas, setUserPersonas] = useState([]);
   const [selectedPersonaId, setSelectedPersonaId] = useState("");
 
+  // Existing Chat Prompt State
+  const [existingChatPrompt, setExistingChatPrompt] = useState(null);
+
   useEffect(() => {
     fetchPublicCharacters();
     fetchUserPersonas();
@@ -276,20 +282,21 @@ export default function HomeDiscoveryView({
   const handleStartCharacterChat = async (char, forceCreateNew = false) => {
     setLoadingCharId(char.id);
 
-    incrementChatsCount(char.id, char.name);
-
     if (!forceCreateNew) {
       const existing = chats.find(
-        (c) => c.title.toLowerCase() === char.name.toLowerCase()
+        (c) =>
+          c.discoverCharacterId === char.id ||
+          c.title.toLowerCase() === char.name.toLowerCase()
       );
 
       if (existing) {
-        onSelectChat(existing.id);
-        if (onSwitchToChatView) onSwitchToChatView();
+        setExistingChatPrompt({ char, existingSession: existing });
         setLoadingCharId(null);
         return;
       }
     }
+
+    incrementChatsCount(char.id, char.name);
 
     try {
       const parsedCharacters = Array.isArray(char.characters) && char.characters.length > 0
@@ -324,6 +331,8 @@ export default function HomeDiscoveryView({
           userPersonaId: pId,
           userPersonaName: pName,
           userPersonaDetails: pDetails,
+          discoverCharacterId: char.id,
+          discoveryChatId: char.id,
         }),
       });
 
@@ -790,6 +799,91 @@ export default function HomeDiscoveryView({
                     <span>START ROLEPLAY CHAT</span>
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EXISTING CHAT DETECTED MODAL */}
+      {existingChatPrompt && (
+        <div
+          onClick={() => setExistingChatPrompt(null)}
+          className="fixed inset-0 bg-black/90 backdrop-blur-2xl z-[9999999] flex items-center justify-center p-4 overflow-hidden"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="relative w-full max-w-md bg-[#090d16] border border-purple-500/50 rounded-3xl overflow-hidden shadow-[0_0_90px_rgba(147,51,234,0.4)] p-6 space-y-5 animate-fadeIn font-sans text-center"
+          >
+            {/* Header Icon */}
+            <div className="w-16 h-16 rounded-2xl bg-purple-950/80 border-2 border-purple-500/40 flex items-center justify-center mx-auto text-purple-300 shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+              <History className="w-8 h-8 text-purple-400 animate-pulse" />
+            </div>
+
+            {/* Character Info Card */}
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-950 border border-purple-700/60 text-purple-300 text-[10px] font-mono font-bold">
+                <span>EXISTING CHAT DETECTED</span>
+              </div>
+              <h3 className="text-xl font-black text-white tracking-tight">
+                Aapne ye pehle se use kiya hua hai!
+              </h3>
+              <p className="text-xs text-neutral-300 leading-relaxed max-w-xs mx-auto">
+                You already have an active roleplay conversation with{" "}
+                <strong className="text-purple-300 font-extrabold">{existingChatPrompt.char.name}</strong>.
+              </p>
+            </div>
+
+            {/* Existing Chat Session Details Pill */}
+            <div className="p-3.5 rounded-2xl bg-neutral-950 border border-purple-500/30 text-left space-y-1.5 shadow-inner">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-extrabold text-white truncate max-w-[200px]">
+                  {existingChatPrompt.existingSession.title}
+                </span>
+                <span className="text-[10px] font-mono text-neutral-400">
+                  {new Date(existingChatPrompt.existingSession.updatedAt || existingChatPrompt.existingSession.createdAt).toLocaleDateString()}
+                </span>
+              </div>
+              <p className="text-[11px] text-neutral-400 line-clamp-1">
+                {existingChatPrompt.existingSession.story}
+              </p>
+            </div>
+
+            {/* Actions: Redirect to existing, Create new, Close */}
+            <div className="space-y-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  const targetSessionId = existingChatPrompt.existingSession.id;
+                  setExistingChatPrompt(null);
+                  onSelectChat(targetSessionId);
+                  if (onSwitchToChatView) onSwitchToChatView();
+                }}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 text-white font-extrabold text-xs shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 hover:scale-[1.02] active:scale-95 transition-all cursor-pointer"
+              >
+                <MessageSquare className="w-4 h-4 text-purple-200" />
+                <span>Redirect to Existing Chat</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const targetChar = existingChatPrompt.char;
+                  setExistingChatPrompt(null);
+                  handleStartCharacterChat(targetChar, true);
+                }}
+                className="w-full py-3 rounded-xl bg-neutral-900 border border-purple-500/40 hover:border-purple-400 text-purple-300 font-extrabold text-xs flex items-center justify-center gap-2 hover:bg-neutral-850 active:scale-95 transition-all cursor-pointer"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-purple-400" />
+                <span>Start Fresh New Session</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setExistingChatPrompt(null)}
+                className="w-full py-2 text-xs font-bold text-neutral-400 hover:text-white transition-colors cursor-pointer"
+              >
+                Close
               </button>
             </div>
           </div>
