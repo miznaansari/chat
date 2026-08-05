@@ -197,3 +197,14 @@ model DiscoverCharacter {
 
   @@index([isPublic, category])
 }
+
+model SystemMetric {
+  id           String   @id @default(cuid())
+  minuteBucket String   @unique // YYYY-MM-DD HH:mm format
+  requestCount Int      @default(0)
+  queuedCount  Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([createdAt])
+}

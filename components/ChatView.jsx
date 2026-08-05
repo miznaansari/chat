@@ -538,6 +538,7 @@ export default function ChatView({
   const [responseLength, setResponseLength] = useState("normal"); // "veryshort" | "short" | "normal" | "detailed"
   const [chatMode, setChatMode] = useState("turn"); // "turn" | "classic"
   const [typingCharacter, setTypingCharacter] = useState(null);
+  const [isQueuedNotice, setIsQueuedNotice] = useState(false);
   const [dismissPersonaWarning, setDismissPersonaWarning] = useState(false);
 
   // Load saved response length & chat mode from localStorage
@@ -1010,6 +1011,16 @@ export default function ChatView({
         });
 
         const data = await res.json();
+
+        // Update high demand & queued status strictly based on server rate queue state
+        const serverHighDemand = Boolean(data.isHighDemand || data.wasQueued || res.headers.get("X-High-Demand") === "true");
+        const serverQueued = Boolean(data.wasQueued || res.headers.get("X-Queued") === "true");
+
+        setIsQueuedNotice(serverQueued);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("ai-high-demand", { detail: { active: serverHighDemand } }));
+        }
+
         if (!res.ok) {
           throw new Error(data.error || "Failed turn response");
         }
@@ -1075,6 +1086,7 @@ export default function ChatView({
         alert("Error in Turn-by-Turn mode: " + err.message);
         setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
       } finally {
+        setIsQueuedNotice(false);
         setTypingCharacter(null);
         setLoading(false);
       }
@@ -1097,6 +1109,15 @@ export default function ChatView({
 
         const data = await res.json();
 
+        // Update high demand & queued status strictly based on server rate queue state
+        const serverHighDemand = Boolean(data.isHighDemand || data.wasQueued || res.headers.get("X-High-Demand") === "true");
+        const serverQueued = Boolean(data.wasQueued || res.headers.get("X-Queued") === "true");
+
+        setIsQueuedNotice(serverQueued);
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("ai-high-demand", { detail: { active: serverHighDemand } }));
+        }
+
         if (!res.ok) {
           throw new Error(data.error || "Failed to send message");
         }
@@ -1116,6 +1137,7 @@ export default function ChatView({
         alert("Error sending message: " + err.message);
         setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
       } finally {
+        setIsQueuedNotice(false);
         setTypingCharacter(null);
         setLoading(false);
       }
@@ -2016,9 +2038,17 @@ export default function ChatView({
                 />
               </div>
 
-              <span className="text-xs text-purple-300 font-bold tracking-wide font-mono">
-                {typingCharacter === "Thinking who speaks..." ? "Selecting next speaker..." : `${typingCharacter} is typing...`}
-              </span>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs text-purple-300 font-bold tracking-wide font-mono">
+                  {typingCharacter === "Thinking who speaks..." ? "Selecting next speaker..." : `${typingCharacter} is typing...`}
+                </span>
+                {isQueuedNotice && (
+                  <span className="text-[11px] text-amber-300 font-medium flex items-center gap-1 animate-pulse">
+                    <span>⏳</span>
+                    <span>Wait a min due to high demand your request is in queue...</span>
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import RequireUser from "@/lib/RequireUser";
 import { executeSingleCharacterTurn } from "@/feature/turnEngine";
 import { trackAiUsage, checkAiUsageLimit } from "@/lib/aiUsageTracker";
+import { processWithRateQueue } from "@/lib/aiRateQueue";
 
 export async function POST(req) {
   try {
@@ -98,16 +99,18 @@ export async function POST(req) {
         ? "gemini-3.1-flash-lite"
         : "gemini-3.5-flash-lite";
 
-    // Call single character turn engine with User Persona details
-    const turnResult = await executeSingleCharacterTurn({
-      modelName,
-      contents,
-      story: chatSession.story,
-      characters: chatSession.sessionCharacters || [],
-      userPersonaName: chatSession.userPersonaName || user.name || "User",
-      userPersonaDetails: chatSession.userPersonaDetails || "Standard roleplay participant.",
-      responseLength,
-      language: user.language || "en",
+    // Call single character turn engine wrapped with rate limiter and queue manager
+    const { result: turnResult, isHighDemand, wasQueued } = await processWithRateQueue(async () => {
+      return await executeSingleCharacterTurn({
+        modelName,
+        contents,
+        story: chatSession.story,
+        characters: chatSession.sessionCharacters || [],
+        userPersonaName: chatSession.userPersonaName || user.name || "User",
+        userPersonaDetails: chatSession.userPersonaDetails || "Standard roleplay participant.",
+        responseLength,
+        language: user.language || "en",
+      });
     });
 
     // Track Gemini API call usage for today
@@ -133,13 +136,23 @@ export async function POST(req) {
       data: { updatedAt: new Date() },
     });
 
-    return NextResponse.json({
-      userMessage: userMsg,
-      modelMessage: modelMsg,
-      speaker: turnResult.speakingCharacter,
-      nextSpeaker: turnResult.nextSpeaker,
-      isUserTurn: turnResult.isUserTurn,
-    });
+    return NextResponse.json(
+      {
+        userMessage: userMsg,
+        modelMessage: modelMsg,
+        speaker: turnResult.speakingCharacter,
+        nextSpeaker: turnResult.nextSpeaker,
+        isUserTurn: turnResult.isUserTurn,
+        isHighDemand,
+        wasQueued,
+      },
+      {
+        headers: {
+          "X-High-Demand": isHighDemand ? "true" : "false",
+          "X-Queued": wasQueued ? "true" : "false",
+        },
+      }
+    );
   } catch (error) {
     console.error("Gemini Turn-by-Turn Chat API Error:", error);
     return NextResponse.json(

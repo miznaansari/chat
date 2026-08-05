@@ -3,6 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import prisma from "@/lib/prisma";
 import RequireUser from "@/lib/RequireUser";
 import { trackAiUsage, checkAiUsageLimit } from "@/lib/aiUsageTracker";
+import { processWithRateQueue } from "@/lib/aiRateQueue";
 
 // Helper to call Gemini API with automatic fallback to FALLBACK_GEMINI_API_KEY if primary key fails
 async function generateGeminiContentWithFallback({ modelName, contents, systemInstruction, temperature = 0.85 }) {
@@ -211,12 +212,14 @@ ${languageInstruction}
         ? "gemini-3.1-flash-lite"
         : "gemini-3.5-flash-lite";
 
-    // Call Gemini API with automatic API key fallback mechanism
-    const response = await generateGeminiContentWithFallback({
-      modelName,
-      contents,
-      systemInstruction,
-      temperature: 0.85,
+    // Call Gemini API wrapped with rate limiter and queue manager
+    const { result: response, isHighDemand, wasQueued } = await processWithRateQueue(async () => {
+      return await generateGeminiContentWithFallback({
+        modelName,
+        contents,
+        systemInstruction,
+        temperature: 0.85,
+      });
     });
 
     // Track Gemini API call usage for today
@@ -242,10 +245,20 @@ ${languageInstruction}
       data: { updatedAt: new Date() },
     });
 
-    return NextResponse.json({
-      userMessage: userMsg,
-      modelMessage: modelMsg,
-    });
+    return NextResponse.json(
+      {
+        userMessage: userMsg,
+        modelMessage: modelMsg,
+        isHighDemand,
+        wasQueued,
+      },
+      {
+        headers: {
+          "X-High-Demand": isHighDemand ? "true" : "false",
+          "X-Queued": wasQueued ? "true" : "false",
+        },
+      }
+    );
   } catch (error) {
     console.error("Gemini Multi-Character Chat API Error:", error);
     return NextResponse.json(

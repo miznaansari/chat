@@ -56,6 +56,29 @@ export default function GeminiLayout({
     isLimitReached: false,
   });
 
+  // High Demand / Rate Queue Warning State
+  const [isHighDemand, setIsHighDemand] = useState(false);
+
+  useEffect(() => {
+    let dismissTimer = null;
+    const handleHighDemandEvent = (e) => {
+      if (typeof e.detail?.active === "boolean") {
+        setIsHighDemand(e.detail.active);
+        if (e.detail.active) {
+          clearTimeout(dismissTimer);
+          dismissTimer = setTimeout(() => {
+            setIsHighDemand(false);
+          }, 15000);
+        }
+      }
+    };
+    window.addEventListener("ai-high-demand", handleHighDemandEvent);
+    return () => {
+      window.removeEventListener("ai-high-demand", handleHighDemandEvent);
+      clearTimeout(dismissTimer);
+    };
+  }, []);
+
   useEffect(() => {
     fetchUsageData();
   }, [pathname, activeChatId]);
@@ -613,6 +636,21 @@ export default function GeminiLayout({
 
           {/* Header Right Actions & Model Dropdown */}
           <div className="flex items-center gap-2">
+            {/* High Demand Traffic Warning Pill */}
+            {isHighDemand && (
+              <Tooltip
+                content="High demand detected (rate limit queue active). Replies may take longer."
+                position="bottom"
+                badgeIcon="🔥"
+              >
+                <div className="flex items-center gap-1.5 bg-amber-950/90 border border-amber-500/60 px-2.5 py-1 rounded-full text-[11px] font-bold text-amber-200 shadow-md animate-pulse shrink-0">
+                  <Zap className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <span className="hidden xs:inline">Due to high demand reply can be slow</span>
+                  <span className="xs:hidden">High Demand</span>
+                </div>
+              </Tooltip>
+            )}
+
             {/* Model Selector Dropdown (when chat is active - Desktop only) */}
             {viewMode === "chat" && (
               <div className="relative z-[9999] hidden sm:block" ref={modelDropdownRef}>

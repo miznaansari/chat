@@ -18,6 +18,7 @@ import {
   CheckCircle2,
   Layers,
   ArrowLeft,
+  Activity,
   X
 } from "lucide-react";
 
@@ -263,6 +264,14 @@ export default function AdminDashboardPage() {
         </div>
 
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/admin/health")}
+            className="px-3.5 py-1.5 rounded-xl bg-purple-950/80 border border-purple-600/60 hover:bg-purple-900 text-xs font-bold text-purple-200 flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm"
+          >
+            <Activity className="w-3.5 h-3.5 text-purple-400" />
+            <span>Health & Uptime</span>
+          </button>
+
           <button
             onClick={() => router.push("/")}
             className="px-3.5 py-1.5 rounded-xl bg-neutral-900 border border-neutral-800 hover:border-neutral-700 text-xs font-semibold text-neutral-300 hover:text-white flex items-center gap-1.5 transition-colors cursor-pointer"
