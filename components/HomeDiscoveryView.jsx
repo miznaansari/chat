@@ -256,11 +256,19 @@ export default function HomeDiscoveryView({
     }
   };
 
-  // Derive Dynamic Categories with "WhatsApp Group" explicitly pinned at the top
+  // Derive Dynamic Categories with "Game" and "WhatsApp Group" explicitly prioritized at the top
   const rawCategories = Array.from(new Set(displayCharacters.map((c) => c.category).filter(Boolean)));
   const sortedCategories = rawCategories.sort((a, b) => {
-    if (a.toLowerCase().includes("whatsapp")) return -1;
-    if (b.toLowerCase().includes("whatsapp")) return 1;
+    const getWeight = (cat) => {
+      const lower = cat.toLowerCase();
+      if (lower === "game" || lower.includes("game")) return 1;
+      if (lower.includes("whatsapp")) return 2;
+      if (lower.includes("exam")) return 3;
+      return 10;
+    };
+    const wA = getWeight(a);
+    const wB = getWeight(b);
+    if (wA !== wB) return wA - wB;
     return a.localeCompare(b);
   });
   const dynamicCategories = ["All Showcase", ...sortedCategories];

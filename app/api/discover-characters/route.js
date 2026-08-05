@@ -8,7 +8,22 @@ export async function GET(req) {
       orderBy: { createdAt: "asc" },
     });
 
-    return NextResponse.json({ characters });
+    const parsedCharacters = characters.map((c) => {
+      let chars = c.characters;
+      if (typeof chars === "string") {
+        try {
+          chars = JSON.parse(chars);
+        } catch (e) {
+          chars = [];
+        }
+      }
+      return {
+        ...c,
+        characters: chars,
+      };
+    });
+
+    return NextResponse.json({ characters: parsedCharacters });
   } catch (error) {
     console.error("Public Get Discover Characters Error:", error);
     return NextResponse.json(

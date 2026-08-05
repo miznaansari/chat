@@ -82,6 +82,62 @@ export default function SettingPage() {
   const [optimizingPersona, setOptimizingPersona] = useState(false);
   const [personaStatus, setPersonaStatus] = useState({ type: null, message: "" });
 
+  // Delete Account state
+  const [deleteConfirmationText, setDeleteConfirmationText] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [deleteAccountStatus, setDeleteAccountStatus] = useState({ type: null, message: "" });
+
+  const handleDeleteAccountSubmit = async (e) => {
+    e.preventDefault();
+    if (deleteConfirmationText.trim().toUpperCase() !== "DELETE") {
+      setDeleteAccountStatus({
+        type: "error",
+        message: "Please type 'DELETE' in uppercase to confirm account deletion.",
+      });
+      return;
+    }
+
+    if (
+      !confirm(
+        "Are you 100% sure you want to PERMANENTLY delete your account?\n\nThis will erase:\n• Your user profile\n• ALL roleplay chat sessions & messages\n• ALL personas & credit usage logs\n\nThis action CANNOT be undone."
+      )
+    ) {
+      return;
+    }
+
+    setDeletingAccount(true);
+    setDeleteAccountStatus({ type: null, message: "" });
+
+    try {
+      const res = await fetch("/api/user/delete", {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setDeleteAccountStatus({
+          type: "success",
+          message: "Account deleted successfully. Redirecting...",
+        });
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 1000);
+      } else {
+        const data = await res.json();
+        setDeleteAccountStatus({
+          type: "error",
+          message: data.error || "Failed to delete account.",
+        });
+      }
+    } catch (err) {
+      setDeleteAccountStatus({
+        type: "error",
+        message: "An error occurred while deleting account.",
+      });
+    } finally {
+      setDeletingAccount(false);
+    }
+  };
+
   useEffect(() => {
     fetchAiUsage();
     fetchPersonas();
@@ -332,22 +388,22 @@ export default function SettingPage() {
       {/* Page Title */}
       <div className="space-y-1 pt-2">
         <h1 className="text-xl sm:text-3xl font-extrabold tracking-tight text-white">
-          Settings & Preferences
+          Settings
         </h1>
         <p className="text-xs sm:text-sm text-neutral-400">
-          <span className="sm:hidden">Manage account security, personas, credits & language.</span>
-          <span className="hidden sm:inline">Manage your account security credentials, personal AI profiles ("Me Persona"), daily credit limits, and language preferences.</span>
+          Account security, user personas, daily credits & language.
         </p>
       </div>
 
       {/* Mobile Category Scroll Pills (< md) */}
       <div className="flex md:hidden items-center gap-2 overflow-x-auto pb-1 border-b border-neutral-800/80 no-scrollbar">
         {[
-          { id: "all", label: "All Settings", icon: Sparkles },
-          { id: "personas", label: "User Personas", icon: User, count: personas.length },
+          { id: "all", label: "All", icon: Sparkles },
+          { id: "personas", label: "Personas", icon: User, count: personas.length },
           { id: "credits", label: "AI Credits", icon: Zap, count: `${usageData.todayCount}/${usageData.dailyLimit || 100}` },
-          { id: "password", label: "Change Password", icon: KeyRound },
-          { id: "language", label: "System Language", icon: Globe, count: language.toUpperCase() },
+          { id: "password", label: "Password", icon: KeyRound },
+          { id: "language", label: "Language", icon: Globe, count: language.toUpperCase() },
+          { id: "danger", label: "Delete Account", icon: Trash2 },
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -384,11 +440,12 @@ export default function SettingPage() {
             Setting Options
           </div>
           {[
-            { id: "all", label: "All Settings", desc: "Complete overview of all options", icon: Sparkles },
-            { id: "personas", label: "User Personas", desc: "Me Persona profiles for roleplay", icon: User, count: personas.length },
-            { id: "credits", label: "AI Credits", desc: "Daily limit & usage log", icon: Zap, count: `${usageData.todayCount}/${usageData.dailyLimit || 100}` },
-            { id: "password", label: "Change Password", desc: "Security & credentials", icon: KeyRound },
-            { id: "language", label: "System Language", desc: "English & Hinglish modes", icon: Globe, count: language.toUpperCase() },
+            { id: "all", label: "All Settings", desc: "Overview of all options", icon: Sparkles },
+            { id: "personas", label: "User Personas", desc: "AI roleplay profiles", icon: User, count: personas.length },
+            { id: "credits", label: "AI Credits", desc: "Limits & usage log", icon: Zap, count: `${usageData.todayCount}/${usageData.dailyLimit || 100}` },
+            { id: "password", label: "Password", desc: "Account security", icon: KeyRound },
+            { id: "language", label: "Language", desc: "System language", icon: Globe, count: language.toUpperCase() },
+            { id: "danger", label: "Delete Account", desc: "Danger zone", icon: Trash2 },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -446,13 +503,13 @@ export default function SettingPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-bold text-white tracking-tight">My User Personas ("Me Persona")</h2>
+                      <h2 className="text-lg font-bold text-white tracking-tight">User Personas</h2>
                       <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-blue-950/80 text-blue-300 border border-blue-800/50">
                         {personas.length} Saved
                       </span>
                     </div>
                     <p className="text-xs text-neutral-400 mt-0.5">
-                      Define your name, backstory & role to improve AI roleplay quality and personalized responses
+                      Customize your name, backstory & role for AI roleplays
                     </p>
                   </div>
                 </div>
@@ -463,7 +520,7 @@ export default function SettingPage() {
                   className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-semibold flex items-center gap-2 shadow-lg transition-all cursor-pointer self-start sm:self-auto"
                 >
                   <UserPlus className="w-4 h-4" />
-                  <span>Create New Persona</span>
+                  <span>+ Add Persona</span>
                 </button>
               </div>
 
@@ -478,9 +535,9 @@ export default function SettingPage() {
                     <User className="w-6 h-6" />
                   </div>
                   <div className="space-y-1">
-                    <p className="font-bold text-white text-sm">No "Me Persona" Created Yet</p>
+                    <p className="font-bold text-white text-sm">No Personas Added</p>
                     <p className="text-neutral-400 max-w-md mx-auto">
-                      Creating a User Persona tells AI characters who you are (your name, backstory, job, or personality), dramatically improving roleplay immersion and accuracy!
+                      Create a persona to customize your roleplay identity with AI characters.
                     </p>
                   </div>
                   <button
@@ -489,7 +546,7 @@ export default function SettingPage() {
                     className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-xl inline-flex items-center gap-1.5 transition-all cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
-                    <span>Add Your First Persona</span>
+                    <span>+ Create Persona</span>
                   </button>
                 </div>
               ) : (
@@ -520,7 +577,7 @@ export default function SettingPage() {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
-                      <label className="text-xs font-semibold text-neutral-400 hidden md:inline">Select Active Default:</label>
+                      <label className="text-xs font-semibold text-neutral-400 hidden md:inline">Active:</label>
                       <select
                         value={activeDefaultPersona?.id || ""}
                         onChange={(e) => handleSetDefaultPersona(e.target.value)}
@@ -528,7 +585,7 @@ export default function SettingPage() {
                       >
                         {sortedPersonas.map((p) => (
                           <option key={p.id} value={p.id}>
-                            {p.isDefault ? "★ " : ""}{p.name} {p.isDefault ? "(Active Default)" : ""}
+                            {p.isDefault ? "★ " : ""}{p.name} {p.isDefault ? "(Default)" : ""}
                           </option>
                         ))}
                       </select>
@@ -611,7 +668,7 @@ export default function SettingPage() {
                               className="flex items-center gap-1.5 text-xs font-semibold text-neutral-400 hover:text-amber-300 bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-amber-500/40 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
                             >
                               <Star className="w-3.5 h-3.5 text-neutral-500 hover:text-amber-400" />
-                              <span>Set as Default Persona</span>
+                              <span>Set Default</span>
                             </button>
                           )}
                         </div>
@@ -623,177 +680,173 @@ export default function SettingPage() {
             </div>
           )}
 
-          {/* Settings Grid (Password & Language) */}
-          {(activeTab === "all" || activeTab === "password" || activeTab === "language") && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
-              {/* Card 1: Change Password */}
-              {(activeTab === "all" || activeTab === "password") && (
-                <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-5 sm:p-6 shadow-xl backdrop-blur-md flex flex-col justify-between">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-400">
-                        <KeyRound className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h2 className="text-base font-bold text-white">Change Password</h2>
-                        <p className="text-xs text-neutral-400">Update your account login password securely</p>
-                      </div>
-                    </div>
+          {/* Section: Change Password */}
+          {(activeTab === "all" || activeTab === "password") && (
+            <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-5 sm:p-8 shadow-xl backdrop-blur-md space-y-5 w-full">
+              <div className="flex items-center gap-3 border-b border-neutral-800/80 pb-4">
+                <div className="p-3 rounded-2xl bg-purple-950/80 border border-purple-800/60 text-purple-400">
+                  <KeyRound className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-white tracking-tight">Change Password</h2>
+                  <p className="text-xs text-neutral-400">Update your account password</p>
+                </div>
+              </div>
 
-                    {/* Status Alert Banner */}
-                    {status.message && (
-                      <div
-                        className={`p-3.5 rounded-xl border text-xs flex items-start gap-2.5 animate-in fade-in duration-200 ${status.type === "success"
-                          ? "bg-emerald-950/70 border-emerald-500/40 text-emerald-300"
-                          : "bg-red-950/70 border-red-500/40 text-red-300"
-                          }`}
-                      >
-                        {status.type === "success" ? (
-                          <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                        ) : (
-                          <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-                        )}
-                        <span>{status.message}</span>
-                      </div>
-                    )}
-
-                    <form onSubmit={handlePasswordSubmit} className="space-y-3.5">
-                      {/* Old Password */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold text-neutral-300">Old Password</label>
-                        <div className="relative">
-                          <input
-                            type={showOldPassword ? "text" : "password"}
-                            value={oldPassword}
-                            onChange={(e) => setOldPassword(e.target.value)}
-                            placeholder="Enter current password"
-                            className="w-full bg-neutral-950 border border-neutral-800 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-neutral-500 outline-none transition-colors pr-10"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowOldPassword(!showOldPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-                          >
-                            {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* New Password */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold text-neutral-300">New Password</label>
-                        <div className="relative">
-                          <input
-                            type={showNewPassword ? "text" : "password"}
-                            value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            placeholder="At least 6 characters"
-                            className="w-full bg-neutral-950 border border-neutral-800 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-neutral-500 outline-none transition-colors pr-10"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowNewPassword(!showNewPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-                          >
-                            {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Confirm Password */}
-                      <div className="space-y-1">
-                        <label className="text-xs font-semibold text-neutral-300">Confirm New Password</label>
-                        <div className="relative">
-                          <input
-                            type={showConfirmPassword ? "text" : "password"}
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="Re-enter new password"
-                            className="w-full bg-neutral-950 border border-neutral-800 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-neutral-500 outline-none transition-colors pr-10"
-                            required
-                          />
-                          <button
-                            type="button"
-                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
-                          >
-                            {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      </div>
-
-                      <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full mt-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold py-3 px-4 rounded-xl text-xs shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.99]"
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>Updating Password...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Lock className="w-4 h-4" />
-                            <span>Update Password</span>
-                          </>
-                        )}
-                      </button>
-                    </form>
-                  </div>
+              {/* Status Alert Banner */}
+              {status.message && (
+                <div
+                  className={`p-3.5 rounded-xl border text-xs flex items-start gap-2.5 animate-in fade-in duration-200 ${status.type === "success"
+                    ? "bg-emerald-950/70 border-emerald-500/40 text-emerald-300"
+                    : "bg-red-950/70 border-red-500/40 text-red-300"
+                    }`}
+                >
+                  {status.type === "success" ? (
+                    <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                  ) : (
+                    <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+                  )}
+                  <span>{status.message}</span>
                 </div>
               )}
 
-              {/* Card 2: Language Preference */}
-              {(activeTab === "all" || activeTab === "language") && (
-                <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-5 sm:p-6 shadow-xl backdrop-blur-md flex flex-col justify-between space-y-4">
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2.5 rounded-xl bg-blue-950/80 border border-blue-800/60 text-blue-400">
-                        <Globe className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <h2 className="text-base font-bold text-white">System Language</h2>
-                        <p className="text-xs text-neutral-400">Set default response language mode</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                      <button
-                        type="button"
-                        onClick={() => changeLanguage("en")}
-                        className={`p-4 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${language === "en"
-                          ? "bg-purple-950/40 border-purple-500 text-white shadow-md shadow-purple-950/50"
-                          : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
-                          }`}
-                      >
-                        <div>
-                          <div className="font-bold text-sm text-neutral-100">English</div>
-                          <div className="text-xs text-neutral-400">Standard English responses</div>
-                        </div>
-                        {language === "en" && <Check className="w-5 h-5 text-purple-400" />}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => changeLanguage("hinglish")}
-                        className={`p-4 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${language === "hinglish"
-                          ? "bg-purple-950/40 border-purple-500 text-white shadow-md shadow-purple-950/50"
-                          : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
-                          }`}
-                      >
-                        <div>
-                          <div className="font-bold text-sm text-neutral-100">Hinglish</div>
-                          <div className="text-xs text-neutral-400">Hindi + English conversational style</div>
-                        </div>
-                        {language === "hinglish" && <Check className="w-5 h-5 text-purple-400" />}
-                      </button>
-                    </div>
+              <form onSubmit={handlePasswordSubmit} className="space-y-4 max-w-xl">
+                {/* Old Password */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-neutral-300">Old Password</label>
+                  <div className="relative">
+                    <input
+                      type={showOldPassword ? "text" : "password"}
+                      value={oldPassword}
+                      onChange={(e) => setOldPassword(e.target.value)}
+                      placeholder="Enter current password"
+                      className="w-full bg-neutral-950 border border-neutral-800 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-neutral-500 outline-none transition-colors pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowOldPassword(!showOldPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {showOldPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                 </div>
-              )}
+
+                {/* New Password */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-neutral-300">New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showNewPassword ? "text" : "password"}
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="At least 6 characters"
+                      className="w-full bg-neutral-950 border border-neutral-800 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-neutral-500 outline-none transition-colors pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div className="space-y-1">
+                  <label className="text-xs font-semibold text-neutral-300">Confirm New Password</label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="Re-enter new password"
+                      className="w-full bg-neutral-950 border border-neutral-800 focus:border-purple-500 rounded-xl px-3.5 py-2.5 text-base sm:text-sm text-white placeholder-neutral-500 outline-none transition-colors pr-10"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold rounded-xl text-xs shadow-lg shadow-purple-600/30 flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50 active:scale-[0.99]"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Updating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock className="w-4 h-4" />
+                      <span>Update Password</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* Section: System Language (Full Width) */}
+          {(activeTab === "all" || activeTab === "language") && (
+            <div className="bg-neutral-900/60 border border-neutral-800 rounded-3xl p-5 sm:p-8 shadow-xl backdrop-blur-md space-y-5 w-full">
+              <div className="flex items-center justify-between border-b border-neutral-800/80 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-blue-950/80 border border-blue-800/60 text-blue-400">
+                    <Globe className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-bold text-white tracking-tight">System Language</h2>
+                    <p className="text-xs text-neutral-400">Select default response language</p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-blue-950 text-blue-300 border border-blue-800">
+                  {language.toUpperCase()}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+                <button
+                  type="button"
+                  onClick={() => changeLanguage("en")}
+                  className={`p-4 sm:p-5 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${language === "en"
+                    ? "bg-purple-950/40 border-purple-500 text-white shadow-md shadow-purple-950/50"
+                    : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                    }`}
+                >
+                  <div>
+                    <div className="font-bold text-sm sm:text-base text-neutral-100">English</div>
+                    <div className="text-xs text-neutral-400 mt-0.5">Standard English</div>
+                  </div>
+                  {language === "en" && <Check className="w-5 h-5 text-purple-400" />}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => changeLanguage("hinglish")}
+                  className={`p-4 sm:p-5 rounded-2xl border text-left flex items-center justify-between transition-all cursor-pointer ${language === "hinglish"
+                    ? "bg-purple-950/40 border-purple-500 text-white shadow-md shadow-purple-950/50"
+                    : "bg-neutral-950 border-neutral-800 text-neutral-400 hover:border-neutral-700"
+                    }`}
+                >
+                  <div>
+                    <div className="font-bold text-sm sm:text-base text-neutral-100">Hinglish</div>
+                    <div className="text-xs text-neutral-400 mt-0.5">Hindi + English mix</div>
+                  </div>
+                  {language === "hinglish" && <Check className="w-5 h-5 text-purple-400" />}
+                </button>
+              </div>
             </div>
           )}
 
@@ -807,13 +860,13 @@ export default function SettingPage() {
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h2 className="text-lg font-bold text-white tracking-tight">API Usage</h2>
+                      <h2 className="text-lg font-bold text-white tracking-tight">AI Usage & Credits</h2>
                       <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-purple-950/80 text-purple-300 border border-purple-800/50">
-                        Live Log
+                        Live
                       </span>
                     </div>
                     <p className="text-xs text-neutral-400 mt-0.5">
-                      Real-time API prompt calls, completions, & message volume metrics
+                      Track credit limits & daily prompt logs
                     </p>
                   </div>
                 </div>
@@ -824,7 +877,7 @@ export default function SettingPage() {
                     { key: "today", label: "Today" },
                     { key: "7days", label: "7 Days" },
                     { key: "30days", label: "30 Days" },
-                    { key: "all", label: "All History" },
+                    { key: "all", label: "All" },
                   ].map((tab) => (
                     <button
                       key={tab.key}
@@ -855,7 +908,7 @@ export default function SettingPage() {
                         </span>
                       </div>
                       <p className="text-xs text-neutral-400 mt-0.5">
-                        Each AI chat response consumes 1 daily credit. Auto-resets daily at 00:00 UTC.
+                        Each AI prompt uses 1 credit. Resets daily.
                       </p>
                     </div>
                   </div>
@@ -866,16 +919,16 @@ export default function SettingPage() {
                     className="px-4 py-2.5 rounded-xl text-xs font-extrabold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-950/50 flex items-center gap-2 transition-all cursor-pointer shrink-0 self-start sm:self-auto hover:scale-[1.02] active:scale-[0.98]"
                   >
                     <Mail className="w-4 h-4 text-amber-300" />
-                    <span>Need More Credits? Contact Admin →</span>
+                    <span>Request More Credits →</span>
                   </Link>
                 </div>
 
                 {/* Progress Bar & Stat Breakdown */}
                 <div className="space-y-2 pt-1">
                   <div className="flex items-center justify-between text-xs font-semibold">
-                    <span className="text-neutral-300">Today's Credit Usage</span>
+                    <span className="text-neutral-300">Today's Usage</span>
                     <span className="text-purple-300 font-mono font-bold">
-                      {usageData.todayCount || 0} Used / {usageData.dailyLimit || 100} Daily Limit ({usageData.remainingCredits ?? 100} Left)
+                      {usageData.todayCount || 0} / {usageData.dailyLimit || 100} Used ({usageData.remainingCredits ?? 100} Left)
                     </span>
                   </div>
                   <div className="w-full bg-neutral-900 h-3 rounded-full overflow-hidden border border-neutral-800 p-0.5">
@@ -895,30 +948,15 @@ export default function SettingPage() {
                     />
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-neutral-400 font-mono">
-                    <span>0 Credits</span>
+                    <span>0</span>
                     <span>
                       {Math.min(
                         100,
                         Math.round(((usageData.todayCount || 0) / (usageData.dailyLimit || 100)) * 100)
                       )}% Used
                     </span>
-                    <span>{usageData.dailyLimit || 100} Daily Max</span>
+                    <span>{usageData.dailyLimit || 100} Max</span>
                   </div>
-                </div>
-
-                {/* Request Limit Increase Info Box */}
-                <div className="p-3.5 rounded-xl bg-purple-950/30 border border-purple-800/40 text-purple-200 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-purple-400 shrink-0" />
-                    <span>Want to increase your account limit? Admins can upgrade your custom daily limit.</span>
-                  </div>
-                  <Link
-                    href="/contact"
-                    className="text-purple-300 hover:text-white font-extrabold underline text-xs shrink-0 flex items-center gap-1"
-                  >
-                    <span>Contact Admin to Request Limit Increase</span>
-                    <span>→</span>
-                  </Link>
                 </div>
               </div>
 
@@ -926,46 +964,46 @@ export default function SettingPage() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-neutral-950/80 border border-neutral-800/80 rounded-2xl p-4 space-y-1 relative overflow-hidden group">
                   <div className="flex items-center justify-between text-neutral-400 text-xs">
-                    <span className="font-semibold">Today Hits</span>
+                    <span className="font-semibold">Today</span>
                     <Clock className="w-4 h-4 text-purple-400" />
                   </div>
                   <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                     {loadingUsage ? "..." : usageData.todayCount}
                   </div>
-                  <div className="text-[10px] text-purple-400 font-mono">Date: {usageData.today || "N/A"}</div>
+                  <div className="text-[10px] text-purple-400 font-mono">{usageData.today || "N/A"}</div>
                 </div>
 
                 <div className="bg-neutral-950/80 border border-neutral-800/80 rounded-2xl p-4 space-y-1 relative overflow-hidden">
                   <div className="flex items-center justify-between text-neutral-400 text-xs">
-                    <span className="font-semibold">Last 7 Days</span>
+                    <span className="font-semibold">7 Days</span>
                     <TrendingUp className="w-4 h-4 text-blue-400" />
                   </div>
                   <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                     {loadingUsage ? "..." : usageData.history7DaysCount}
                   </div>
-                  <div className="text-[10px] text-blue-400 font-mono">Rolling 7-Day sum</div>
+                  <div className="text-[10px] text-blue-400 font-mono">7-day sum</div>
                 </div>
 
                 <div className="bg-neutral-950/80 border border-neutral-800/80 rounded-2xl p-4 space-y-1 relative overflow-hidden">
                   <div className="flex items-center justify-between text-neutral-400 text-xs">
-                    <span className="font-semibold">Last 30 Days</span>
+                    <span className="font-semibold">30 Days</span>
                     <Calendar className="w-4 h-4 text-emerald-400" />
                   </div>
                   <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                     {loadingUsage ? "..." : usageData.history30DaysCount}
                   </div>
-                  <div className="text-[10px] text-emerald-400 font-mono">Monthly total</div>
+                  <div className="text-[10px] text-emerald-400 font-mono">Monthly sum</div>
                 </div>
 
                 <div className="bg-neutral-950/80 border border-neutral-800/80 rounded-2xl p-4 space-y-1 relative overflow-hidden">
                   <div className="flex items-center justify-between text-neutral-400 text-xs">
-                    <span className="font-semibold">All-Time Total</span>
+                    <span className="font-semibold">All-Time</span>
                     <Zap className="w-4 h-4 text-cyan-400" />
                   </div>
                   <div className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
                     {loadingUsage ? "..." : usageData.totalCount}
                   </div>
-                  <div className="text-[10px] text-cyan-400 font-mono">Lifetime AI prompts</div>
+                  <div className="text-[10px] text-cyan-400 font-mono">Lifetime prompts</div>
                 </div>
               </div>
 
@@ -974,7 +1012,7 @@ export default function SettingPage() {
                 <div className="flex items-center justify-between">
                   <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-400 flex items-center gap-1.5">
                     <BarChart3 className="w-3.5 h-3.5 text-purple-400" />
-                    Daily Execution Breakdown ({filteredHistory.length} Days)
+                    Usage History ({filteredHistory.length} Days)
                   </h3>
                   <span className="text-[11px] text-neutral-500 font-mono">
                     Filtered: {rangeFilter.toUpperCase()}
@@ -1060,6 +1098,87 @@ export default function SettingPage() {
               </div>
             </div>
           )}
+
+          {/* Option 5: Danger Zone - Delete Account & All Data */}
+          {activeTab === "danger" && (
+            <div className="bg-rose-950/30 border border-rose-900/60 rounded-3xl p-5 sm:p-6 space-y-4 shadow-2xl backdrop-blur-md">
+              <div className="flex items-center justify-between border-b border-rose-900/50 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center text-rose-400">
+                    <Trash2 className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-black text-white tracking-tight">
+                      Delete Account
+                    </h2>
+                    <p className="text-xs text-rose-300/80 font-mono">
+                      Permanently delete account and data
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider bg-rose-950 border border-rose-800 text-rose-400 px-2 py-0.5 rounded-full">
+                  PERMANENT
+                </span>
+              </div>
+
+              <div className="text-xs text-neutral-300 space-y-2 leading-relaxed">
+                <p>
+                  This action cannot be undone. The following data will be deleted:
+                </p>
+                <ul className="list-disc list-inside space-y-1 font-mono text-[11px] text-rose-200/90 pl-1">
+                  <li>Account profile & credentials</li>
+                  <li>Chat sessions & message history</li>
+                  <li>Custom user personas</li>
+                </ul>
+              </div>
+
+              {deleteAccountStatus.message && (
+                <div
+                  className={`p-3 rounded-2xl border text-xs flex items-center gap-2 ${deleteAccountStatus.type === "error"
+                    ? "bg-red-950/80 border-red-800 text-red-300"
+                    : "bg-emerald-950/80 border-emerald-800 text-emerald-300"
+                    }`}
+                >
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{deleteAccountStatus.message}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleDeleteAccountSubmit} className="space-y-3 pt-2">
+                <div>
+                  <label className="block text-xs font-semibold text-neutral-300 mb-1 font-mono">
+                    Type <strong className="text-rose-400">DELETE</strong> to confirm:
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Type DELETE"
+                    value={deleteConfirmationText}
+                    onChange={(e) => setDeleteConfirmationText(e.target.value)}
+                    className="w-full sm:w-80 bg-neutral-950 border border-rose-900/60 focus:border-rose-500 rounded-xl px-3.5 py-2.5 text-xs font-mono font-bold text-white placeholder-neutral-600 outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={deletingAccount || deleteConfirmationText.trim().toUpperCase() !== "DELETE"}
+                  className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-rose-600 to-red-700 hover:from-rose-500 hover:to-red-600 text-white shadow-lg shadow-rose-950/50 transition-all flex items-center gap-2 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {deletingAccount ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Deleting Account...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete My Account</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1074,9 +1193,9 @@ export default function SettingPage() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white">
-                    {editingPersona ? "Edit 'Me Persona'" : "Create New 'Me Persona'"}
+                    {editingPersona ? "Edit Persona" : "Create Persona"}
                   </h3>
-                  <p className="text-xs text-neutral-400">Your profile persona sent to AI characters</p>
+                  <p className="text-xs text-neutral-400">Profile persona sent to AI characters</p>
                 </div>
               </div>
               <button
@@ -1102,12 +1221,12 @@ export default function SettingPage() {
             <form onSubmit={handleSavePersona} className="space-y-4 pt-4">
               <div>
                 <label className="block text-xs font-semibold text-neutral-300 mb-1">
-                  Persona / User Name <span className="text-red-400">*</span>
+                  Persona Name <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. Arjun / Alex / Detective Sam"
+                  placeholder="e.g. Alex / Arjun / Detective Sam"
                   value={personaForm.name}
                   onChange={(e) => setPersonaForm((prev) => ({ ...prev, name: e.target.value }))}
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-neutral-500 focus:border-blue-500 outline-none"
@@ -1117,7 +1236,7 @@ export default function SettingPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-semibold text-neutral-300">
-                    Backstory, Bio & Role Details <span className="text-red-400">*</span>
+                    Bio & Role Details <span className="text-red-400">*</span>
                   </label>
                   <button
                     type="button"
@@ -1141,7 +1260,7 @@ export default function SettingPage() {
                 <textarea
                   rows={4}
                   required
-                  placeholder="Describe yourself, your personality, background, role, or preferred conversation tone..."
+                  placeholder="Describe your persona, background, role, or style..."
                   value={personaForm.persona}
                   onChange={(e) => setPersonaForm((prev) => ({ ...prev, persona: e.target.value }))}
                   className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-sm text-white placeholder-neutral-500 focus:border-blue-500 outline-none resize-none"
@@ -1150,7 +1269,7 @@ export default function SettingPage() {
 
               <div>
                 <label className="block text-xs font-semibold text-neutral-300 mb-1">
-                  Avatar Emoji / Icon (Optional)
+                  Avatar Emoji (Optional)
                 </label>
                 <input
                   type="text"
@@ -1170,7 +1289,7 @@ export default function SettingPage() {
                   className="w-4 h-4 rounded bg-neutral-950 border-neutral-800 text-blue-600 focus:ring-blue-500"
                 />
                 <label htmlFor="isDefaultCheckbox" className="text-xs text-neutral-300 font-medium cursor-pointer">
-                  Set as my Default "Me Persona" for new chats
+                  Set as default persona for new chats
                 </label>
               </div>
 

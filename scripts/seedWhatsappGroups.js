@@ -100,15 +100,20 @@ async function seed() {
       where: { name: char.name }
     });
 
+    const dataToSave = {
+      ...char,
+      characters: typeof char.characters === "string" ? char.characters : JSON.stringify(char.characters)
+    };
+
     if (!existing) {
       await prisma.discoverCharacter.create({
-        data: char
+        data: dataToSave
       });
       console.log(`✅ Character created: ${char.name}`);
     } else {
       await prisma.discoverCharacter.update({
         where: { id: existing.id },
-        data: char
+        data: dataToSave
       });
       console.log(`🔄 Character updated: ${char.name}`);
     }

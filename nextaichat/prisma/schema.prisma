@@ -65,7 +65,7 @@ model ChatSession {
   discoverCharacter   DiscoverCharacter? @relation(fields: [discoverCharacterId], references: [id], onDelete: SetNull)
   messages           ChatMessage[]
   user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  UserPersona        UserPersona?       @relation(fields: [userPersonaId], references: [id])
+  UserPersona        UserPersona?       @relation(fields: [userPersonaId], references: [id], onDelete: SetNull)
   sessionCharacters  SessionCharacter[]
 
   @@index([userId, updatedAt])
