@@ -175,6 +175,25 @@ const DEFAULT_CHARACTERS = [
   }
 ];
 
+// Dynamic Color palette matching ChatView.jsx for character avatar & speaker chips
+const SPEAKER_CHIP_COLORS = [
+  "from-blue-900/90 via-indigo-950 to-blue-950 border-blue-400/60 shadow-blue-500/20",
+  "from-purple-900/90 via-pink-950 to-purple-950 border-purple-400/60 shadow-purple-500/20",
+  "from-emerald-900/90 via-teal-950 to-emerald-950 border-emerald-400/60 shadow-emerald-500/20",
+  "from-amber-900/90 via-orange-950 to-amber-950 border-amber-400/60 shadow-amber-500/20",
+  "from-rose-900/90 via-red-950 to-rose-950 border-rose-400/60 shadow-rose-500/20",
+];
+
+function getSpeakerChipStyle(charName) {
+  if (!charName) return SPEAKER_CHIP_COLORS[0];
+  let hash = 0;
+  for (let i = 0; i < charName.length; i++) {
+    hash = charName.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const index = Math.abs(hash) % SPEAKER_CHIP_COLORS.length;
+  return SPEAKER_CHIP_COLORS[index];
+}
+
 export default function HomeDiscoveryView({
   chats = [],
   onSelectChat,
@@ -381,19 +400,25 @@ export default function HomeDiscoveryView({
     <div
       key={char.id}
       onClick={() => setSelectedCharPreview(char)}
-      className="group relative bg-neutral-900/80 backdrop-blur-xl border border-purple-500/20 hover:border-purple-500/60 rounded-2xl overflow-hidden cursor-pointer transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(168,85,247,0.3)] flex flex-col h-full touch-manipulation select-none md:active:scale-95"
+      className="group relative bg-neutral-900/80 backdrop-blur-xl border border-purple-500/20 hover:border-purple-500/60 rounded-2xl cursor-pointer transition-all duration-300 shadow-lg hover:shadow-[0_0_25px_rgba(168,85,247,0.3)] flex flex-col h-full touch-manipulation select-none md:active:scale-95"
     >
-      <div className="relative h-28 sm:h-36 w-full bg-neutral-950 overflow-hidden shrink-0">
+      {/* Floating Badge Tag - Positioned at top-right corner floating slightly outside */}
+      {char.badge && (
+        <span
+          className={`absolute -top-2.5 -right-1 z-20 px-2 py-0.5 rounded-md ${char.badgeBg || "bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold"
+            } text-[9px] font-black uppercase tracking-wider shadow-lg border border-white/20 pointer-events-none transition-transform group-hover:scale-105`}
+        >
+          {char.badge}
+        </span>
+      )}
+
+      {/* Photo Container - Clean avatar image with rounded top */}
+      <div className="relative h-28 sm:h-36 w-full bg-neutral-950 overflow-hidden rounded-t-2xl shrink-0">
         <img
           src={char.avatar}
           alt={char.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
-        {char.badge && (
-          <span className={`absolute top-2 right-2 px-2 py-0.5 rounded ${char.badgeBg || "bg-purple-950 text-purple-300 border border-purple-700"} text-[9px] font-extrabold shadow-sm`}>
-            {char.badge}
-          </span>
-        )}
         <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/70 backdrop-blur-md px-2 py-0.5 rounded-full border border-white/10">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           <span className="text-[9px] font-mono text-amber-400 font-bold">★ {char.rating || "4.9"}</span>
@@ -412,7 +437,7 @@ export default function HomeDiscoveryView({
             <Loader2 className="w-3.5 h-3.5 text-purple-400 animate-spin" />
           ) : (
             <span className="px-2.5 py-1 rounded-lg bg-purple-600/20 text-purple-300 group-hover:bg-purple-600 group-hover:text-white font-bold text-[10px] transition-all">
-              Preview →
+              Preview
             </span>
           )}
         </div>
@@ -577,7 +602,7 @@ export default function HomeDiscoveryView({
               No characters found matching filter.
             </div>
           ) : (
-            <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-manipulation -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 overflow-x-auto sm:overflow-x-visible pt-2.5 pb-2 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-manipulation -mx-4 px-4 sm:mx-0 sm:px-0">
               {filteredCharacters.map((char) => (
                 <div key={char.id} className="w-[155px] sm:w-auto shrink-0 snap-start">
                   <CharacterCard char={char} />
@@ -611,7 +636,7 @@ export default function HomeDiscoveryView({
                 </div>
 
                 {/* Compact Touch-Manipulated Horizontal Slider on Mobile */}
-                <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 overflow-x-auto sm:overflow-x-visible pb-2 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-manipulation -mx-4 px-4 sm:mx-0 sm:px-0">
+                <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 overflow-x-auto sm:overflow-x-visible pt-2.5 pb-2 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-manipulation -mx-4 px-4 sm:mx-0 sm:px-0">
                   {categoryChars.map((char) => (
                     <div key={char.id} className="w-[155px] sm:w-auto shrink-0 snap-start">
                       <CharacterCard char={char} />
@@ -649,161 +674,236 @@ export default function HomeDiscoveryView({
             className="relative w-full max-w-xl bg-[#090d16] border border-purple-500/40 rounded-3xl overflow-hidden shadow-[0_0_90px_rgba(147,51,234,0.4)] my-auto flex flex-col h-auto max-h-[calc(100vh-140px)] md:max-h-[85vh] animate-fadeIn font-sans"
           >
 
-            {/* Modal Header Bar */}
-            <div className="relative p-4 sm:p-5 bg-neutral-950/90 border-b border-neutral-800/80 shrink-0">
-              <button
-                type="button"
-                onClick={() => setSelectedCharPreview(null)}
-                className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-neutral-900 border border-neutral-700/60 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer z-10"
-              >
-                <X className="w-4 h-4" />
-              </button>
+            {/* Scrollable Container containing Hero Banner + Sticky Title Bar + Body Content */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar relative">
 
-              <div className="flex items-start gap-3 pr-10">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl overflow-hidden bg-neutral-900 border border-purple-500/40 shrink-0 shadow-lg">
-                  <img src={selectedCharPreview.avatar} alt={selectedCharPreview.name} className="w-full h-full object-cover" />
+              {/* Modal Full-Width Top Hero Image & Title Overlay */}
+              <div className="relative w-full h-52 sm:h-64 bg-neutral-950 overflow-hidden shrink-0">
+                {/* Ambient Blurred Background */}
+                <img
+                  src={selectedCharPreview.avatar}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover blur-xl opacity-40 scale-110 pointer-events-none"
+                />
+
+                {/* Main Full Image Fitted Without Cropping */}
+                <img
+                  src={selectedCharPreview.avatar}
+                  alt={selectedCharPreview.name}
+                  className="relative z-10 w-full h-full object-contain mx-auto drop-shadow-2xl"
+                />
+
+                {/* Gradient Overlay for Text Legibility */}
+                <div className="absolute inset-0 z-10 bg-gradient-to-t from-[#090d16] via-transparent to-black/40 pointer-events-none" />
+
+                {/* Close Button Floating on Top-Right */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedCharPreview(null)}
+                  className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/80 hover:text-white transition-colors cursor-pointer z-20 shadow-lg"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+
+                {/* Character Badge / Rating Pills at Top-Left */}
+                <div className="absolute top-3.5 left-3.5 flex items-center gap-2 z-10 flex-wrap pr-12">
+                  {selectedCharPreview.badge && (
+                    <span className={`px-2.5 py-0.5 rounded-full ${selectedCharPreview.badgeBg || "bg-purple-950/90 text-purple-300 border border-purple-700/60"} text-[10px] font-extrabold shadow-md backdrop-blur-md`}>
+                      {selectedCharPreview.badge}
+                    </span>
+                  )}
+                  {/* {selectedCharPreview.rating && (
+                    <span className="px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-amber-400 font-bold font-mono text-[10px] flex items-center gap-1 shadow-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                      ★ {selectedCharPreview.rating}
+                    </span>
+                  )} */}
                 </div>
 
-                <div className="min-w-0 flex-1 space-y-1">
+                {/* Title, Category & Tagline Layered on Bottom of Image */}
+                <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 space-y-1 z-10">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm sm:text-base font-extrabold text-white tracking-tight leading-snug">
+                    <h3 className="text-lg sm:text-xl font-extrabold text-white tracking-tight leading-snug drop-shadow-md">
                       {selectedCharPreview.name}
                     </h3>
-                    <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-950 border border-purple-700 text-purple-300 shrink-0">
+                    <span className="text-[10px] font-mono font-bold px-2.5 py-0.5 rounded-full bg-purple-950/90 border border-purple-700/80 text-purple-300 backdrop-blur-md shrink-0 shadow-md">
                       {selectedCharPreview.category}
                     </span>
                   </div>
-                  <p className="text-[11px] sm:text-xs text-purple-300 font-medium truncate">{selectedCharPreview.tagline}</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Scrollable Body */}
-            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 custom-scrollbar">
-
-              {/* Roleplay Storyline Background */}
-              <div className="space-y-2">
-                <h4 className="text-[11px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <BookOpen className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Roleplay Storyline & Scenario</span>
-                </h4>
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 text-xs sm:text-sm text-neutral-200 leading-relaxed font-normal shadow-inner">
-                  {selectedCharPreview.story}
+                  <p className="text-xs sm:text-sm text-purple-200/90 font-medium leading-relaxed drop-shadow">
+                    {selectedCharPreview.tagline}
+                  </p>
                 </div>
               </div>
 
-              {/* Multi-Speaker Personas */}
-              <div className="space-y-2.5">
-                <h4 className="text-[11px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
-                  <Users className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Multi-Speaker Personas ({Array.isArray(selectedCharPreview.characters) ? selectedCharPreview.characters.length : 1})</span>
-                </h4>
-
-                <div className="space-y-2">
-                  {(Array.isArray(selectedCharPreview.characters) && selectedCharPreview.characters.length > 0
-                    ? selectedCharPreview.characters
-                    : [{ name: selectedCharPreview.name, persona: selectedCharPreview.tagline }]
-                  ).map((p, idx) => (
-                    <div key={idx} className="p-3 sm:p-3.5 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-extrabold text-purple-300 flex items-center gap-1.5">
-                          <span>🗣️</span>
-                          <span>{p.name}</span>
-                        </span>
-                        <span className="text-[9px] font-mono text-neutral-500">Speaker #{idx + 1}</span>
-                      </div>
-                      <p className="text-xs text-neutral-300 leading-relaxed">
-                        {p.persona || p.personality || "Interactive character persona."}
-                      </p>
+              {/* Sticky Title Bar - Pinned at top-0 when user scrolls down */}
+              <div className="sticky top-0 z-40 bg-[#090d16]/95 backdrop-blur-xl border-b border-purple-500/30 px-4 py-3 flex items-center justify-between shadow-xl">
+                <div className="flex items-center gap-3 min-w-0 pr-2">
+                  <img
+                    src={selectedCharPreview.avatar}
+                    alt={selectedCharPreview.name}
+                    className="w-8 h-8 rounded-full border border-purple-500/40 object-cover shrink-0 shadow-md"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="text-xs sm:text-sm font-extrabold text-white truncate">
+                        {selectedCharPreview.name}
+                      </h4>
+                      <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-purple-950/90 border border-purple-700/80 text-purple-300 shrink-0 hidden sm:inline-block">
+                        {selectedCharPreview.category}
+                      </span>
                     </div>
-                  ))}
+                    <p className="text-[10px] text-purple-300 truncate hidden sm:block">
+                      {selectedCharPreview.tagline}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-[10px] font-mono text-amber-400 font-bold bg-black/60 px-2 py-0.5 rounded-full border border-white/10">
+                    ★ {selectedCharPreview.rating || "4.9"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCharPreview(null)}
+                    className="w-7 h-7 rounded-full bg-neutral-900 border border-neutral-700/60 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               </div>
 
-              {/* Highlighted "Me Persona" (Who you play as) & Warning Notice */}
-              {(() => {
-                const activePersona = userPersonas.find((p) => p.id === selectedPersonaId);
-                const hasPersona = Boolean(activePersona);
+              {/* Modal Body Content */}
+              <div className="p-4 sm:p-6 space-y-5">
 
-                return (
-                  <div className="space-y-3">
-                    <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/80 via-indigo-950/60 to-blue-950/80 border border-purple-500/50 space-y-3 shadow-xl relative overflow-hidden">
-                      <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-xl pointer-events-none" />
+                {/* Roleplay Storyline Background */}
+                <div className="space-y-2">
+                  <h4 className="text-[11px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Roleplay Storyline & Scenario</span>
+                  </h4>
+                  <div className="p-3.5 sm:p-4 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 text-xs sm:text-sm text-neutral-200 leading-relaxed font-normal shadow-inner">
+                    {selectedCharPreview.story}
+                  </div>
+                </div>
 
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-extrabold text-purple-300 flex items-center gap-1.5 uppercase tracking-wider">
-                          <UserCheck className="w-4 h-4 text-purple-400 animate-pulse" />
-                          <span>Who You Play As ("Me Persona")</span>
-                        </span>
-                        <a
-                          href="/setting"
-                          className="text-[11px] font-bold text-purple-400 hover:text-purple-300 hover:underline flex items-center gap-1"
-                        >
-                          <span>+ Manage in Settings</span>
-                        </a>
-                      </div>
+                {/* Multi-Speaker Personas */}
+                <div className="space-y-2.5">
+                  <h4 className="text-[11px] sm:text-xs font-bold text-neutral-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Multi-Speaker Personas ({Array.isArray(selectedCharPreview.characters) ? selectedCharPreview.characters.length : 1})</span>
+                  </h4>
 
-                      {hasPersona ? (
-                        <div className="space-y-2.5">
-                          {/* Active Persona Highlight Card */}
-                          <div className="p-3 rounded-xl bg-neutral-950/90 border border-purple-400/40 space-y-1.5 shadow-inner">
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-black text-white flex items-center gap-1.5">
-                                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                                <span>Playing as: <strong className="text-purple-300 font-extrabold">{activePersona.name}</strong></span>
-                              </span>
-                              {activePersona.isDefault && (
-                                <span className="text-[9px] font-extrabold font-mono px-2 py-0.5 rounded-full bg-purple-900/80 text-purple-200 border border-purple-600">
-                                  Default Persona
-                                </span>
-                              )}
-                            </div>
-                            <p className="text-xs text-neutral-300 italic line-clamp-2 leading-relaxed bg-neutral-900/80 p-2 rounded-lg border border-neutral-800">
-                              "{activePersona.persona}"
-                            </p>
-                          </div>
-
-                          {/* Persona Switcher Dropdown (if user has multiple) */}
-                          {userPersonas.length > 1 && (
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-neutral-400 font-semibold shrink-0">Switch Persona:</span>
-                              <select
-                                value={selectedPersonaId}
-                                onChange={(e) => setSelectedPersonaId(e.target.value)}
-                                className="flex-1 bg-neutral-950 border border-purple-800/60 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none focus:border-purple-400 font-medium"
-                              >
-                                {userPersonas.map((p) => (
-                                  <option key={p.id} value={p.id}>
-                                    {p.name} {p.isDefault ? "(Default)" : ""}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          )}
+                  <div className="space-y-2">
+                    {(Array.isArray(selectedCharPreview.characters) && selectedCharPreview.characters.length > 0
+                      ? selectedCharPreview.characters
+                      : [{ name: selectedCharPreview.name, persona: selectedCharPreview.tagline }]
+                    ).map((p, idx) => (
+                      <div key={idx} className="p-3 sm:p-3.5 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r ${getSpeakerChipStyle(p.name)} border text-xs font-extrabold shadow-md capitalize`}>
+                            <span className="text-xs">🗣️</span>
+                            <span className="text-white font-black tracking-wide drop-shadow">{p.name}</span>
+                          </span>
+                          <span className="text-[9px] font-mono font-bold px-2 py-0.5 rounded-full bg-neutral-900 border border-neutral-800 text-neutral-400">
+                            Speaker #{idx + 1}
+                          </span>
                         </div>
-                      ) : (
-                        /* Warning Alert Banner inside Modal when NO Persona is created/selected */
-                        <div className="p-3.5 rounded-xl bg-amber-950/80 border border-amber-500/70 space-y-2 text-amber-200 shadow-md">
-                          <div className="flex items-center gap-2 font-extrabold text-xs text-amber-300">
-                            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 animate-bounce" />
-                            <span>⚠️ Warning: No "Me Persona" Added!</span>
-                          </div>
-                          <p className="text-[11px] leading-relaxed text-amber-100/90 font-medium">
-                            AI character responses will <strong className="text-white underline">not be personalized</strong> to your specific background, tone, or personality because you haven't created a "Me Persona". Characters may reply generically!
-                          </p>
+                        <p className="text-xs text-neutral-300 leading-relaxed">
+                          {p.persona || p.personality || "Interactive character persona."}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Highlighted "Me Persona" (Who you play as) & Warning Notice */}
+                {(() => {
+                  const activePersona = userPersonas.find((p) => p.id === selectedPersonaId);
+                  const hasPersona = Boolean(activePersona);
+
+                  return (
+                    <div className="space-y-3">
+                      <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-950/80 via-indigo-950/60 to-blue-950/80 border border-purple-500/50 space-y-3 shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-xl pointer-events-none" />
+
+                        <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+                          <span className="text-[11px] font-extrabold text-purple-300 flex items-center gap-1.5 uppercase tracking-wider">
+                            <UserCheck className="w-4 h-4 text-purple-400 animate-pulse shrink-0" />
+                            <span className="hidden sm:inline">Who You Play As ("Me Persona")</span>
+                            <span className="sm:hidden">Playing As ("Me Persona")</span>
+                          </span>
                           <a
                             href="/setting"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all shadow-sm cursor-pointer mt-1"
+                            className="text-[11px] font-bold text-purple-400 hover:text-purple-300 hover:underline flex items-center gap-1 shrink-0 whitespace-nowrap"
                           >
-                            <span>+ Create "Me Persona" Now</span>
+                            <span className="hidden sm:inline">+ Manage in Settings</span>
+                            <span className="sm:hidden">+ Settings</span>
                           </a>
                         </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
 
+                        {hasPersona ? (
+                          <div className="space-y-2.5">
+                            {/* Active Persona Highlight Card */}
+                            <div className="p-3 rounded-xl bg-neutral-950/90 border border-purple-400/40 space-y-1.5 shadow-inner">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs font-black text-white flex items-center gap-1.5">
+                                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                                  <span>Playing as: <strong className="text-purple-300 font-extrabold">{activePersona.name}</strong></span>
+                                </span>
+                                {activePersona.isDefault && (
+                                  <span className="text-[9px] font-extrabold font-mono px-2 py-0.5 rounded-full bg-purple-900/80 text-purple-200 border border-purple-600">
+                                    Default Persona
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-neutral-300 italic line-clamp-2 leading-relaxed bg-neutral-900/80 p-2 rounded-lg border border-neutral-800">
+                                "{activePersona.persona}"
+                              </p>
+                            </div>
+
+                            {/* Persona Switcher Dropdown (if user has multiple) */}
+                            {userPersonas.length > 1 && (
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-neutral-400 font-semibold shrink-0">Switch Persona:</span>
+                                <select
+                                  value={selectedPersonaId}
+                                  onChange={(e) => setSelectedPersonaId(e.target.value)}
+                                  className="flex-1 bg-neutral-950 border border-purple-800/60 rounded-xl px-2.5 py-1.5 text-xs text-white outline-none focus:border-purple-400 font-medium"
+                                >
+                                  {userPersonas.map((p) => (
+                                    <option key={p.id} value={p.id}>
+                                      {p.name} {p.isDefault ? "(Default)" : ""}
+                                    </option>
+                                  ))}
+                                </select>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          /* Warning Alert Banner inside Modal when NO Persona is created/selected */
+                          <div className="p-3.5 rounded-xl bg-amber-950/80 border border-amber-500/70 space-y-2 text-amber-200 shadow-md">
+                            <div className="flex items-center gap-2 font-extrabold text-xs text-amber-300">
+                              <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 animate-bounce" />
+                              <span>⚠️ Warning: No "Me Persona" Added!</span>
+                            </div>
+                            <p className="text-[11px] leading-relaxed text-amber-100/90 font-medium">
+                              AI character responses will <strong className="text-white underline">not be personalized</strong> to your specific background, tone, or personality because you haven't created a "Me Persona". Characters may reply generically!
+                            </p>
+                            <a
+                              href="/setting"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-400 text-black font-extrabold text-xs transition-all shadow-sm cursor-pointer mt-1"
+                            >
+                              <span>+ Create "Me Persona" Now</span>
+                            </a>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+              </div>
             </div>
 
             {/* Modal Fixed Footer Action Bar */}

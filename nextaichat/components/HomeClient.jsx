@@ -279,75 +279,86 @@ export default function HomeClient({ blogs = [], characters = [], appUrl }) {
         </div>
 
         {/* Character Showcase Grid with Touch-Pan-X Mobile Slider */}
-        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 overflow-x-auto sm:overflow-x-visible pb-3 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
-          {filteredCharacters.slice(0, 6).map((char) => {
+        <div className="flex sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6 overflow-x-auto sm:overflow-x-visible pb-4 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
+          {filteredCharacters.slice(0, 9).map((char) => {
             const parsedPersonas = Array.isArray(char.characters) ? char.characters : [];
+            const chatsNum = typeof char.chatsCount === "number" ? char.chatsCount : parseInt(char.chatsCount) || 0;
+            const formattedChats = chatsNum >= 1000 ? `${(chatsNum / 1000).toFixed(1)}k` : chatsNum;
+
             return (
-              <div key={char.id} className="w-[180px] sm:w-auto shrink-0 snap-start flex flex-col">
+              <div key={char.id} className="w-[260px] xs:w-[280px] sm:w-auto shrink-0 snap-start flex flex-col">
                 <div
                   onClick={() => setSelectedCharPreview(char)}
-                  className="cyber-glass-card p-6 rounded-3xl space-y-4 flex flex-col justify-between border border-neutral-800/80 hover:border-purple-500/50 transition-all duration-300 shadow-xl hover:shadow-[0_10px_30px_rgba(147,51,234,0.2)] group h-full cursor-pointer"
+                  className="group relative bg-neutral-900/90 backdrop-blur-2xl border border-purple-500/30 hover:border-purple-400/80 rounded-3xl overflow-hidden cursor-pointer transition-all duration-500 shadow-xl hover:shadow-[0_12px_40px_rgba(147,51,234,0.35)] hover:-translate-y-1.5 flex flex-col justify-between h-full touch-manipulation select-none"
                 >
-                  <div className="space-y-3.5">
-                    {/* Top Avatar & Badge Bar */}
-                    <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 rounded-2xl overflow-hidden bg-neutral-950 shrink-0 border border-neutral-800 relative shadow-md">
-                        <img src={char.avatar} alt={char.name} className="w-full h-full object-cover" />
-                      </div>
+                  {/* Top Cover Banner with Gradient Mask & Glass Overlay Badges */}
+                  <div className="relative h-44 sm:h-48 w-full bg-neutral-950 overflow-hidden shrink-0">
+                    <img
+                      src={char.avatar}
+                      alt={char.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#090d16] via-[#090d16]/40 to-transparent" />
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-1">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${char.badgeBg || "bg-purple-950 border border-purple-700 text-purple-300"}`}>
-                            {char.badge || "AI Persona"}
-                          </span>
-                          
-                          <div className="flex items-center gap-1 text-[11px] font-bold text-amber-400">
-                            <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                            <span>{char.rating || "4.9"}</span>
-                          </div>
-                        </div>
+                    {/* Top Right Category / Game Badge */}
+                    <span className={`absolute top-3 right-3 px-3 py-1 rounded-full ${char.badgeBg || "bg-purple-950/90 border border-purple-600 text-purple-200"} text-[10px] font-black uppercase tracking-wider shadow-lg backdrop-blur-md`}>
+                      {char.badge || char.category || "AI Persona"}
+                    </span>
 
-                        <h3 className="text-base font-extrabold text-white truncate mt-1 group-hover:text-purple-300 transition-colors">
-                          {char.name}
-                        </h3>
-                        <p className="text-xs text-purple-300 font-medium truncate">{char.tagline}</p>
-                      </div>
+                    {/* Top Left Speaker Count Badge */}
+                    {parsedPersonas.length > 0 && (
+                      <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md border border-purple-500/40 text-[10px] font-extrabold text-purple-300 font-mono flex items-center gap-1 shadow-md">
+                        <Users className="w-3 h-3 text-purple-400" />
+                        <span>{parsedPersonas.length} Speakers</span>
+                      </span>
+                    )}
+
+                    {/* Bottom Left Rating Badge */}
+                    <div className="absolute bottom-3 left-3 flex items-center gap-1.5 bg-black/80 backdrop-blur-md px-3 py-1 rounded-full border border-amber-500/40 shadow-lg">
+                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                      <span className="text-xs font-mono font-black text-amber-300">{char.rating || "4.9"}</span>
                     </div>
 
-                    {/* Story Scenario */}
-                    <p className="text-xs text-neutral-300 leading-relaxed line-clamp-2 bg-neutral-950/60 p-3 rounded-2xl border border-neutral-800/80">
-                      {char.story}
-                    </p>
+                    {/* Bottom Right Chat Count Pill */}
+                    <div className="absolute bottom-3 right-3 text-[10px] font-mono font-bold text-neutral-300 bg-neutral-900/90 backdrop-blur-md border border-neutral-700/60 px-2.5 py-1 rounded-full">
+                      🔥 {formattedChats} chats
+                    </div>
+                  </div>
 
-                    {/* Multi-Speaker Personas Badges */}
-                    {parsedPersonas.length > 0 && (
-                      <div className="space-y-1 pt-1">
-                        <div className="flex items-center gap-1 text-[11px] font-mono text-purple-400">
-                          <Users className="w-3.5 h-3.5" />
-                          <span>Multi-Speaker Room ({parsedPersonas.length}):</span>
-                        </div>
-                        <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* Body Content */}
+                  <div className="p-4 sm:p-5 flex-1 flex flex-col justify-between space-y-3.5 bg-gradient-to-b from-[#090d16] to-neutral-950">
+                    <div className="space-y-2">
+                      <h3 className="text-base sm:text-lg font-black text-white group-hover:text-purple-300 transition-colors tracking-tight line-clamp-1">
+                        {char.name}
+                      </h3>
+                      <p className="text-xs text-purple-300 font-semibold line-clamp-1">{char.tagline}</p>
+
+                      {/* Multi-Speaker Pill List */}
+                      {parsedPersonas.length > 0 && (
+                        <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                           {parsedPersonas.map((p, idx) => (
-                            <span key={idx} className="text-[10px] px-2.5 py-1 rounded-full bg-purple-950/70 border border-purple-800/50 text-purple-200 font-mono font-semibold">
+                            <span key={idx} className="text-[10px] px-2.5 py-1 rounded-xl bg-purple-950/70 border border-purple-800/60 text-purple-200 font-mono font-bold">
                               🗣️ {p.name}
                             </span>
                           ))}
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
 
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setSelectedCharPreview(char);
-                    }}
-                    className="w-full py-3 rounded-2xl bg-neutral-900 hover:bg-purple-600 border border-neutral-800 hover:border-purple-400 text-xs sm:text-sm text-center font-extrabold text-white transition-all flex items-center justify-center gap-2 cursor-pointer shadow-md mt-4"
-                  >
-                    <span>Preview Story & Personas</span>
-                    <ArrowRight className="w-4 h-4 text-purple-300" />
-                  </button>
+                    {/* Action Button */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCharPreview(char);
+                      }}
+                      className="w-full py-3 rounded-2xl bg-neutral-900 hover:bg-gradient-to-r hover:from-purple-600 hover:to-indigo-600 border border-purple-500/30 hover:border-purple-400 text-xs sm:text-sm text-center font-black text-white transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer shadow-md group-hover:shadow-[0_0_20px_rgba(168,85,247,0.4)] mt-2"
+                    >
+                      <Sparkles className="w-4 h-4 text-purple-300 group-hover:text-white transition-colors" />
+                      <span>Preview Story & Play</span>
+                      <ArrowRight className="w-4 h-4 text-purple-300 group-hover:translate-x-1 transition-transform" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
