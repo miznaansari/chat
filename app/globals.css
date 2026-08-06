@@ -25,6 +25,15 @@ body {
   font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
 }
 
+/* Hide scrollbar utility class */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 /* Lock Fixed Layout Headers & Footers (No scroll jitter, rubber-banding, or blur bleed) */
 .solid-fixed-header {
   position: sticky !important;

@@ -2240,7 +2240,7 @@ export default function ChatView({
                 : "max-h-0 opacity-0 py-0 mb-0 translate-y-2 pointer-events-none"
             }`}
           >
-            <div className="w-full px-1 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+            <div className="w-full px-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <div className="flex items-center gap-1.5 shrink-0">
                 {/* Character Name Chips */}
                 {sessionChars.map((char) => (
