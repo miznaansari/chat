@@ -539,6 +539,8 @@ export default function ChatView({
   const [chatMode, setChatMode] = useState("turn"); // "turn" | "classic"
   const [typingCharacter, setTypingCharacter] = useState(null);
   const [dismissPersonaWarning, setDismissPersonaWarning] = useState(false);
+  const [isQueuedNotice, setIsQueuedNotice] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const [mobileTipIndex, setMobileTipIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -996,6 +998,7 @@ export default function ChatView({
     e?.preventDefault();
     if (!inputPrompt.trim() || !activeChat || loading) return;
 
+    setIsInputFocused(false);
     const currentPrompt = inputPrompt;
     setInputPrompt("");
     setLoading(true);
@@ -2229,6 +2232,61 @@ export default function ChatView({
       {/* Solid Fixed Bottom Input Capsule Bar Container */}
       <div className="solid-fixed-footer border-t border-neutral-800/80 p-3 md:px-8 w-full bg-neutral-950">
         <div className="max-w-4xl mx-auto w-full">
+          {/* Focused Keyboard Slide-Up & Slide-Down Toolbar with Smooth Ease Animation */}
+          <div
+            className={`w-full overflow-hidden transition-all duration-300 ease-in-out select-none ${
+              isInputFocused
+                ? "max-h-16 opacity-100 py-1.5 mb-2 translate-y-0"
+                : "max-h-0 opacity-0 py-0 mb-0 translate-y-2 pointer-events-none"
+            }`}
+          >
+            <div className="w-full px-1 flex items-center gap-1.5 overflow-x-auto custom-scrollbar">
+              <div className="flex items-center gap-1.5 shrink-0">
+                {/* Character Name Chips */}
+                {sessionChars.map((char) => (
+                  <button
+                    key={char.id || char.name}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      setInputPrompt((prev) => {
+                        if (!prev) return `${char.name}: `;
+                        return prev.endsWith(" ") ? `${prev}${char.name}: ` : `${prev} ${char.name}: `;
+                      });
+                    }}
+                    className="shrink-0 inline-flex items-center gap-1.5 bg-purple-950/90 border border-purple-600/80 text-purple-200 font-extrabold text-xs px-3 py-1 rounded-full hover:bg-purple-900 active:scale-95 shadow-md cursor-pointer transition-all"
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>{char.name}:</span>
+                  </button>
+                ))}
+
+                {/* Saved Phrases Chips */}
+                {snippets.map((snip, index) => {
+                  const text = typeof snip === "object" ? snip.text : snip;
+                  const key = typeof snip === "object" ? (snip.id || index) : index;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setInputPrompt((prev) => {
+                          if (!prev) return text;
+                          return prev.endsWith(" ") ? `${prev}${text}` : `${prev} ${text}`;
+                        });
+                      }}
+                      className="shrink-0 inline-flex items-center gap-1 bg-neutral-900 border border-cyan-500/50 text-cyan-200 font-bold text-xs px-3 py-1 rounded-full hover:bg-neutral-800 active:scale-95 shadow-md cursor-pointer transition-all truncate max-w-[180px]"
+                    >
+                      <span className="text-[10px]">💬</span>
+                      <span className="truncate">{text}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
           <div
             className="relative bg-neutral-900 border border-neutral-800 rounded-2xl md:rounded-3xl p-2 px-3.5 shadow-2xl flex items-end gap-2.5 focus-within:border-neutral-700 transition-all"
           >
@@ -2432,6 +2490,8 @@ export default function ChatView({
               value={inputPrompt}
               onChange={(e) => setInputPrompt(e.target.value)}
               onKeyDown={handleKeyDown}
+              onFocus={() => setIsInputFocused(true)}
+              onBlur={() => setTimeout(() => setIsInputFocused(false), 250)}
               placeholder={`Speak to ${sessionChars.map((c) => c.name).join(", ")}...`}
               className="flex-1 bg-transparent text-base sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none resize-none max-h-40 min-h-[42px] py-2 leading-relaxed touch-manipulation cursor-text"
               enterKeyHint="send"
