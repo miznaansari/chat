@@ -13,6 +13,15 @@ async function updateCharacter(req, { params }) {
     const { id } = await params;
     const body = await req.json();
 
+    let formattedCharacters = undefined;
+    if (body.characters !== undefined) {
+      if (typeof body.characters === "string") {
+        formattedCharacters = body.characters;
+      } else {
+        formattedCharacters = JSON.stringify(body.characters);
+      }
+    }
+
     const updated = await prisma.discoverCharacter.update({
       where: { id },
       data: {
@@ -26,12 +35,26 @@ async function updateCharacter(req, { params }) {
         ...(body.chatsCount !== undefined && { chatsCount: parseInt(body.chatsCount) }),
         ...(body.rating && { rating: body.rating }),
         ...(body.story && { story: body.story.trim() }),
-        ...(body.characters && { characters: body.characters }),
+        ...(formattedCharacters !== undefined && { characters: formattedCharacters }),
         ...(body.isPublic !== undefined && { isPublic: Boolean(body.isPublic) }),
       },
     });
 
-    return NextResponse.json({ character: updated });
+    let returnChars = updated.characters;
+    if (typeof returnChars === "string") {
+      try {
+        returnChars = JSON.parse(returnChars);
+      } catch (e) {
+        returnChars = [];
+      }
+    }
+
+    return NextResponse.json({
+      character: {
+        ...updated,
+        characters: returnChars,
+      },
+    });
   } catch (error) {
     console.error("Admin Update Character Error:", error);
     return NextResponse.json({ error: "Failed to update character" }, { status: 500 });

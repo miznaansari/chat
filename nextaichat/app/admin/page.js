@@ -110,11 +110,13 @@ export default function AdminDashboardPage() {
       const draftBlogs = blogList.filter((b) => b.published === false).length;
       const sortedBlogs = [...blogList].sort((a, b) => (b.views || 0) - (a.views || 0)).slice(0, 5);
 
-      // Compute Discover Character Analytics & Most Used (based on discoverCharacterId linked ChatSessions)
+      // Compute Discover Character Analytics & Most Used (Show all >0 usage, scrollable)
       const getCharUsage = (c) => (c._count?.chatSessions !== undefined ? c._count.chatSessions : (c.chatsCount || 0));
 
       const totalChatsCount = charList.reduce((acc, c) => acc + getCharUsage(c), 0);
-      const sortedChars = [...charList].sort((a, b) => getCharUsage(b) - getCharUsage(a)).slice(0, 5);
+      const charactersWithUsage = charList.filter((c) => getCharUsage(c) > 0);
+      const charsToDisplay = charactersWithUsage.length > 0 ? charactersWithUsage : charList;
+      const sortedChars = [...charsToDisplay].sort((a, b) => getCharUsage(b) - getCharUsage(a));
 
       // Category breakdown for Characters
       const categoryMap = {};
@@ -380,8 +382,13 @@ export default function AdminDashboardPage() {
                 <Flame className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               </div>
               <div>
-                <h3 className="text-sm sm:text-base font-bold text-white">Most Used Discover Characters</h3>
-                <p className="hidden md:block text-[11px] text-slate-400 font-mono">Ranked by total user roleplay chats started</p>
+                <h3 className="text-sm sm:text-base font-bold text-white flex items-center gap-2">
+                  <span>Most Used Discover Characters</span>
+                  <span className="text-[10px] font-mono font-normal px-2 py-0.5 rounded-full bg-purple-950/80 border border-purple-800/80 text-purple-300">
+                    {topCharacters.length} active
+                  </span>
+                </h3>
+                <p className="hidden md:block text-[11px] text-slate-400 font-mono">Ranked by total user roleplay chats started (&gt;0 usage)</p>
               </div>
             </div>
             <Link
@@ -396,7 +403,7 @@ export default function AdminDashboardPage() {
           {topCharacters.length === 0 ? (
             <div className="p-8 text-center text-xs text-slate-500">No characters found</div>
           ) : (
-            <div className="space-y-2.5 sm:space-y-3">
+            <div className="space-y-2.5 sm:space-y-3 max-h-[380px] overflow-y-auto custom-scrollbar pr-1.5">
               {topCharacters.map((char, index) => {
                 const charSessionsCount = char._count?.chatSessions !== undefined ? char._count.chatSessions : (char.chatsCount || 0);
                 const pct = Math.min(100, Math.round((charSessionsCount / maxCharChats) * 100));

@@ -538,8 +538,28 @@ export default function ChatView({
   const [responseLength, setResponseLength] = useState("normal"); // "veryshort" | "short" | "normal" | "detailed"
   const [chatMode, setChatMode] = useState("turn"); // "turn" | "classic"
   const [typingCharacter, setTypingCharacter] = useState(null);
-  const [isQueuedNotice, setIsQueuedNotice] = useState(false);
   const [dismissPersonaWarning, setDismissPersonaWarning] = useState(false);
+  const [mobileTipIndex, setMobileTipIndex] = useState(0);
+  const [touchStart, setTouchStart] = useState(null);
+  const [touchEnd, setTouchEnd] = useState(null);
+
+  // Auto-swipe mobile story tips every 3 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMobileTipIndex((prev) => (prev + 1) % 3);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    if (distance > 40) {
+      setMobileTipIndex((prev) => (prev + 1) % 3);
+    } else if (distance < -40) {
+      setMobileTipIndex((prev) => (prev === 0 ? 2 : prev - 1));
+    }
+  };
 
   // Load saved response length & chat mode from localStorage
   useEffect(() => {
@@ -1358,28 +1378,11 @@ export default function ChatView({
   if (!activeChat) {
     return (
       <div className="flex-1 min-h-[75vh] flex flex-col items-center justify-center p-6 text-center bg-transparent relative overflow-hidden my-auto select-none">
-        <div className="w-20 h-20 rounded-full bg-purple-500/10 flex items-center justify-center mb-6 border border-purple-500/20 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
-          <svg className="w-10 h-10" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M12 0C12 6.627 6.627 12 0 12C6.627 12 12 17.373 12 24C12 17.373 17.373 12 24 12C17.373 12 12 6.627 12 0Z"
-              fill="url(#gemini-gradient-empty)"
-            />
-            <defs>
-              <linearGradient
-                id="gemini-gradient-empty"
-                x1="0"
-                y1="0"
-                x2="24"
-                y2="24"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop stopColor="#60A5FA" />
-                <stop offset="0.5" stopColor="#A855F7" />
-                <stop offset="1" stopColor="#F472B6" />
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
+        <img
+          src="/logo-landspace.png"
+          alt="NextAiChat Logo"
+          className="h-10 sm:h-12 w-auto object-contain mx-auto mb-6 drop-shadow-[0_0_30px_rgba(168,85,247,0.35)]"
+        />
 
         <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white mb-2 text-center">
           Where should we start?
@@ -1896,44 +1899,185 @@ export default function ChatView({
             <span className="text-xs font-semibold text-neutral-400">Loading session messages...</span>
           </div>
         ) : messages.length === 0 ? (
-          <div className="min-h-[55vh] flex flex-col items-center justify-center text-center my-auto py-6 select-none">
-            <div className="w-16 h-16 relative mb-6">
-              <svg className="w-full h-full" viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 0C12 6.627 6.627 12 0 12C6.627 12 12 17.373 12 24C12 17.373 17.373 12 24 12C17.373 12 12 6.627 12 0Z"
-                  fill="url(#gemini-sparkle-center)"
-                />
-                <defs>
-                  <linearGradient
-                    id="gemini-sparkle-center"
-                    x1="0"
-                    y1="0"
-                    x2="24"
-                    y2="24"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop stopColor="#3B82F6" />
-                    <stop offset="0.33" stopColor="#EC4899" />
-                    <stop offset="0.66" stopColor="#EAB308" />
-                    <stop offset="1" stopColor="#06B6D4" />
-                  </linearGradient>
-                </defs>
-              </svg>
+          <div className="relative min-h-[55vh] flex flex-col items-center justify-center text-center my-auto py-8 select-none max-w-2xl mx-auto px-3 sm:px-4 overflow-hidden rounded-3xl">
+            {/* Aesthetic Background Logo Watermark & Ambient Glow Aura */}
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none -z-10 overflow-hidden">
+              <div className="w-80 sm:w-[480px] h-80 sm:h-[480px] rounded-full bg-gradient-to-tr from-purple-600/20 via-indigo-600/15 to-transparent blur-3xl absolute animate-pulse" />
+              <img
+                src="/logo-landspace.png"
+                alt="Background Aesthetic Watermark"
+                className="w-[85%] sm:w-[75%] max-w-lg h-auto object-contain opacity-[0.08] sm:opacity-[0.14] filter drop-shadow-[0_0_60px_rgba(168,85,247,0.35)] scale-110 sm:scale-125 transform transition-all duration-700"
+              />
             </div>
-            <h1 className="text-3xl font-extrabold text-white mb-2 text-center">
-              Where should we start?
+
+            <h1 className="font-outfit text-2xl sm:text-4xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-purple-300 mb-2.5 text-center drop-shadow-md">
+              <span className="hidden sm:inline">Where should we take the story?</span>
+              <span className="sm:hidden">Start the Story</span>
             </h1>
 
-            <div className="flex flex-wrap items-center justify-center gap-2 max-w-md mt-2">
-              <span className="text-xs text-neutral-400">Characters in this scene:</span>
-              {sessionChars.map((char) => (
-                <span
-                  key={char.id || char.name}
-                  className="inline-flex items-center gap-1 bg-neutral-900 border border-neutral-800 rounded-full px-3 py-1 text-xs text-blue-400 font-semibold capitalize"
-                >
-                  {char.name}
-                </span>
-              ))}
+            {/* Characters in Scene */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2.5 max-w-md my-2.5">
+              <span className="text-xs text-neutral-300 font-extrabold uppercase tracking-wider shrink-0">
+                Characters in scene:
+              </span>
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                {sessionChars.map((char) => (
+                  <span
+                    key={char.id || char.name}
+                    className="inline-flex items-center gap-1.5 bg-purple-950/80 border border-purple-700/80 rounded-full px-3.5 py-1 text-xs text-purple-200 font-black capitalize shadow-md"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_8px_#34d399]" />
+                    {char.name}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Response Length Quick Selector */}
+            <div className="my-3 space-y-1.5 w-full max-w-md bg-neutral-950/60 p-3 rounded-2xl border border-neutral-800/80">
+              <span className="text-[11px] font-black uppercase tracking-wider text-purple-400 block">
+                Response Length
+              </span>
+              <div className="flex flex-wrap items-center justify-center gap-1.5">
+                {[
+                  { id: "veryshort", label: "⚡ V.Short" },
+                  { id: "short", label: "⚡ Short" },
+                  { id: "normal", label: "💬 Normal" },
+                  { id: "detailed", label: "📖 Detailed" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => handleSetResponseLength(item.id)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 border shadow-sm active:scale-95 ${
+                      responseLength === item.id
+                        ? "bg-purple-950 border-purple-500 text-purple-200 shadow-purple-500/20 shadow-md ring-1 ring-purple-500/60"
+                        : "bg-neutral-900/90 border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700"
+                    }`}
+                  >
+                    <span>{item.label}</span>
+                    {responseLength === item.id && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse" />
+                    )}
+                  </button>
+                ))}
+              </div>
+              <span className="text-[11px] text-neutral-400 font-semibold block pt-1">
+                * Select how long AI character responses should be
+              </span>
+            </div>
+
+            {/* Interactive Roleplay & Storytelling Tips (Desktop 3-Col & Mobile 3s Auto-Swipe Carousel) */}
+            <div className="w-full mt-3 space-y-2.5">
+              <div className="flex items-center justify-between px-1 text-[11px] font-black text-purple-400 uppercase tracking-wider">
+                <div className="flex items-center gap-1.5 mx-auto sm:mx-0">
+                  <Sparkles className="w-3.5 h-3.5 text-purple-400 animate-pulse" />
+                  <span>Story Direction Tips</span>
+                </div>
+
+                {/* Mobile Carousel Page Dots */}
+                <div className="flex sm:hidden items-center gap-1.5 shrink-0">
+                  {[0, 1, 2].map((idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setMobileTipIndex(idx)}
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                        mobileTipIndex === idx ? "w-4 bg-purple-400" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop View: 3 Columns Grid */}
+              <div className="hidden sm:grid sm:grid-cols-3 gap-2.5 text-left">
+                {/* Tip 1 */}
+                <div className="p-3 rounded-2xl bg-neutral-950/80 border border-purple-500/40 shadow-sm space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-purple-200 font-mono bg-purple-950 px-2 py-0.5 rounded-md border border-purple-800/80">
+                      ( ) Change Story/Plot
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-300 font-semibold truncate">
+                    E.g. <span className="text-purple-300 font-mono italic font-bold">(Take us to a coffee shop)</span>
+                  </p>
+                </div>
+
+                {/* Tip 2 */}
+                <div className="p-3 rounded-2xl bg-neutral-950/80 border border-blue-500/40 shadow-sm space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-blue-200 font-mono bg-blue-950 px-2 py-0.5 rounded-md border border-blue-800/80">
+                      * * Action & Feeling
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-300 font-semibold truncate">
+                    E.g. <span className="text-blue-300 font-mono italic font-bold">*smiles & offers tea*</span>
+                  </p>
+                </div>
+
+                {/* Tip 3 */}
+                <div className="p-3 rounded-2xl bg-neutral-950/80 border border-emerald-500/40 shadow-sm space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-black text-emerald-200 font-mono bg-emerald-950 px-2 py-0.5 rounded-md border border-emerald-800/80">
+                      " " Direct Dialogue
+                    </span>
+                  </div>
+                  <p className="text-xs text-neutral-300 font-semibold truncate">
+                    E.g. <span className="text-emerald-300 font-mono italic font-bold">"Hey, what's next?"</span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Mobile View: 3-Second Auto-Swipe & Touch Gesture Carousel */}
+              <div
+                onTouchStart={(e) => {
+                  setTouchEnd(null);
+                  setTouchStart(e.targetTouches[0].clientX);
+                }}
+                onTouchMove={(e) => setTouchEnd(e.targetTouches[0].clientX)}
+                onTouchEnd={handleTouchEnd}
+                className="sm:hidden relative overflow-hidden text-left p-0.5 touch-pan-x"
+              >
+                {mobileTipIndex === 0 && (
+                  <div className="p-3.5 rounded-2xl bg-neutral-950/90 border border-purple-500/50 shadow-md space-y-1.5 animate-in fade-in zoom-in-95 duration-300">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-purple-200 font-mono bg-purple-950 px-2.5 py-0.5 rounded-md border border-purple-800">
+                        ( ) Change Story/Plot
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-200 font-semibold">
+                      E.g. <span className="text-purple-300 font-mono italic font-bold">(Take us to a coffee shop)</span>
+                    </p>
+                  </div>
+                )}
+
+                {mobileTipIndex === 1 && (
+                  <div className="p-3.5 rounded-2xl bg-neutral-950/90 border border-blue-500/50 shadow-md space-y-1.5 animate-in fade-in zoom-in-95 duration-300">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-blue-200 font-mono bg-blue-950 px-2.5 py-0.5 rounded-md border border-blue-800">
+                        * * Action & Feeling
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-200 font-semibold">
+                      E.g. <span className="text-blue-300 font-mono italic font-bold">*smiles & offers tea*</span>
+                    </p>
+                  </div>
+                )}
+
+                {mobileTipIndex === 2 && (
+                  <div className="p-3.5 rounded-2xl bg-neutral-950/90 border border-emerald-500/50 shadow-md space-y-1.5 animate-in fade-in zoom-in-95 duration-300">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-emerald-200 font-mono bg-emerald-950 px-2.5 py-0.5 rounded-md border border-emerald-800">
+                        " " Direct Dialogue
+                      </span>
+                    </div>
+                    <p className="text-xs text-neutral-200 font-semibold">
+                      E.g. <span className="text-emerald-300 font-mono italic font-bold">"Hey, what's next?"</span>
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ) : (

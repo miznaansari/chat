@@ -14,7 +14,22 @@ export async function GET(req) {
       orderBy: { createdAt: "desc" },
     });
 
-    return NextResponse.json({ characters });
+    const parsedCharacters = characters.map((c) => {
+      let chars = c.characters;
+      if (typeof chars === "string") {
+        try {
+          chars = JSON.parse(chars);
+        } catch (e) {
+          chars = [];
+        }
+      }
+      return {
+        ...c,
+        characters: chars,
+      };
+    });
+
+    return NextResponse.json({ characters: parsedCharacters });
   } catch (error) {
     console.error("Admin Get Characters Error:", error);
     return NextResponse.json({ error: "Failed to fetch characters" }, { status: 500 });
@@ -52,9 +67,9 @@ export async function POST(req) {
       );
     }
 
-    const formattedCharacters = Array.isArray(characters) && characters.length > 0
+    const formattedCharacters = typeof characters === "string"
       ? characters
-      : [{ name: name, persona: tagline }];
+      : JSON.stringify(Array.isArray(characters) && characters.length > 0 ? characters : [{ name: name, persona: tagline }]);
 
     const newChar = await prisma.discoverCharacter.create({
       data: {
@@ -73,7 +88,21 @@ export async function POST(req) {
       },
     });
 
-    return NextResponse.json({ character: newChar });
+    let returnChars = newChar.characters;
+    if (typeof returnChars === "string") {
+      try {
+        returnChars = JSON.parse(returnChars);
+      } catch (e) {
+        returnChars = [];
+      }
+    }
+
+    return NextResponse.json({
+      character: {
+        ...newChar,
+        characters: returnChars,
+      },
+    });
   } catch (error) {
     console.error("Admin Create Character Error:", error);
     return NextResponse.json({ error: "Failed to create character" }, { status: 500 });
