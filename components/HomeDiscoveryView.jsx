@@ -578,33 +578,40 @@ export default function HomeDiscoveryView({
             </div>
           ))}
         </div>
-      ) : selectedFilter !== "all" && selectedFilter !== "All Showcase" ? (
-        /* Filtered Single Category View */
+      ) : (selectedFilter !== "all" && selectedFilter !== "All Showcase") || searchQuery.trim() !== "" ? (
+        /* Filtered / Searched Category View: Show ALL cards on screen in a full responsive grid (No horizontal scroll container) */
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b border-neutral-800 pb-3">
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-purple-400" />
-              <h3 className="text-base md:text-lg font-extrabold text-white tracking-wide">{selectedFilter}</h3>
+              <h3 className="text-base md:text-lg font-extrabold text-white tracking-wide">
+                {searchQuery ? `Search results for "${searchQuery}"` : selectedFilter}
+              </h3>
               <span className="text-xs font-mono text-purple-300 font-bold">({filteredCharacters.length})</span>
             </div>
 
             <button
               type="button"
-              onClick={() => setSelectedFilter("All Showcase")}
-              className="text-xs font-semibold text-neutral-400 hover:text-white"
+              onClick={() => {
+                setSelectedFilter("All Showcase");
+                setSearchQuery("");
+              }}
+              className="text-xs font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 cursor-pointer"
             >
               Show All Showcase →
             </button>
           </div>
+
+
 
           {filteredCharacters.length === 0 ? (
             <div className="p-8 text-center bg-neutral-900/40 border border-neutral-800 rounded-2xl text-xs text-neutral-400">
               No characters found matching filter.
             </div>
           ) : (
-            <div className="flex sm:grid sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 overflow-x-auto sm:overflow-x-visible pt-2.5 pb-2 sm:pb-0 snap-x snap-mandatory scrollbar-none touch-manipulation -mx-4 px-4 sm:mx-0 sm:px-0">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4 pt-2">
               {filteredCharacters.map((char) => (
-                <div key={char.id} className="w-[155px] sm:w-auto shrink-0 snap-start">
+                <div key={char.id} className="w-full">
                   <CharacterCard char={char} />
                 </div>
               ))}
