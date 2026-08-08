@@ -371,11 +371,11 @@ function SliderCarouselSection({ items, onSelectPreview }) {
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />
           <h3 className="text-base md:text-lg font-black text-white tracking-wide">
-            Trending Hinglish Stories 🔥
+            Trending Stories 🔥
           </h3>
-          <span className="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-full bg-neutral-800 text-pink-300 border border-neutral-700">
+          {/* <span className="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-full bg-neutral-800 text-pink-300 border border-neutral-700">
             {baseItems.length} Stories
-          </span>
+          </span> */}
         </div>
         <div className="flex items-center gap-1.5">
           <button
@@ -427,12 +427,14 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                 onClick={(e) => handleCardClick(e, char, idx)}
                 style={{
                   width: `${cardWidth}px`,
+                  borderRadius: isMobile ? "24px" : "32px",
+                  WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+                  isolation: "isolate",
                 }}
-                className={`relative transition-all duration-500 ease-out cursor-pointer rounded-[20px] sm:rounded-[32px] overflow-hidden shrink-0 shadow-xl flex flex-row ${theme.bg} ${
-                  isCenter
-                    ? "h-[145px] sm:h-[220px] scale-100 opacity-100 z-20 ring-2 ring-white/20 shadow-2xl shadow-black/50"
-                    : "h-[125px] sm:h-[190px] scale-95 opacity-75 hover:opacity-95 z-10"
-                }`}
+                className={`relative transition-all duration-500 ease-out cursor-pointer rounded-[24px] sm:rounded-[32px] overflow-hidden shrink-0 flex flex-row h-[145px] sm:h-[220px] ${theme.bg} ${isCenter
+                  ? "scale-100 opacity-100 z-20 ring-2 ring-white/20 shadow-2xl shadow-black/50"
+                  : "scale-[0.92] opacity-80 z-10 shadow-lg"
+                  }`}
               >
                 {/* Left Content Column */}
                 <div className="w-[60%] sm:w-[58%] p-2.5 sm:p-6 flex flex-col justify-between z-10 shrink-0">
@@ -466,11 +468,11 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                 </div>
 
                 {/* Right Image Column */}
-                <div className="w-[40%] sm:w-[42%] h-full relative overflow-hidden shrink-0">
+                <div className="w-[40%] sm:w-[42%] h-full relative overflow-hidden shrink-0 rounded-r-[24px] sm:rounded-r-[32px]">
                   <img
                     src={char.avatar}
                     alt={char.name}
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 rounded-r-[24px] sm:rounded-r-[32px]"
                   />
                   <div className="absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-black/15 to-transparent pointer-events-none" />
                 </div>
@@ -493,9 +495,8 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                   pauseInteraction();
                   resumeInteractionAfterDelay(5000);
                 }}
-                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                  idx === activeRealIndex ? "w-6 bg-pink-500" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
-                }`}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === activeRealIndex ? "w-6 bg-pink-500" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
+                  }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             );
