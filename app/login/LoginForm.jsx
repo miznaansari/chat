@@ -51,15 +51,15 @@ export default function LoginForm() {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
+      const idToken = await user.getIdToken();
 
       const res = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: user.email,
+          idToken,
           displayName: user.displayName,
           photoURL: user.photoURL,
-          uid: user.uid,
         }),
       });
 

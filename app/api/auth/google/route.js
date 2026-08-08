@@ -2,45 +2,82 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import prisma from "@/lib/prisma";
 import { createAuthToken } from "@/lib/jwt";
+import { createRemoteJWKSet, jwtVerify } from "jose";
+
+const JWKS = createRemoteJWKSet(
+  new URL("https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com")
+);
 
 export async function POST(req) {
   try {
-    const { email, displayName, photoURL, uid } = await req.json();
+    const { idToken, displayName, photoURL } = await req.json();
 
-    if (!email && !uid) {
+    if (!idToken) {
       return NextResponse.json(
-        { error: "Google user authentication failed" },
+        { error: "Google ID token is required" },
         { status: 400 }
       );
     }
 
-    const userName = (displayName || email?.split("@")[0] || `user_${Date.now()}`).trim();
+    let payload;
+    try {
+      const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "nextaichat-a0a1c";
+      const { payload: verifiedPayload } = await jwtVerify(idToken, JWKS, {
+        issuer: `https://securetoken.google.com/${projectId}`,
+        audience: projectId,
+      });
+      payload = verifiedPayload;
+    } catch (jwtErr) {
+      console.error("Google ID Token validation failed:", jwtErr?.message || jwtErr);
+      return NextResponse.json(
+        { error: "Invalid or expired Google ID token" },
+        { status: 401 }
+      );
+    }
 
-    let user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          ...(email ? [{ email }] : []),
-          { name: userName },
-        ],
-      },
+    const email = payload.email;
+    const uid = payload.sub; // Firebase user ID
+
+    if (!email) {
+      return NextResponse.json(
+        { error: "Email not provided in Google ID token" },
+        { status: 400 }
+      );
+    }
+
+    const cleanEmail = email.trim().toLowerCase();
+    const userName = (displayName || cleanEmail.split("@")[0] || `user_${Date.now()}`).trim();
+
+    // Match strictly by verified email to prevent name-collision takeover
+    let user = await prisma.user.findUnique({
+      where: { email: cleanEmail },
     });
 
     if (!user) {
+      // Ensure name is unique in DB
+      let finalName = userName;
+      const nameExists = await prisma.user.findUnique({
+        where: { name: finalName },
+      });
+      if (nameExists) {
+        finalName = `${userName}_${Math.floor(1000 + Math.random() * 9000)}`;
+      }
+
       // Create new Google User
       const dummyPassword = await bcrypt.hash(uid || Date.now().toString(), 10);
       user = await prisma.user.create({
         data: {
-          name: userName,
-          email: email || `${uid}@google.com`,
+          name: finalName,
+          email: cleanEmail,
           password: dummyPassword,
           authProvider: "google",
           hasChosenLanguage: false,
         },
       });
-    } else if (!user.email && email) {
+    } else if (user.authProvider !== "google") {
       user = await prisma.user.update({
         where: { id: user.id },
-        data: { email, authProvider: "google" },
+        data: { authProvider: "google" },
       });
     }
 
