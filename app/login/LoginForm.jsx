@@ -37,6 +37,7 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
 
   // Onboarding Step State: "auth" | "language" | "generating"
   const [step, setStep] = useState("auth");
@@ -45,6 +46,10 @@ export default function LoginForm() {
   const [activeAgentIndex, setActiveAgentIndex] = useState(0);
 
   const handleGoogleSignIn = async () => {
+    if (!ageConfirmed) {
+      setError("Please confirm your age by checking the age limit box to proceed.");
+      return;
+    }
     setError("");
     setLoading(true);
 
@@ -87,6 +92,10 @@ export default function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!ageConfirmed) {
+      setError("Please confirm your age by checking the age limit box to proceed.");
+      return;
+    }
     setError("");
     setLoading(true);
 
@@ -401,6 +410,20 @@ export default function LoginForm() {
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
+              </div>
+
+              {/* Age Limit Checkbox */}
+              <div className="flex items-start gap-2.5 p-3 rounded-xl bg-neutral-900/40 border border-neutral-800/80 my-2 animate-in fade-in duration-200">
+                <input
+                  type="checkbox"
+                  id="ageConfirm"
+                  checked={ageConfirmed}
+                  onChange={(e) => setAgeConfirmed(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 shrink-0 rounded border-neutral-800 bg-neutral-950 text-purple-600 focus:ring-purple-500 focus:ring-offset-neutral-950 cursor-pointer accent-purple-600"
+                />
+                <label htmlFor="ageConfirm" className="text-xs text-neutral-400 select-none leading-normal cursor-pointer">
+                  I confirm that I am <span className="text-purple-400 font-semibold">16 years of age or older</span> and agree to the platform safety rules.
+                </label>
               </div>
 
               <button
