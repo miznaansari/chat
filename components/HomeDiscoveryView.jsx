@@ -281,7 +281,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
             return (
               <CarouselItem
                 key={`${char.id || char.name}-${idx}`}
-                className="pl-2.5 sm:pl-4 basis-[70%] sm:basis-[52%] md:basis-[46%] max-w-[290px] sm:max-w-[540px]"
+                className="pl-2.5 sm:pl-4 basis-[70%] sm:basis-[52%] md:basis-[46%] max-w-[290px] sm:max-w-[500px]"
               >
                 <div
                   onClick={() => {
@@ -296,14 +296,14 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                     WebkitMaskImage: "-webkit-radial-gradient(white, black)",
                     isolation: "isolate",
                   }}
-                  className={`relative transition-all duration-500 ease-out cursor-pointer rounded-[24px] sm:rounded-[32px] overflow-hidden flex flex-row h-[145px] sm:h-[220px] ${theme.bg} ${
+                  className={`group relative transition-all duration-500 ease-out cursor-pointer rounded-[24px] sm:rounded-[32px] overflow-hidden flex flex-row h-[145px] sm:h-[220px] ${theme.bg} ${
                     isCenter
                       ? "scale-100 opacity-100 z-20 ring-2 ring-white/20 shadow-2xl shadow-black/50"
                       : "scale-[0.90] opacity-75 z-10 shadow-lg"
                   }`}
                 >
                   {/* Left Content Column */}
-                  <div className="w-[60%] sm:w-[58%] p-2.5 sm:p-6 flex flex-col justify-between z-10 shrink-0">
+                  <div className="w-[58%] sm:w-[58%] p-2.5 sm:p-6 flex flex-col justify-between z-10 shrink-0">
                     <div className="flex items-center gap-1">
                       <span className={`text-[8px] sm:text-xs font-black uppercase tracking-wider truncate ${theme.brand}`}>
                         NextAiChat <span className="opacity-40">|</span> {char.badge || "Story"}
@@ -319,7 +319,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                       </p>
                     </div>
 
-                    <div className="pt-0.5 flex items-center justify-between">
+                    <div className="pt-0.5 flex items-center justify-between gap-1">
                       <button
                         type="button"
                         className={`px-2.5 sm:px-5 py-0.5 sm:py-2 rounded-lg sm:rounded-2xl font-black text-[9px] sm:text-xs transition-all shadow-md active:scale-95 flex items-center gap-1 cursor-pointer ${theme.btn}`}
@@ -328,19 +328,19 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                       </button>
 
                       <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-black/20 text-white/90 backdrop-blur-sm">
-                        Story
+                        ★ {char.rating || "4.9"}
                       </span>
                     </div>
                   </div>
 
-                  {/* Right Image Column */}
-                  <div className="w-[40%] sm:w-[42%] h-full relative overflow-hidden shrink-0 rounded-r-[24px] sm:rounded-r-[32px]">
+                  {/* Right Image Column (Fills width and height of container) */}
+                  <div className="w-[42%] sm:w-[42%] h-full relative overflow-hidden shrink-0 rounded-r-[24px] sm:rounded-r-[32px]">
                     <img
                       src={char.avatar}
                       alt={char.name}
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 rounded-r-[24px] sm:rounded-r-[32px]"
                     />
-                    <div className="absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-black/15 to-transparent pointer-events-none" />
+                    <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-black/25 via-black/10 to-transparent pointer-events-none" />
                   </div>
                 </div>
               </CarouselItem>

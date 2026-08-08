@@ -1034,6 +1034,7 @@ export default function ChatView({
         });
 
         const data = await res.json();
+        console.log("🤖 [Gemini Turn Response]:", data.modelMessage?.content || data);
 
         // Update high demand & queued status strictly based on server rate queue state
         const serverHighDemand = Boolean(data.isHighDemand || data.wasQueued || res.headers.get("X-High-Demand") === "true");
@@ -1096,6 +1097,7 @@ export default function ChatView({
           });
 
           const nextData = await nextRes.json();
+          console.log("🤖 [Gemini Next Turn Response]:", nextData.modelMessage?.content || nextData);
           if (!nextRes.ok) break;
 
           if (typeof window !== "undefined") {
@@ -1114,7 +1116,7 @@ export default function ChatView({
           turnCount++;
         }
       } catch (err) {
-        alert("Error in Turn-by-Turn mode: " + err.message);
+        console.error("Error in Turn-by-Turn mode:", err);
         setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
       } finally {
         setIsQueuedNotice(false);
@@ -1139,6 +1141,7 @@ export default function ChatView({
         });
 
         const data = await res.json();
+        console.log("🤖 [Gemini Response]:", data.modelMessage?.content || data);
 
         // Update high demand & queued status strictly based on server rate queue state
         const serverHighDemand = Boolean(data.isHighDemand || data.wasQueued || res.headers.get("X-High-Demand") === "true");
@@ -1169,7 +1172,7 @@ export default function ChatView({
           await animateTypewriterMessage(data.modelMessage);
         }
       } catch (err) {
-        alert("Error sending message: " + err.message);
+        console.error("Error sending message:", err);
         setMessages((prev) => prev.filter((m) => m.id !== tempUserMsg.id));
       } finally {
         setIsQueuedNotice(false);

@@ -6,6 +6,7 @@ import { trackAiUsage, checkAiUsageLimit } from "@/lib/aiUsageTracker";
 import { processWithRateQueue } from "@/lib/aiRateQueue";
 
 export async function POST(req) {
+  let userMsg = null;
   try {
     const user = await RequireUser(req);
     if (!user) {
@@ -46,8 +47,6 @@ export async function POST(req) {
       return NextResponse.json({ error: "Forbidden: Access denied" }, { status: 403 });
     }
 
-    let userMsg = null;
-
     // If user provided a prompt in this call, save user message
     if (prompt && typeof prompt === "string" && prompt.trim().length > 0) {
       const userMessageTokenEstimate = Math.ceil(prompt.trim().length / 4);
@@ -62,7 +61,7 @@ export async function POST(req) {
       });
     }
 
-    // Fetch messages flagged to be INCLUDED in context history
+    // Fetch messages flagged to be INCLUDED in context history (slided window of last 25 messages)
     const contextMessages = await prisma.chatMessage.findMany({
       where: {
         chatSessionId,
@@ -71,8 +70,10 @@ export async function POST(req) {
       orderBy: { createdAt: "asc" },
     });
 
-    // Format full context history into structured transcript for turn engine
-    const historyTranscript = contextMessages
+    const recentContextMessages = contextMessages.slice(-25);
+
+    // Format context history into structured transcript for turn engine
+    const historyTranscript = recentContextMessages
       .map((msg) => {
         if (msg.role === "user") {
           return `[me / user]: ${msg.content}`;
@@ -155,6 +156,9 @@ export async function POST(req) {
     );
   } catch (error) {
     console.error("Gemini Turn-by-Turn Chat API Error:", error);
+    if (userMsg && userMsg.id) {
+      await prisma.chatMessage.delete({ where: { id: userMsg.id } }).catch(() => {});
+    }
     return NextResponse.json(
       { error: error.message || "Failed to process character turn" },
       { status: 500 }

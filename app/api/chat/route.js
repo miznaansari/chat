@@ -36,6 +36,7 @@ async function generateGeminiContentWithFallback({ modelName, contents, systemIn
         },
       });
       console.timeEnd(timerLabel);
+      console.log(`🤖 [Gemini Response (${modelName})]:\n`, response?.text || response);
       return response;
     } catch (err) {
       console.warn(`AI API call failed using ${label}:`, err?.message || err);
@@ -47,6 +48,7 @@ async function generateGeminiContentWithFallback({ modelName, contents, systemIn
 }
 
 export async function POST(req) {
+  let userMsg = null;
   try {
     const user = await RequireUser(req);
     if (!user) {
@@ -98,7 +100,7 @@ export async function POST(req) {
 
     // Save current user message into database
     const userMessageTokenEstimate = Math.ceil(prompt.length / 4);
-    const userMsg = await prisma.chatMessage.create({
+    userMsg = await prisma.chatMessage.create({
       data: {
         chatSessionId,
         role: "user",
@@ -195,8 +197,9 @@ ${languageInstruction}
 6. CINEMATIC NARRATIVE HOOKS:
    - At dramatic scene transitions or turn endings, naturally include story notes in parentheses like (Ab dekhte hai aage kya hota hai...) to build suspense!`;
 
-    // Map context messages to Gemini contents format
-    const contents = contextMessages.map((msg) => ({
+    // Map recent 25 context messages to Gemini contents format
+    const recentContextMessages = contextMessages.slice(-25);
+    const contents = recentContextMessages.map((msg) => ({
       role: msg.role === "model" || msg.role === "assistant" ? "model" : "user",
       parts: [{ text: msg.content }],
     }));
@@ -225,7 +228,7 @@ ${languageInstruction}
     // Track Gemini API call usage for today
     trackAiUsage(user.id).catch(() => {});
 
-    const replyText = response.text || "No response generated.";
+    const replyText = response.text || "(Response was blocked due to safety policy.)";
     const replyTokenEstimate = Math.ceil(replyText.length / 4);
 
     // Save AI multi-character response in database
@@ -261,6 +264,9 @@ ${languageInstruction}
     );
   } catch (error) {
     console.error("AI Multi-Character Chat API Error:", error);
+    if (userMsg && userMsg.id) {
+      await prisma.chatMessage.delete({ where: { id: userMsg.id } }).catch(() => {});
+    }
     return NextResponse.json(
       { error: error.message || "Failed to process chat response" },
       { status: 500 }

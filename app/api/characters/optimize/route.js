@@ -57,8 +57,9 @@ Improve the following character persona and backstory description:
       });
 
       const resultText = response.text ? response.text.trim() : text;
-      // Strip outer wrapping quotes if Gemini added any
-      return resultText.replace(/^["']|["']$/g, "").trim();
+      const finalResult = resultText.replace(/^["']|["']$/g, "").trim();
+      console.log(`🤖 [Gemini Optimization Response (${type})]:\n`, finalResult);
+      return finalResult;
     } catch (err) {
       console.warn("Gemini Optimization failed:", err?.message || err);
       lastError = err;

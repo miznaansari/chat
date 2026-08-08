@@ -118,69 +118,101 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
 
   let lastError = null;
 
+  const extractText = (res) => {
+    let text = "";
+    try {
+      if (typeof res?.text === "string" && res.text.trim()) {
+        text = res.text.trim();
+      }
+    } catch (e) {}
+    if (!text && res?.candidates?.[0]?.content?.parts) {
+      text = res.candidates[0].content.parts.map((p) => p.text || "").join("").trim();
+    }
+    return text;
+  };
+
   for (const { key, label } of keysToTry) {
     const timerLabel = `⏱️ [TurnEngine] Gemini API call (${modelName}) [${label}]`;
     try {
       console.time(timerLabel);
       const ai = new GoogleGenAI({ apiKey: key });
-      const response = await ai.models.generateContent({
-        model: modelName,
-        contents,
-        config: {
-          systemInstruction,
-          temperature: 0.85,
-          responseMimeType: "application/json",
-          safetySettings,
-        },
-      });
-      console.timeEnd(timerLabel);
 
-      const candidate = response.candidates?.[0];
-      const finishReason = candidate?.finishReason;
-
+      // Attempt 1: Try with responseMimeType: "application/json"
+      let response = null;
       let responseText = "";
       try {
-        if (typeof response.text === "string" && response.text.trim()) {
-          responseText = response.text.trim();
-        }
-      } catch (e) {}
-
-      if (!responseText && candidate?.content?.parts) {
-        responseText = candidate.content.parts.map((p) => p.text || "").join("").trim();
+        response = await ai.models.generateContent({
+          model: modelName,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.85,
+            responseMimeType: "application/json",
+            safetySettings,
+          },
+        });
+        responseText = extractText(response);
+      } catch (eJson) {
+        console.warn(`⚠️ [TurnEngine] JSON mode API error using ${label}:`, eJson?.message || eJson);
       }
+
+      // Attempt 2: If JSON mode returned empty text, retry with standard text mode
+      if (!responseText) {
+        console.warn(`⚠️ [TurnEngine] JSON mode returned empty response. Retrying standard text mode (${label})...`);
+        response = await ai.models.generateContent({
+          model: modelName,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.85,
+            safetySettings,
+          },
+        });
+        responseText = extractText(response);
+      }
+
+      console.timeEnd(timerLabel);
+
+      const candidate = response?.candidates?.[0];
+      const finishReason = candidate?.finishReason;
 
       console.log(`🤖 [TurnEngine] Raw Gemini API Response (${label}) [FinishReason: ${finishReason || "NORMAL"}]:\n`, responseText);
 
-      if (!responseText) {
-        if (finishReason === "SAFETY") {
-          throw new Error("Gemini Safety Filter: Response was blocked due to safety policy.");
-        }
-        throw new Error(`Gemini API returned an empty response (FinishReason: ${finishReason || "UNKNOWN"}). Rate limit or quota limit may have been reached.`);
-      }
-
       // Robust JSON Extraction & Parsing
       let parsed = null;
-      try {
-        parsed = JSON.parse(responseText);
-      } catch (e1) {
+
+      if (!responseText) {
+        console.warn(`⚠️ [TurnEngine] Response blocked or empty (${label}) [FinishReason: ${finishReason || "SAFETY/EMPTY"}]`);
+        const defaultChar = characterNames[0] || "AI";
+        parsed = {
+          speakingCharacter: defaultChar,
+          dialogue: "(Response was blocked due to safety policy.)",
+          nextSpeaker: "USER",
+          isUserTurn: true,
+        };
+      } else {
         try {
-          const cleaned = responseText.replace(/```json/gi, "").replace(/```/g, "").trim();
-          parsed = JSON.parse(cleaned);
-        } catch (e2) {
+          parsed = JSON.parse(responseText);
+        } catch (e1) {
           try {
-            const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-              parsed = JSON.parse(jsonMatch[0]);
+            const cleaned = responseText.replace(/```json/gi, "").replace(/```/g, "").trim();
+            parsed = JSON.parse(cleaned);
+          } catch (e2) {
+            try {
+              const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                parsed = JSON.parse(jsonMatch[0]);
+              }
+            } catch (e3) {
+              console.warn("Gemini turn output is raw text instead of JSON:", responseText);
+              const defaultChar = characterNames[0] || "AI";
+              parsed = {
+                speakingCharacter: defaultChar,
+                dialogue: responseText,
+                nextSpeaker: "USER",
+                isUserTurn: true,
+              };
             }
-          } catch (e3) {
-            console.warn("Gemini turn output is raw text instead of JSON:", responseText);
-            const defaultChar = characterNames[0] || "AI";
-            parsed = {
-              speakingCharacter: defaultChar,
-              dialogue: responseText,
-              nextSpeaker: "USER",
-              isUserTurn: true,
-            };
           }
         }
       }
@@ -188,11 +220,16 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
       console.log(`✨ [TurnEngine] Parsed Turn Object:\n`, parsed);
 
       if (!parsed || !parsed.dialogue) {
-        throw new Error("Failed to parse dialogue from Gemini API response.");
+        parsed = {
+          speakingCharacter: characterNames[0] || "AI",
+          dialogue: "(Response was blocked due to safety policy.)",
+          nextSpeaker: "USER",
+          isUserTurn: true,
+        };
       }
 
       const speakingCharacter = parsed.speakingCharacter || characterNames[0] || "Character";
-      const dialogue = parsed.dialogue || responseText;
+      const dialogue = parsed.dialogue || "(Response was blocked due to safety policy.)";
       let rawNextSpeaker = String(parsed.nextSpeaker || "USER").trim();
       let isUserTurn = Boolean(parsed.isUserTurn);
 
@@ -239,5 +276,14 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
     }
   }
 
-  throw lastError || new Error("All Gemini API keys failed in turn engine.");
+  // Fallback safety message if all Gemini API attempts fail or hit limits
+  const fallbackChar = characterNames[0] || "AI";
+  console.warn("⚠️ [TurnEngine] All Gemini API attempts failed. Returning safety response to user:", lastError?.message || lastError);
+  return {
+    speakingCharacter: fallbackChar,
+    dialogue: "(Response was blocked due to safety policy.)",
+    nextSpeaker: "me",
+    isUserTurn: true,
+    formattedContent: `[${fallbackChar}]: (Response was blocked due to safety policy.)`,
+  };
 }
