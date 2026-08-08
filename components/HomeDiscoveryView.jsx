@@ -1,6 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Autoplay from "embla-carousel-autoplay";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import {
   Search,
   Sparkles,
@@ -209,300 +217,152 @@ const SLIDER_CARD_THEMES = [
 ];
 
 function SliderCarouselSection({ items, onSelectPreview }) {
-  const containerRef = useRef(null);
-  const [containerWidth, setContainerWidth] = useState(0);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState(0);
-  const [isInteracting, setIsInteracting] = useState(false);
+  const [api, setApi] = useState(null);
+  const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const isHorizontalSwipe = useRef(null);
-  const interactionTimerRef = useRef(null);
+  const plugin = useRef(
+    Autoplay({ delay: 4000, stopOnInteraction: true, stopOnMouseEnter: true })
+  );
 
   let baseItems = items.filter((c) => c.category === "slider");
   if (!baseItems || baseItems.length === 0) {
     baseItems = items.slice(0, 6);
   }
 
-  // Triple the array for seamless circular scrolling
-  const sliderItems = baseItems.length > 0 ? [...baseItems, ...baseItems, ...baseItems] : [];
-
-  // Measure container width on mount and resize
   useEffect(() => {
-    const updateWidth = () => {
-      if (containerRef.current) {
-        setContainerWidth(containerRef.current.offsetWidth);
-      }
+    if (!api) return;
+    setSelectedIndex(api.selectedScrollSnap());
+    const onSelect = () => {
+      setSelectedIndex(api.selectedScrollSnap());
     };
-    updateWidth();
-    window.addEventListener("resize", updateWidth);
-    return () => window.removeEventListener("resize", updateWidth);
-  }, []);
-
-  // Initialize index to middle set on mount
-  useEffect(() => {
-    if (baseItems.length > 0 && currentIndex === 0) {
-      setCurrentIndex(baseItems.length);
-    }
-  }, [baseItems.length]);
-
-  // Auto-slide effect
-  useEffect(() => {
-    if (sliderItems.length <= 1 || isInteracting || isDragging) return;
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => {
-        const next = prev + 1;
-        if (next >= baseItems.length * 2) {
-          return baseItems.length;
-        }
-        return next;
-      });
-    }, 5000);
-    return () => clearInterval(timer);
-  }, [sliderItems.length, isInteracting, isDragging, baseItems.length]);
+    api.on("select", onSelect);
+    api.on("reInit", onSelect);
+    return () => {
+      api.off("select", onSelect);
+      api.off("reInit", onSelect);
+    };
+  }, [api]);
 
   if (!baseItems || baseItems.length === 0) return null;
 
-  const isMobile = containerWidth > 0 ? containerWidth < 640 : false;
-  const cardWidth = isMobile
-    ? Math.min(containerWidth * 0.78, 300)
-    : Math.min(containerWidth * 0.55, 540);
-  const cardGap = isMobile ? 12 : 20;
-
-  const centerOffset = containerWidth > 0 ? (containerWidth / 2) - (cardWidth / 2) : 0;
-  const trackTranslateX = centerOffset - (currentIndex * (cardWidth + cardGap)) + dragOffset;
-
-  const pauseInteraction = () => {
-    setIsInteracting(true);
-    if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
-  };
-
-  const resumeInteractionAfterDelay = (ms = 5000) => {
-    if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
-    interactionTimerRef.current = setTimeout(() => {
-      setIsInteracting(false);
-    }, ms);
-  };
-
-  const handlePrev = (e) => {
-    e?.stopPropagation();
-    pauseInteraction();
-    setCurrentIndex((prev) => (prev <= 0 ? baseItems.length * 2 - 1 : prev - 1));
-    resumeInteractionAfterDelay();
-  };
-
-  const handleNext = (e) => {
-    e?.stopPropagation();
-    pauseInteraction();
-    setCurrentIndex((prev) => (prev >= baseItems.length * 2 - 1 ? baseItems.length : prev + 1));
-    resumeInteractionAfterDelay();
-  };
-
-  // Touch Handlers for real-time finger swipe dragging
-  const handleTouchStart = (e) => {
-    pauseInteraction();
-    setIsDragging(true);
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-    isHorizontalSwipe.current = null;
-    setDragOffset(0);
-  };
-
-  const handleTouchMove = (e) => {
-    if (!isDragging) return;
-    const currentX = e.touches[0].clientX;
-    const currentY = e.touches[0].clientY;
-    const deltaX = currentX - touchStartX.current;
-    const deltaY = currentY - touchStartY.current;
-
-    if (isHorizontalSwipe.current === null) {
-      if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
-        isHorizontalSwipe.current = Math.abs(deltaX) > Math.abs(deltaY);
-      }
-    }
-
-    if (isHorizontalSwipe.current) {
-      setDragOffset(deltaX);
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (!isDragging) return;
-    setIsDragging(false);
-
-    const finalDeltaX = dragOffset;
-    setDragOffset(0);
-
-    if (isHorizontalSwipe.current && Math.abs(finalDeltaX) > 35) {
-      if (finalDeltaX < 0) {
-        setCurrentIndex((prev) => {
-          const next = prev + 1;
-          return next >= baseItems.length * 2 ? baseItems.length : next;
-        });
-      } else {
-        setCurrentIndex((prev) => {
-          const prevIdx = prev - 1;
-          return prevIdx < 0 ? baseItems.length * 2 - 1 : prevIdx;
-        });
-      }
-    }
-    resumeInteractionAfterDelay();
-  };
-
-  const handleCardClick = (e, char, idx) => {
-    e.stopPropagation();
-    if (Math.abs(dragOffset) > 10) return;
-
-    if (idx < currentIndex) {
-      handlePrev();
-    } else if (idx > currentIndex) {
-      handleNext();
-    } else {
-      onSelectPreview(char);
-    }
-  };
-
   return (
     <div className="space-y-3 my-2 font-sans select-none overflow-hidden">
-      {/* Header Row */}
-      <div className="flex items-center justify-between px-1">
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />
-          <h3 className="text-base md:text-lg font-black text-white tracking-wide">
-            Trending Stories 🔥
-          </h3>
-          {/* <span className="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-full bg-neutral-800 text-pink-300 border border-neutral-700">
-            {baseItems.length} Stories
-          </span> */}
-        </div>
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={handlePrev}
-            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-700 hover:border-pink-500 flex items-center justify-center text-white/80 hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
-            aria-label="Previous Slide"
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <button
-            type="button"
-            onClick={handleNext}
-            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-700 hover:border-pink-500 flex items-center justify-center text-white/80 hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
-            aria-label="Next Slide"
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      </div>
-
-      {/* Slider Carousel Container */}
-      <div
-        ref={containerRef}
-        className="relative w-full overflow-hidden py-2 touch-pan-y"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseEnter={pauseInteraction}
-        onMouseLeave={() => resumeInteractionAfterDelay(3000)}
+      <Carousel
+        setApi={setApi}
+        opts={{
+          align: "center",
+          loop: true,
+          skipSnaps: false,
+        }}
+        plugins={[plugin.current]}
+        className="w-full relative"
       >
-        <div
-          className="flex flex-row items-center"
-          style={{
-            transform: `translateX(${trackTranslateX}px)`,
-            transition: isDragging ? "none" : "transform 500ms cubic-bezier(0.25, 1, 0.5, 1)",
-            gap: `${cardGap}px`,
-          }}
-        >
-          {sliderItems.map((char, idx) => {
-            const isCenter = idx === currentIndex;
-            const theme = SLIDER_CARD_THEMES[idx % SLIDER_CARD_THEMES.length];
+        {/* Header Row */}
+        <div className="flex items-center justify-between px-1 mb-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />
+            <h3 className="text-base md:text-lg font-black text-white tracking-wide">
+              Trending Stories 🔥
+            </h3>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <CarouselPrevious className="static translate-y-0" />
+            <CarouselNext className="static translate-y-0" />
+          </div>
+        </div>
 
+        {/* Carousel Content */}
+        <CarouselContent className="-ml-3 sm:-ml-5">
+          {baseItems.map((char, idx) => {
+            const isCenter = idx === selectedIndex;
+            const theme = SLIDER_CARD_THEMES[idx % SLIDER_CARD_THEMES.length];
             const cleanTitle = char.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
 
             return (
-              <div
+              <CarouselItem
                 key={`${char.id || char.name}-${idx}`}
-                onClick={(e) => handleCardClick(e, char, idx)}
-                style={{
-                  width: `${cardWidth}px`,
-                  borderRadius: isMobile ? "24px" : "32px",
-                  WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-                  isolation: "isolate",
-                }}
-                className={`relative transition-all duration-500 ease-out cursor-pointer rounded-[24px] sm:rounded-[32px] overflow-hidden shrink-0 flex flex-row h-[145px] sm:h-[220px] ${theme.bg} ${isCenter
-                  ? "scale-100 opacity-100 z-20 ring-2 ring-white/20 shadow-2xl shadow-black/50"
-                  : "scale-[0.92] opacity-80 z-10 shadow-lg"
-                  }`}
+                className="pl-3 sm:pl-5 basis-[78%] sm:basis-[55%] md:basis-[48%] max-w-[320px] sm:max-w-[540px]"
               >
-                {/* Left Content Column */}
-                <div className="w-[60%] sm:w-[58%] p-2.5 sm:p-6 flex flex-col justify-between z-10 shrink-0">
-                  <div className="flex items-center gap-1">
-                    <span className={`text-[8px] sm:text-xs font-black uppercase tracking-wider truncate ${theme.brand}`}>
-                      NextAiChat <span className="opacity-40">|</span> {char.badge || "Story"}
-                    </span>
+                <div
+                  onClick={() => {
+                    if (idx === selectedIndex) {
+                      onSelectPreview(char);
+                    } else if (api) {
+                      api.scrollTo(idx);
+                    }
+                  }}
+                  style={{
+                    borderRadius: "24px",
+                    WebkitMaskImage: "-webkit-radial-gradient(white, black)",
+                    isolation: "isolate",
+                  }}
+                  className={`relative transition-all duration-500 ease-out cursor-pointer rounded-[24px] sm:rounded-[32px] overflow-hidden flex flex-row h-[145px] sm:h-[220px] ${theme.bg} ${
+                    isCenter
+                      ? "scale-100 opacity-100 z-20 ring-2 ring-white/20 shadow-2xl shadow-black/50"
+                      : "scale-[0.92] opacity-75 z-10 shadow-lg"
+                  }`}
+                >
+                  {/* Left Content Column */}
+                  <div className="w-[60%] sm:w-[58%] p-2.5 sm:p-6 flex flex-col justify-between z-10 shrink-0">
+                    <div className="flex items-center gap-1">
+                      <span className={`text-[8px] sm:text-xs font-black uppercase tracking-wider truncate ${theme.brand}`}>
+                        NextAiChat <span className="opacity-40">|</span> {char.badge || "Story"}
+                      </span>
+                    </div>
+
+                    <div className="space-y-0.5 my-auto">
+                      <h4 className={`font-black text-[11px] sm:text-lg leading-tight tracking-tight uppercase line-clamp-1 sm:line-clamp-2 ${theme.text}`}>
+                        {cleanTitle}
+                      </h4>
+                      <p className={`text-[9px] sm:text-xs font-medium line-clamp-1 sm:line-clamp-2 leading-tight ${theme.subText}`}>
+                        {char.tagline}
+                      </p>
+                    </div>
+
+                    <div className="pt-0.5 flex items-center justify-between">
+                      <button
+                        type="button"
+                        className={`px-2.5 sm:px-5 py-0.5 sm:py-2 rounded-lg sm:rounded-2xl font-black text-[9px] sm:text-xs transition-all shadow-md active:scale-95 flex items-center gap-1 cursor-pointer ${theme.btn}`}
+                      >
+                        <span>Start now</span>
+                      </button>
+
+                      <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-black/20 text-white/90 backdrop-blur-sm">
+                        Story
+                      </span>
+                    </div>
                   </div>
 
-                  <div className="space-y-0.5 my-auto">
-                    <h4 className={`font-black text-[11px] sm:text-lg leading-tight tracking-tight uppercase line-clamp-1 sm:line-clamp-2 ${theme.text}`}>
-                      {cleanTitle}
-                    </h4>
-                    <p className={`text-[9px] sm:text-xs font-medium line-clamp-1 sm:line-clamp-2 leading-tight ${theme.subText}`}>
-                      {char.tagline}
-                    </p>
-                  </div>
-
-                  <div className="pt-0.5 flex items-center justify-between">
-                    <button
-                      type="button"
-                      className={`px-2.5 sm:px-5 py-0.5 sm:py-2 rounded-lg sm:rounded-2xl font-black text-[9px] sm:text-xs transition-all shadow-md active:scale-95 flex items-center gap-1 cursor-pointer ${theme.btn}`}
-                    >
-                      <span>Start now</span>
-                    </button>
-
-                    <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-black/20 text-white/90 backdrop-blur-sm">
-                      Story
-                    </span>
+                  {/* Right Image Column */}
+                  <div className="w-[40%] sm:w-[42%] h-full relative overflow-hidden shrink-0 rounded-r-[24px] sm:rounded-r-[32px]">
+                    <img
+                      src={char.avatar}
+                      alt={char.name}
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 rounded-r-[24px] sm:rounded-r-[32px]"
+                    />
+                    <div className="absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-black/15 to-transparent pointer-events-none" />
                   </div>
                 </div>
-
-                {/* Right Image Column */}
-                <div className="w-[40%] sm:w-[42%] h-full relative overflow-hidden shrink-0 rounded-r-[24px] sm:rounded-r-[32px]">
-                  <img
-                    src={char.avatar}
-                    alt={char.name}
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 rounded-r-[24px] sm:rounded-r-[32px]"
-                  />
-                  <div className="absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-black/15 to-transparent pointer-events-none" />
-                </div>
-              </div>
+              </CarouselItem>
             );
           })}
-        </div>
+        </CarouselContent>
 
         {/* Carousel Pagination Dots */}
         <div className="flex items-center justify-center gap-1.5 mt-3">
-          {baseItems.map((_, idx) => {
-            const activeRealIndex = currentIndex % baseItems.length;
-            return (
-              <button
-                key={idx}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setCurrentIndex(baseItems.length + idx);
-                  pauseInteraction();
-                  resumeInteractionAfterDelay(5000);
-                }}
-                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === activeRealIndex ? "w-6 bg-pink-500" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
-                  }`}
-                aria-label={`Go to slide ${idx + 1}`}
-              />
-            );
-          })}
+          {baseItems.map((_, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => api?.scrollTo(idx)}
+              className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                idx === selectedIndex ? "w-6 bg-pink-500" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
         </div>
-      </div>
+      </Carousel>
     </div>
   );
 }
