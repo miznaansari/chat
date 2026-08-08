@@ -938,9 +938,9 @@ export default function HomeDiscoveryView({
           )}
         </div>
       ) : (
-        /* All Showcase View: Dynamically Grouped by Database Categories */
+        /* All Showcase View: Dynamically Grouped by Database Categories (Slider category excluded here as it is featured in the top carousel) */
         <div className="space-y-7">
-          {dynamicCategories.filter((cat) => cat !== "All Showcase").map((cat) => {
+          {dynamicCategories.filter((cat) => cat !== "All Showcase" && cat.toLowerCase() !== "slider").map((cat) => {
             const categoryChars = filteredCharacters.filter((c) => c.category === cat);
             if (categoryChars.length === 0) return null;
             return (
