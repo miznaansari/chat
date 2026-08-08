@@ -31,7 +31,7 @@ export default function ComparePage() {
     {
       feature: "Dynamic Speaker Turn Engine",
       description: "AI decides who speaks next based on conversation context without forced manual prompts.",
-      nextaichat: { status: "success", text: "Smart Turn Engine (Gemini AI)" },
+      nextaichat: { status: "success", text: "Smart Turn Engine (Advanced AI)" },
       characterAi: { status: "danger", text: "Rigid 1-by-1 Manual Prompts" },
     },
     {
@@ -43,7 +43,7 @@ export default function ComparePage() {
     {
       feature: "Response Speed & Latency",
       description: "Fast turn latency during peak usage hours without waiting queues.",
-      nextaichat: { status: "success", text: "Zero Latency (Gemini Flash Lite)" },
+      nextaichat: { status: "success", text: "Zero Latency (High Speed AI)" },
       characterAi: { status: "warning", text: "Queue wait times on peak load" },
     },
     {
@@ -59,9 +59,9 @@ export default function ComparePage() {
       characterAi: { status: "warning", text: "English standard default" },
     },
     {
-      feature: "Privacy & Log Encryption",
-      description: "Encrypted JWT user sessions without public indexing of user chats.",
-      nextaichat: { status: "success", text: "Encrypted Private AI Context" },
+      feature: "Privacy & Log Protection",
+      description: "Private JWT user sessions without public indexing of user chats.",
+      nextaichat: { status: "success", text: "100% Private AI Context" },
       characterAi: { status: "warning", text: "Public indexing & moderation filters" },
     },
     {
@@ -159,7 +159,7 @@ export default function ComparePage() {
             <span>Dynamic Speaker Turns</span>
           </div>
           <p className="text-xs text-neutral-400 leading-relaxed">
-            Instead of manually clicking character names to respond one by one, NextAiChat evaluates conversation context using Gemini AI to automatically determine the most relevant speaker turn.
+            Instead of manually clicking character names to respond one by one, NextAiChat evaluates conversation context using advanced AI models to automatically determine the most relevant speaker turn.
           </p>
         </div>
       </div>

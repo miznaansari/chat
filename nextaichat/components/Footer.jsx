@@ -30,7 +30,7 @@ export default function Footer() {
               className="h-14 sm:h-16 w-auto object-contain drop-shadow-[0_0_20px_rgba(168,85,247,0.4)]"
             />
           </Link>
-          <p className="text-sm text-neutral-400 leading-relaxed">
+          <p className="text-sm text-neutral-300 leading-relaxed">
             {t("The #1 AI Roleplay Matrix engine designed for study prep, educational tutors, creative worldbuilding, and multi-character storytelling.")}
           </p>
 

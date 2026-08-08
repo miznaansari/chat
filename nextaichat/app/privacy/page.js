@@ -3,7 +3,7 @@ import { ShieldCheck, ArrowLeft } from "lucide-react";
 
 export const metadata = {
   title: "Privacy Policy - NextAiChat",
-  description: "NextAiChat Privacy Policy detailing data security, encrypted user sessions, and private AI roleplay context handling.",
+  description: "NextAiChat Privacy Policy detailing data security, private user sessions, and private AI roleplay context handling.",
 };
 
 export default function PrivacyPage() {
@@ -37,21 +37,21 @@ export default function PrivacyPage() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-white">1. Information We Collect</h2>
           <p>
-            NextAiChat collects minimal user information necessary to provide AI roleplay for study and entertainment. Account data includes chosen usernames, encrypted password hashes, and user settings (such as active interface language preferences).
+            NextAiChat collects minimal user information necessary to provide AI roleplay for study and entertainment. Account data includes chosen usernames, secure password hashes, and user settings (such as active interface language preferences).
           </p>
         </section>
 
         <section className="space-y-2">
           <h2 className="text-base font-bold text-white">2. Use of AI Conversation Data</h2>
           <p>
-            Your interactive roleplay conversations are processed strictly to maintain turn-by-turn context using Google Gemini AI models. We do not sell or index your private conversations for public search engines.
+            Your interactive roleplay conversations are processed strictly to maintain turn-by-turn context using Advanced AI models. We do not sell or index your private conversations for public search engines.
           </p>
         </section>
 
         <section className="space-y-2">
           <h2 className="text-base font-bold text-white">3. Security & Cookies</h2>
           <p>
-            Authentication is managed via HTTP-Only JWT cookies and encrypted session keys. We implement industry-standard security protocols to guard your account against unauthorized access.
+            Authentication is managed via HTTP-Only JWT cookies and secure session keys. We implement industry-standard security protocols to guard your account against unauthorized access.
           </p>
         </section>
 

@@ -46,7 +46,7 @@ NextAiChat's **Dynamic Speaker Turn Engine** uses contextual AI analysis to auto
 
 ### Key Benefits:
 - **Zero Latency**: Powered by Gemini Flash Lite models.
-- **Privacy First**: Encrypted sessions without public log scraping.
+- **Privacy First**: Private sessions without public log scraping.
 - **Custom Snippets**: Store your favorite roleplay prompts for quick reuse.
         `,
         category: "Guides",

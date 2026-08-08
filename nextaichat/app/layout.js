@@ -134,7 +134,7 @@ export default function RootLayout({ children }) {
 
           {/* Navbar Header (Admin Dashboard link commented out) */}
           <Navbar />
-          <main className="flex-1 flex flex-col relative z-10 w-full max-w-full overflow-x-clip">{children}</main>
+          <main className="flex-1 flex flex-col relative z-10 w-full max-w-full overflow-x-clip  ">{children}</main>
           <Footer />
         </LanguageProvider>
       </body>

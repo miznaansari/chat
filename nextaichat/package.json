@@ -1,11 +1,12 @@
 {
   "name": "chat",
-  "version": "2.1.7",
+  "version": "2.1.17",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "node scripts/compress-images.mjs && next build",
     "start": "next start",
+    "compress-images": "node scripts/compress-images.mjs",
     "lint": "eslint",
     "postinstall": "prisma generate"
   },

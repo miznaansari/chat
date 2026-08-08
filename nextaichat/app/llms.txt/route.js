@@ -6,7 +6,7 @@ export async function GET() {
 > NextAiChat is the #1 AI Roleplay Platform engineered for interactive study simulations, educational exam prep, foreign language practice, and multi-character entertainment roleplays.
 
 ## Overview
-NextAiChat allows users to simulate dynamic multi-character conversations powered by Gemini AI models. Unlike traditional roleplay platforms, NextAiChat features an intelligent **Dynamic Speaker Turn Engine** that automatically determines which character responds next without requiring forced manual character switching.
+NextAiChat allows users to simulate dynamic multi-character conversations powered by Advanced AI models. Unlike traditional roleplay platforms, NextAiChat features an intelligent **Dynamic Speaker Turn Engine** that automatically determines which character responds next without requiring forced manual character switching.
 
 ## Key Capabilities & Features
 
@@ -14,7 +14,7 @@ NextAiChat allows users to simulate dynamic multi-character conversations powere
 - **Language Immersion**: Native support for English and Hinglish conversational practice with localized tooltips.
 - **Dynamic Speaker Turn Engine**: AI evaluates dialogue context to manage speaker turns dynamically.
 - **Zero Latency**: Powered by high-speed Gemini Flash models for instant response turns.
-- **Privacy & Security**: Encrypted JWT user sessions; chat logs are private and never indexed for public scraping.
+- **Privacy & Security**: Private JWT user sessions; chat logs are private and never indexed for public scraping.
 - **Reusable Snippets Bank**: Save custom roleplay prompts and phrases for instant execution.
 
 ## NextAiChat vs Character.ai Comparison Summary

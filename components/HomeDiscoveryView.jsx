@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Search,
   Sparkles,
   User,
   ChevronRight,
+  ChevronLeft,
   Plus,
   Loader2,
   Users,
@@ -194,6 +195,317 @@ function getSpeakerChipStyle(charName) {
   return SPEAKER_CHIP_COLORS[index];
 }
 
+const SLIDER_CARD_THEMES = [
+  { bg: "bg-[#f2efe9]", text: "text-neutral-900", subText: "text-neutral-600", btn: "bg-[#27272a] text-white hover:bg-black", brand: "text-neutral-800" },
+  { bg: "bg-[#b8802a]", text: "text-white", subText: "text-amber-100", btn: "bg-white text-neutral-900 hover:bg-amber-50", brand: "text-amber-100" },
+  { bg: "bg-[#8c1d24]", text: "text-white", subText: "text-rose-100", btn: "bg-white text-neutral-900 hover:bg-rose-50", brand: "text-rose-100" },
+  { bg: "bg-[#1e293b]", text: "text-white", subText: "text-slate-300", btn: "bg-white text-neutral-900 hover:bg-slate-100", brand: "text-slate-300" },
+  { bg: "bg-[#14532d]", text: "text-white", subText: "text-emerald-100", btn: "bg-white text-neutral-900 hover:bg-emerald-50", brand: "text-emerald-100" },
+  { bg: "bg-[#e5e0d8]", text: "text-neutral-900", subText: "text-neutral-600", btn: "bg-[#18181b] text-white hover:bg-black", brand: "text-neutral-800" },
+  { bg: "bg-[#581c87]", text: "text-white", subText: "text-purple-200", btn: "bg-white text-neutral-900 hover:bg-purple-50", brand: "text-purple-200" },
+  { bg: "bg-[#0f766e]", text: "text-white", subText: "text-teal-100", btn: "bg-white text-neutral-900 hover:bg-teal-50", brand: "text-teal-100" },
+  { bg: "bg-[#c2410c]", text: "text-white", subText: "text-orange-100", btn: "bg-white text-neutral-900 hover:bg-orange-50", brand: "text-orange-100" },
+  { bg: "bg-[#334155]", text: "text-white", subText: "text-slate-200", btn: "bg-white text-neutral-900 hover:bg-slate-50", brand: "text-slate-200" },
+];
+
+function SliderCarouselSection({ items, onSelectPreview }) {
+  const containerRef = useRef(null);
+  const [containerWidth, setContainerWidth] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isInteracting, setIsInteracting] = useState(false);
+
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const isHorizontalSwipe = useRef(null);
+  const interactionTimerRef = useRef(null);
+
+  let baseItems = items.filter((c) => c.category === "slider");
+  if (!baseItems || baseItems.length === 0) {
+    baseItems = items.slice(0, 6);
+  }
+
+  // Triple the array for seamless circular scrolling
+  const sliderItems = baseItems.length > 0 ? [...baseItems, ...baseItems, ...baseItems] : [];
+
+  // Measure container width on mount and resize
+  useEffect(() => {
+    const updateWidth = () => {
+      if (containerRef.current) {
+        setContainerWidth(containerRef.current.offsetWidth);
+      }
+    };
+    updateWidth();
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
+  }, []);
+
+  // Initialize index to middle set on mount
+  useEffect(() => {
+    if (baseItems.length > 0 && currentIndex === 0) {
+      setCurrentIndex(baseItems.length);
+    }
+  }, [baseItems.length]);
+
+  // Auto-slide effect
+  useEffect(() => {
+    if (sliderItems.length <= 1 || isInteracting || isDragging) return;
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => {
+        const next = prev + 1;
+        if (next >= baseItems.length * 2) {
+          return baseItems.length;
+        }
+        return next;
+      });
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [sliderItems.length, isInteracting, isDragging, baseItems.length]);
+
+  if (!baseItems || baseItems.length === 0) return null;
+
+  const isMobile = containerWidth > 0 ? containerWidth < 640 : false;
+  const cardWidth = isMobile
+    ? Math.min(containerWidth * 0.78, 300)
+    : Math.min(containerWidth * 0.55, 540);
+  const cardGap = isMobile ? 12 : 20;
+
+  const centerOffset = containerWidth > 0 ? (containerWidth / 2) - (cardWidth / 2) : 0;
+  const trackTranslateX = centerOffset - (currentIndex * (cardWidth + cardGap)) + dragOffset;
+
+  const pauseInteraction = () => {
+    setIsInteracting(true);
+    if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
+  };
+
+  const resumeInteractionAfterDelay = (ms = 5000) => {
+    if (interactionTimerRef.current) clearTimeout(interactionTimerRef.current);
+    interactionTimerRef.current = setTimeout(() => {
+      setIsInteracting(false);
+    }, ms);
+  };
+
+  const handlePrev = (e) => {
+    e?.stopPropagation();
+    pauseInteraction();
+    setCurrentIndex((prev) => (prev <= 0 ? baseItems.length * 2 - 1 : prev - 1));
+    resumeInteractionAfterDelay();
+  };
+
+  const handleNext = (e) => {
+    e?.stopPropagation();
+    pauseInteraction();
+    setCurrentIndex((prev) => (prev >= baseItems.length * 2 - 1 ? baseItems.length : prev + 1));
+    resumeInteractionAfterDelay();
+  };
+
+  // Touch Handlers for real-time finger swipe dragging
+  const handleTouchStart = (e) => {
+    pauseInteraction();
+    setIsDragging(true);
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+    isHorizontalSwipe.current = null;
+    setDragOffset(0);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const deltaX = currentX - touchStartX.current;
+    const deltaY = currentY - touchStartY.current;
+
+    if (isHorizontalSwipe.current === null) {
+      if (Math.abs(deltaX) > 6 || Math.abs(deltaY) > 6) {
+        isHorizontalSwipe.current = Math.abs(deltaX) > Math.abs(deltaY);
+      }
+    }
+
+    if (isHorizontalSwipe.current) {
+      setDragOffset(deltaX);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    setIsDragging(false);
+
+    const finalDeltaX = dragOffset;
+    setDragOffset(0);
+
+    if (isHorizontalSwipe.current && Math.abs(finalDeltaX) > 35) {
+      if (finalDeltaX < 0) {
+        setCurrentIndex((prev) => {
+          const next = prev + 1;
+          return next >= baseItems.length * 2 ? baseItems.length : next;
+        });
+      } else {
+        setCurrentIndex((prev) => {
+          const prevIdx = prev - 1;
+          return prevIdx < 0 ? baseItems.length * 2 - 1 : prevIdx;
+        });
+      }
+    }
+    resumeInteractionAfterDelay();
+  };
+
+  const handleCardClick = (e, char, idx) => {
+    e.stopPropagation();
+    if (Math.abs(dragOffset) > 10) return;
+
+    if (idx < currentIndex) {
+      handlePrev();
+    } else if (idx > currentIndex) {
+      handleNext();
+    } else {
+      onSelectPreview(char);
+    }
+  };
+
+  return (
+    <div className="space-y-3 my-2 font-sans select-none overflow-hidden">
+      {/* Header Row */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />
+          <h3 className="text-base md:text-lg font-black text-white tracking-wide">
+            Trending Hinglish Stories 🔥
+          </h3>
+          <span className="text-[10px] font-mono font-extrabold px-2 py-0.5 rounded-full bg-neutral-800 text-pink-300 border border-neutral-700">
+            {baseItems.length} Stories
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handlePrev}
+            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-700 hover:border-pink-500 flex items-center justify-center text-white/80 hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
+            aria-label="Previous Slide"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleNext}
+            className="w-8 h-8 rounded-full bg-neutral-900 border border-neutral-700 hover:border-pink-500 flex items-center justify-center text-white/80 hover:text-white transition-all shadow-md active:scale-95 cursor-pointer"
+            aria-label="Next Slide"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Slider Carousel Container */}
+      <div
+        ref={containerRef}
+        className="relative w-full overflow-hidden py-2 touch-pan-y"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onMouseEnter={pauseInteraction}
+        onMouseLeave={() => resumeInteractionAfterDelay(3000)}
+      >
+        <div
+          className="flex flex-row items-center"
+          style={{
+            transform: `translateX(${trackTranslateX}px)`,
+            transition: isDragging ? "none" : "transform 500ms cubic-bezier(0.25, 1, 0.5, 1)",
+            gap: `${cardGap}px`,
+          }}
+        >
+          {sliderItems.map((char, idx) => {
+            const isCenter = idx === currentIndex;
+            const theme = SLIDER_CARD_THEMES[idx % SLIDER_CARD_THEMES.length];
+
+            const cleanTitle = char.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+
+            return (
+              <div
+                key={`${char.id || char.name}-${idx}`}
+                onClick={(e) => handleCardClick(e, char, idx)}
+                style={{
+                  width: `${cardWidth}px`,
+                }}
+                className={`relative transition-all duration-500 ease-out cursor-pointer rounded-[20px] sm:rounded-[32px] overflow-hidden shrink-0 shadow-xl flex flex-row ${theme.bg} ${
+                  isCenter
+                    ? "h-[145px] sm:h-[220px] scale-100 opacity-100 z-20 ring-2 ring-white/20 shadow-2xl shadow-black/50"
+                    : "h-[125px] sm:h-[190px] scale-95 opacity-75 hover:opacity-95 z-10"
+                }`}
+              >
+                {/* Left Content Column */}
+                <div className="w-[60%] sm:w-[58%] p-2.5 sm:p-6 flex flex-col justify-between z-10 shrink-0">
+                  <div className="flex items-center gap-1">
+                    <span className={`text-[8px] sm:text-xs font-black uppercase tracking-wider truncate ${theme.brand}`}>
+                      NextAiChat <span className="opacity-40">|</span> {char.badge || "Story"}
+                    </span>
+                  </div>
+
+                  <div className="space-y-0.5 my-auto">
+                    <h4 className={`font-black text-[11px] sm:text-lg leading-tight tracking-tight uppercase line-clamp-1 sm:line-clamp-2 ${theme.text}`}>
+                      {cleanTitle}
+                    </h4>
+                    <p className={`text-[9px] sm:text-xs font-medium line-clamp-1 sm:line-clamp-2 leading-tight ${theme.subText}`}>
+                      {char.tagline}
+                    </p>
+                  </div>
+
+                  <div className="pt-0.5 flex items-center justify-between">
+                    <button
+                      type="button"
+                      className={`px-2.5 sm:px-5 py-0.5 sm:py-2 rounded-lg sm:rounded-2xl font-black text-[9px] sm:text-xs transition-all shadow-md active:scale-95 flex items-center gap-1 cursor-pointer ${theme.btn}`}
+                    >
+                      <span>Start now</span>
+                    </button>
+
+                    <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-black/20 text-white/90 backdrop-blur-sm">
+                      Story
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right Image Column */}
+                <div className="w-[40%] sm:w-[42%] h-full relative overflow-hidden shrink-0">
+                  <img
+                    src={char.avatar}
+                    alt={char.name}
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-y-0 left-0 w-5 bg-gradient-to-r from-black/15 to-transparent pointer-events-none" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Carousel Pagination Dots */}
+        <div className="flex items-center justify-center gap-1.5 mt-3">
+          {baseItems.map((_, idx) => {
+            const activeRealIndex = currentIndex % baseItems.length;
+            return (
+              <button
+                key={idx}
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCurrentIndex(baseItems.length + idx);
+                  pauseInteraction();
+                  resumeInteractionAfterDelay(5000);
+                }}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                  idx === activeRealIndex ? "w-6 bg-pink-500" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
+                }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function HomeDiscoveryView({
   chats = [],
   onSelectChat,
@@ -280,6 +592,7 @@ export default function HomeDiscoveryView({
   const sortedCategories = rawCategories.sort((a, b) => {
     const getWeight = (cat) => {
       const lower = cat.toLowerCase();
+      if (lower === "slider" || lower.includes("slider")) return 0;
       if (lower === "game" || lower.includes("game")) return 1;
       if (lower.includes("whatsapp")) return 2;
       if (lower.includes("exam")) return 3;
@@ -502,6 +815,11 @@ export default function HomeDiscoveryView({
           );
         })}
       </div>
+
+      {/* Featured Slider Carousel Section */}
+      {(selectedFilter === "All Showcase" || selectedFilter === "all" || selectedFilter === "slider") && !searchQuery && (
+        <SliderCarouselSection items={displayCharacters} onSelectPreview={setSelectedCharPreview} />
+      )}
 
       {/* Hero Showcase Banner (Desktop Only - Ultra-Slim Header) */}
       <div className="hidden lg:flex relative rounded-2xl py-3 px-5 md:py-3.5 md:px-6 bg-gradient-to-r from-purple-950/90 via-indigo-950/90 to-slate-950 border border-purple-500/30 shadow-lg overflow-hidden items-center justify-between gap-4 group">
