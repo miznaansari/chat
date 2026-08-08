@@ -112,6 +112,11 @@ export default function RootLayout({ children }) {
         <meta name="ai-content-declaration" content="authorized" />
         <meta name="chatgpt-plugin" content="enabled" />
         <link rel="alternate" type="text/plain" href="/llms.txt" title="LLM Context Summary" />
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9568924836412793"
+          crossOrigin="anonymous"
+        ></script>
       </head>
       <body className="min-h-full flex flex-col bg-[#030712] text-neutral-100 selection:bg-purple-500 selection:text-white relative overflow-x-clip w-full max-w-full font-sans">
         <LanguageProvider>
