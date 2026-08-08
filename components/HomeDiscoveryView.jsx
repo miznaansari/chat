@@ -216,7 +216,7 @@ const SLIDER_CARD_THEMES = [
   { bg: "bg-[#334155]", text: "text-white", subText: "text-slate-200", btn: "bg-white text-neutral-900 hover:bg-slate-50", brand: "text-slate-200" },
 ];
 
-function SliderCarouselSection({ items, onSelectPreview }) {
+function SliderCarouselSection({ items, onSelectPreview, fetching }) {
   const [api, setApi] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -243,7 +243,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
     };
   }, [api]);
 
-  if (!baseItems || baseItems.length === 0) return null;
+  const displayItems = fetching ? [0, 1, 2, 3, 4, 5, 6, 7] : baseItems;
 
   return (
     <div className="space-y-3 my-2 font-sans select-none overflow-hidden -mx-4 px-4 sm:mx-0 sm:px-0">
@@ -254,15 +254,19 @@ function SliderCarouselSection({ items, onSelectPreview }) {
           loop: true,
           skipSnaps: false,
         }}
-        plugins={[plugin.current]}
-        className="w-full relative"
+        plugins={fetching ? [] : [plugin.current]}
+        className={`w-full relative ${fetching ? "pointer-events-none" : ""}`}
       >
         {/* Header Row */}
         <div className="flex items-center justify-between px-4 sm:px-1 mb-2">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />
             <h3 className="text-base md:text-lg font-black text-white tracking-wide">
-              Trending Stories 🔥
+              {fetching ? (
+                <div className="h-5 w-32 bg-neutral-900/60 rounded-md animate-pulse inline-block" />
+              ) : (
+                "Trending Stories 🔥"
+              )}
             </h3>
           </div>
           <div className="flex items-center gap-1.5">
@@ -272,21 +276,54 @@ function SliderCarouselSection({ items, onSelectPreview }) {
         </div>
 
         {/* Carousel Content */}
-        <CarouselContent className="-ml-2.5 sm:-ml-4">
-          {baseItems.map((char, idx) => {
+        <CarouselContent className={`-ml-2.5 sm:-ml-4 transition-opacity duration-200 ${!api ? "opacity-0" : "opacity-100"}`}>
+          {displayItems.map((item, idx) => {
             const isCenter = idx === selectedIndex;
+
+            if (fetching) {
+              return (
+                <CarouselItem
+                  key={`skeleton-${idx}`}
+                  className="pl-2.5 sm:pl-4 basis-[70%] sm:basis-[52%] md:basis-[38%] lg:basis-[30%] xl:basis-[25%] max-w-[290px] sm:max-w-[500px] md:max-w-[340px]"
+                >
+                  <div
+                    className={`relative rounded-[24px] sm:rounded-[32px] overflow-hidden flex flex-row h-[145px] sm:h-[220px] md:h-[180px] bg-neutral-900/40 border border-neutral-800/80 animate-pulse w-full transition-all duration-500 ease-out ${
+                      isCenter
+                        ? "scale-100 opacity-100 z-20 ring-2 ring-white/10 shadow-2xl shadow-black/50"
+                        : "scale-[0.90] opacity-75 z-10 shadow-lg"
+                    }`}
+                  >
+                    {/* Left Content Column */}
+                    <div className="w-[58%] p-2.5 sm:p-6 md:p-4 flex flex-col justify-between shrink-0">
+                      <div className="h-2.5 w-16 bg-neutral-800 rounded-md" />
+                      <div className="space-y-1.5 my-auto">
+                        <div className="h-3.5 sm:h-5 bg-neutral-800 rounded-md w-3/4" />
+                        <div className="h-2.5 bg-neutral-800/50 rounded-md w-full" />
+                      </div>
+                      <div className="pt-0.5 flex items-center justify-between gap-1">
+                        <div className="h-5 sm:h-7 w-16 sm:w-20 bg-neutral-800 rounded-lg" />
+                        <div className="h-3.5 w-8 bg-neutral-800 rounded-md" />
+                      </div>
+                    </div>
+                    {/* Right Image Column */}
+                    <div className="w-[42%] h-full bg-neutral-800/30 shrink-0 rounded-r-[24px] sm:rounded-r-[32px]" />
+                  </div>
+                </CarouselItem>
+              );
+            }
+
             const theme = SLIDER_CARD_THEMES[idx % SLIDER_CARD_THEMES.length];
-            const cleanTitle = char.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
+            const cleanTitle = item.name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '').trim();
 
             return (
               <CarouselItem
-                key={`${char.id || char.name}-${idx}`}
-                className="pl-2.5 sm:pl-4 basis-[70%] sm:basis-[52%] md:basis-[38%] lg:basis-[30%] xl:basis-[35%] max-w-[290px] sm:max-w-[500px] md:max-w-[340px]"
+                key={`${item.id || item.name}-${idx}`}
+                className="pl-2.5 sm:pl-4 basis-[70%] sm:basis-[52%] md:basis-[38%] lg:basis-[30%] xl:basis-[25%] max-w-[290px] sm:max-w-[500px] md:max-w-[340px]"
               >
                 <div
                   onClick={() => {
                     if (idx === selectedIndex) {
-                      onSelectPreview(char);
+                      onSelectPreview(item);
                     } else if (api) {
                       api.scrollTo(idx);
                     }
@@ -305,7 +342,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                   <div className="w-[58%] sm:w-[58%] p-2.5 sm:p-6 md:p-4 flex flex-col justify-between z-10 shrink-0">
                     <div className="flex items-center gap-1">
                       <span className={`text-[8px] sm:text-xs font-black uppercase tracking-wider truncate ${theme.brand}`}>
-                        NextAiChat <span className="opacity-40">|</span> {char.badge || "Story"}
+                        NextAiChat <span className="opacity-40">|</span> {item.badge || "Story"}
                       </span>
                     </div>
 
@@ -314,7 +351,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                         {cleanTitle}
                       </h4>
                       <p className={`text-[9px] sm:text-xs font-medium line-clamp-1 sm:line-clamp-2 leading-tight ${theme.subText}`}>
-                        {char.tagline}
+                        {item.tagline}
                       </p>
                     </div>
 
@@ -327,7 +364,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                       </button>
 
                       <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-black/20 text-white/90 backdrop-blur-sm">
-                        ★ {char.rating || "4.9"}
+                        ★ {item.rating || "4.9"}
                       </span>
                     </div>
                   </div>
@@ -335,8 +372,8 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                   {/* Right Image Column (Fills width and height of container) */}
                   <div className="w-[42%] sm:w-[42%] h-full relative overflow-hidden shrink-0 rounded-r-[24px] sm:rounded-r-[32px]">
                     <img
-                      src={char.avatar}
-                      alt={char.name}
+                      src={item.avatar}
+                      alt={item.name}
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 rounded-r-[24px] sm:rounded-r-[32px]"
                     />
                     <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-black/25 via-black/10 to-transparent pointer-events-none" />
@@ -348,18 +385,20 @@ function SliderCarouselSection({ items, onSelectPreview }) {
         </CarouselContent>
 
         {/* Carousel Pagination Dots */}
-        <div className="flex items-center justify-center gap-1.5 mt-3">
-          {baseItems.map((_, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => api?.scrollTo(idx)}
-              className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === selectedIndex ? "w-6 bg-pink-500" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
-                }`}
-              aria-label={`Go to slide ${idx + 1}`}
-            />
-          ))}
-        </div>
+        {!fetching && (
+          <div className="flex items-center justify-center gap-1.5 mt-3">
+            {baseItems.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => api?.scrollTo(idx)}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === selectedIndex ? "w-6 bg-pink-500" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
+                  }`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
+          </div>
+        )}
       </Carousel>
     </div>
   );
@@ -677,7 +716,7 @@ export default function HomeDiscoveryView({
 
       {/* Featured Slider Carousel Section */}
       {(selectedFilter === "All Showcase" || selectedFilter === "all" || selectedFilter === "slider") && !searchQuery && (
-        <SliderCarouselSection items={displayCharacters} onSelectPreview={setSelectedCharPreview} />
+        <SliderCarouselSection items={displayCharacters} onSelectPreview={setSelectedCharPreview} fetching={fetching} />
       )}
 
       {/* Hero Showcase Banner (Desktop Only - Ultra-Slim Header) */}
