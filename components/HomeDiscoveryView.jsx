@@ -246,7 +246,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
   if (!baseItems || baseItems.length === 0) return null;
 
   return (
-    <div className="space-y-3 my-2 font-sans select-none overflow-hidden">
+    <div className="space-y-3 my-2 font-sans select-none overflow-hidden -mx-4 px-4 sm:mx-0 sm:px-0">
       <Carousel
         setApi={setApi}
         opts={{
@@ -258,7 +258,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
         className="w-full relative"
       >
         {/* Header Row */}
-        <div className="flex items-center justify-between px-1 mb-2">
+        <div className="flex items-center justify-between px-4 sm:px-1 mb-2">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />
             <h3 className="text-base md:text-lg font-black text-white tracking-wide">
@@ -272,7 +272,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
         </div>
 
         {/* Carousel Content */}
-        <CarouselContent className="-ml-3 sm:-ml-5">
+        <CarouselContent className="-ml-2.5 sm:-ml-4">
           {baseItems.map((char, idx) => {
             const isCenter = idx === selectedIndex;
             const theme = SLIDER_CARD_THEMES[idx % SLIDER_CARD_THEMES.length];
@@ -281,7 +281,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
             return (
               <CarouselItem
                 key={`${char.id || char.name}-${idx}`}
-                className="pl-3 sm:pl-5 basis-[78%] sm:basis-[55%] md:basis-[48%] max-w-[320px] sm:max-w-[540px]"
+                className="pl-2.5 sm:pl-4 basis-[70%] sm:basis-[52%] md:basis-[46%] max-w-[290px] sm:max-w-[540px]"
               >
                 <div
                   onClick={() => {
@@ -299,7 +299,7 @@ function SliderCarouselSection({ items, onSelectPreview }) {
                   className={`relative transition-all duration-500 ease-out cursor-pointer rounded-[24px] sm:rounded-[32px] overflow-hidden flex flex-row h-[145px] sm:h-[220px] ${theme.bg} ${
                     isCenter
                       ? "scale-100 opacity-100 z-20 ring-2 ring-white/20 shadow-2xl shadow-black/50"
-                      : "scale-[0.92] opacity-75 z-10 shadow-lg"
+                      : "scale-[0.90] opacity-75 z-10 shadow-lg"
                   }`}
                 >
                   {/* Left Content Column */}
