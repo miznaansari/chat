@@ -35,6 +35,7 @@ import {
   Square,
   MicOff,
   Volume2,
+  Check,
 } from "lucide-react";
 
 // Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
@@ -549,11 +550,30 @@ export default function ChatView({
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
+  const [pendingTranscript, setPendingTranscript] = useState(null);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
   const mediaStreamRef = useRef(null);
   const timerIntervalRef = useRef(null);
   const shouldTranscribeRef = useRef(true);
+
+  const handleAcceptTranscript = () => {
+    if (pendingTranscript) {
+      setInputPrompt((prev) => {
+        const text = pendingTranscript.trim();
+        if (!prev || !prev.trim()) return text;
+        return `${prev.trim()} ${text}`;
+      });
+      setPendingTranscript(null);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }
+  };
+
+  const handleRejectTranscript = () => {
+    setPendingTranscript(null);
+  };
 
   // Clean up media streams and interval on component unmount
   useEffect(() => {
@@ -651,15 +671,12 @@ export default function ChatView({
           });
 
           const data = await res.json();
-          if (res.ok && data.transcript) {
-            setInputPrompt((prev) => {
-              const text = data.transcript.trim();
-              if (!prev || !prev.trim()) return text;
-              return `${prev.trim()} ${text}`;
-            });
-
-            if (textareaRef.current) {
-              textareaRef.current.focus();
+          if (res.ok && typeof data.transcript === "string") {
+            const cleanText = data.transcript.trim();
+            if (cleanText) {
+              setPendingTranscript(cleanText);
+            } else {
+              alert("No speech recognized. Please speak clearly into your microphone and try again.");
             }
           } else {
             console.error("STT Failed:", data);
@@ -2393,6 +2410,48 @@ export default function ChatView({
       {/* Solid Fixed Bottom Input Capsule Bar Container */}
       <div className="solid-fixed-footer border-t border-neutral-800/80 p-3 md:px-8 w-full bg-neutral-950">
         <div className="max-w-4xl mx-auto w-full">
+          {/* Transcribed Text Review Card (Accept / Discard Option) */}
+          {pendingTranscript && !isRecording && !isTranscribing && (
+            <div className="w-full bg-neutral-900/95 border border-emerald-500/50 rounded-2xl p-3 px-4 mb-2 shadow-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 backdrop-blur-xl">
+              <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                <div className="w-7 h-7 rounded-lg bg-emerald-950/90 border border-emerald-500/40 flex items-center justify-center text-emerald-400 shrink-0 mt-0.5 sm:mt-0">
+                  <Sparkles className="w-3.5 h-3.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="font-bold text-xs text-emerald-300 uppercase tracking-wider">
+                      Voice Transcription Preview:
+                    </span>
+                  </div>
+                  <p className="text-xs text-white bg-neutral-950/80 border border-neutral-800 p-2 rounded-xl font-medium leading-relaxed italic max-h-24 overflow-y-auto">
+                    "{pendingTranscript}"
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={handleAcceptTranscript}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:opacity-90 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-900/40 cursor-pointer active:scale-95 transition-all"
+                  title="Accept & Add to prompt"
+                >
+                  <Check className="w-4 h-4" />
+                  <span>Accept & Insert</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleRejectTranscript}
+                  className="px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white font-semibold text-xs flex items-center gap-1 cursor-pointer transition-colors"
+                  title="Discard wrong transcription"
+                >
+                  <X className="w-4 h-4 text-red-400" />
+                  <span>Discard</span>
+                </button>
+              </div>
+            </div>
+          )}
           {/* Speech Recording & Transcribing Banner */}
           {(isRecording || isTranscribing) && (
             <div className="w-full bg-neutral-900/95 border border-purple-500/40 rounded-2xl p-3 px-4 mb-2 shadow-2xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 backdrop-blur-xl">
