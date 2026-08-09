@@ -2026,6 +2026,57 @@ export default function ChatView({
         </div>
       </div>
 
+      {/* Batch Messages Fixed Action Header Bar (Floats under header without shifting chat scroll height) */}
+      {isBatchSelectMessages && (
+        <div className="z-30 bg-purple-950/95 border-b border-purple-700/80 p-2.5 px-4 backdrop-blur-md shadow-xl flex items-center justify-between gap-2 text-xs animate-in fade-in slide-in-from-top-2 duration-150 select-none">
+          <div className="max-w-4xl mx-auto w-full flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={toggleSelectAllMessages}
+                className="text-xs font-semibold text-purple-300 hover:text-white flex items-center gap-1 cursor-pointer shrink-0"
+              >
+                <CheckSquare className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                <span className="hidden sm:inline">
+                  {selectedMsgIds.size === messages.length ? "Deselect All" : "Select All"}
+                </span>
+                <span className="sm:hidden">
+                  {selectedMsgIds.size === messages.length ? "None" : "All"}
+                </span>
+              </button>
+              <span className="text-[11px] text-purple-300/80 font-mono shrink-0">
+                <span className="hidden sm:inline">({selectedMsgIds.size} of {messages.length} selected)</span>
+                <span className="sm:hidden">({selectedMsgIds.size})</span>
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+              <button
+                type="button"
+                disabled={selectedMsgIds.size === 0}
+                onClick={() => setShowBatchDeleteModal(true)}
+                className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40 transition-all cursor-pointer shadow-md"
+              >
+                <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Delete Selected ({selectedMsgIds.size})</span>
+                <span className="sm:hidden">Delete ({selectedMsgIds.size})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsBatchSelectMessages(false);
+                  setSelectedMsgIds(new Set());
+                }}
+                className="px-2 sm:px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-medium transition-colors cursor-pointer"
+              >
+                <span className="hidden sm:inline">Cancel</span>
+                <span className="sm:hidden">✕</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
 
 
       {/* Context Window Detailed Circular Gauge & Dashboard Banner */}
@@ -2298,55 +2349,6 @@ export default function ChatView({
           </div>
         ) : (
           <>
-            {/* Batch Messages Floating Action Bar */}
-            {isBatchSelectMessages && (
-              <div className="sticky top-2 z-30 max-w-3xl mx-auto my-2 p-2 px-3 sm:px-4 rounded-2xl bg-purple-950/95 border border-purple-700/80 backdrop-blur-md shadow-2xl flex items-center justify-between gap-1.5 sm:gap-3 text-xs animate-in fade-in duration-200">
-                <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-                  <button
-                    type="button"
-                    onClick={toggleSelectAllMessages}
-                    className="text-xs font-semibold text-purple-300 hover:text-white flex items-center gap-1 cursor-pointer shrink-0"
-                  >
-                    <CheckSquare className="w-3.5 h-3.5 text-purple-400 shrink-0" />
-                    <span className="hidden sm:inline">
-                      {selectedMsgIds.size === messages.length ? "Deselect All" : "Select All"}
-                    </span>
-                    <span className="sm:hidden">
-                      {selectedMsgIds.size === messages.length ? "None" : "All"}
-                    </span>
-                  </button>
-                  <span className="text-[11px] text-purple-300/80 font-mono shrink-0">
-                    <span className="hidden sm:inline">({selectedMsgIds.size} of {messages.length} selected)</span>
-                    <span className="sm:hidden">({selectedMsgIds.size})</span>
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                  <button
-                    type="button"
-                    disabled={selectedMsgIds.size === 0}
-                    onClick={() => setShowBatchDeleteModal(true)}
-                    className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs flex items-center gap-1.5 disabled:opacity-40 transition-all cursor-pointer shadow-md"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
-                    <span className="hidden sm:inline">Delete Selected ({selectedMsgIds.size})</span>
-                    <span className="sm:hidden">Delete ({selectedMsgIds.size})</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsBatchSelectMessages(false);
-                      setSelectedMsgIds(new Set());
-                    }}
-                    className="px-2 sm:px-3 py-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs font-medium transition-colors cursor-pointer"
-                  >
-                    <span className="hidden sm:inline">Cancel</span>
-                    <span className="sm:hidden">✕</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
             {messages.length > visibleCount && (
               <div className="flex justify-center my-3">
                 <button
@@ -2375,12 +2377,20 @@ export default function ChatView({
                   isSelected={selectedMsgIds.has(msg.id)}
                   onToggleSelect={toggleSelectMessage}
                   onLongPressSelect={(msgId) => {
+                    const currentScroll = chatContainerRef.current ? chatContainerRef.current.scrollTop : null;
                     setIsBatchSelectMessages(true);
                     setSelectedMsgIds((prev) => {
                       const next = new Set(prev);
                       next.add(msgId);
                       return next;
                     });
+                    if (currentScroll !== null && chatContainerRef.current) {
+                      requestAnimationFrame(() => {
+                        if (chatContainerRef.current) {
+                          chatContainerRef.current.scrollTop = currentScroll;
+                        }
+                      });
+                    }
                   }}
                 />
               );
