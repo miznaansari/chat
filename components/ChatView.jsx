@@ -36,6 +36,7 @@ import {
   MicOff,
   Volume2,
   Check,
+  Copy,
 } from "lucide-react";
 
 // Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
@@ -364,6 +365,27 @@ const ChatMessageItem = memo(function ChatMessageItem({
 }) {
   const isUser = msg.role === "user";
   const touchTimerRef = useRef(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyText = async (textToCopy) => {
+    if (!textToCopy) return;
+    try {
+      if (typeof window !== "undefined" && navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(textToCopy);
+      } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = textToCopy;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy text:", err);
+    }
+  };
 
   const charBlocks = useMemo(
     () => (!isUser ? parseCharacterSpeechBlocks(msg.content) : []),
@@ -443,6 +465,19 @@ const ChatMessageItem = memo(function ChatMessageItem({
                 Excluded from AI context
               </span>
             )}
+
+            {/* Copy Message Text Button */}
+            <button
+              onClick={() => handleCopyText(msg.content)}
+              className="p-1 rounded text-neutral-500 hover:text-purple-300 hover:bg-neutral-900 transition-colors cursor-pointer"
+              title={copied ? "Copied to clipboard!" : "Copy message text"}
+            >
+              {copied ? (
+                <Check className="w-3.5 h-3.5 text-emerald-400" />
+              ) : (
+                <Copy className="w-3.5 h-3.5" />
+              )}
+            </button>
 
             <button
               disabled={isToggling}
