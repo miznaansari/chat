@@ -32,6 +32,9 @@ import {
   CheckSquare,
   AlertTriangle,
   UserCheck,
+  Square,
+  MicOff,
+  Volume2,
 } from "lucide-react";
 
 // Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
@@ -544,6 +547,168 @@ export default function ChatView({
   const [mobileTipIndex, setMobileTipIndex] = useState(0);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+
+  // Speech-to-text recording states & refs
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const mediaStreamRef = useRef(null);
+  const timerIntervalRef = useRef(null);
+  const shouldTranscribeRef = useRef(true);
+
+  // Clean up media streams and interval on component unmount
+  useEffect(() => {
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      if (mediaStreamRef.current) {
+        mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, []);
+
+  const formatDuration = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const handleStartRecording = async () => {
+    if (typeof window === "undefined" || !navigator.mediaDevices?.getUserMedia) {
+      alert("Speech recording is not supported in your browser.");
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+
+      let options = {};
+      if (typeof MediaRecorder !== "undefined") {
+        if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+          options = { mimeType: "audio/webm;codecs=opus" };
+        } else if (MediaRecorder.isTypeSupported("audio/webm")) {
+          options = { mimeType: "audio/webm" };
+        } else if (MediaRecorder.isTypeSupported("audio/mp4")) {
+          options = { mimeType: "audio/mp4" };
+        } else if (MediaRecorder.isTypeSupported("audio/ogg")) {
+          options = { mimeType: "audio/ogg" };
+        }
+      }
+
+      const mediaRecorder = new MediaRecorder(stream, options);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      shouldTranscribeRef.current = true;
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        if (timerIntervalRef.current) {
+          clearInterval(timerIntervalRef.current);
+          timerIntervalRef.current = null;
+        }
+
+        if (mediaStreamRef.current) {
+          mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+          mediaStreamRef.current = null;
+        }
+
+        if (!shouldTranscribeRef.current) {
+          setIsRecording(false);
+          setRecordingDuration(0);
+          return;
+        }
+
+        const rawMimeType = mediaRecorder.mimeType || "audio/webm";
+        const cleanMimeType = rawMimeType.split(";")[0].trim() || "audio/webm";
+        const audioBlob = new Blob(audioChunksRef.current, { type: cleanMimeType });
+
+        setIsRecording(false);
+
+        if (audioBlob.size < 500) {
+          setRecordingDuration(0);
+          alert("Recording too short. Please speak clearly for at least 1-2 seconds.");
+          return;
+        }
+
+        // Call Sarvam AI Speech-to-Text API route
+        setIsTranscribing(true);
+        try {
+          const fileExtension = cleanMimeType.includes("mp4") ? "mp4" : cleanMimeType.includes("ogg") ? "ogg" : cleanMimeType.includes("wav") ? "wav" : "webm";
+          const audioFile = new File([audioBlob], `recording.${fileExtension}`, { type: cleanMimeType });
+          const formData = new FormData();
+          formData.append("file", audioFile);
+          formData.append("model", "saaras:v3");
+          formData.append("mode", "transcribe");
+          formData.append("language_code", "en-IN");
+
+          const res = await fetch("/api/speech-to-text", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();
+          if (res.ok && data.transcript) {
+            setInputPrompt((prev) => {
+              const text = data.transcript.trim();
+              if (!prev || !prev.trim()) return text;
+              return `${prev.trim()} ${text}`;
+            });
+
+            if (textareaRef.current) {
+              textareaRef.current.focus();
+            }
+          } else {
+            console.error("STT Failed:", data);
+            alert("Speech to text failed: " + (data.error || "Could not transcribe audio."));
+          }
+        } catch (err) {
+          console.error("STT Error:", err);
+          alert("Failed to send audio for transcription: " + err.message);
+        } finally {
+          setIsTranscribing(false);
+          setRecordingDuration(0);
+        }
+      };
+
+      mediaRecorder.start(200);
+      setIsRecording(true);
+      setRecordingDuration(0);
+
+      timerIntervalRef.current = setInterval(() => {
+        setRecordingDuration((prev) => prev + 1);
+      }, 1000);
+    } catch (err) {
+      console.error("Microphone access error:", err);
+      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+        alert("Microphone access was denied. Please allow microphone permissions in your browser to use voice input.");
+      } else {
+        alert("Could not access microphone: " + err.message);
+      }
+    }
+  };
+
+  const handleStopRecording = () => {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      shouldTranscribeRef.current = true;
+      mediaRecorderRef.current.stop();
+    }
+  };
+
+  const handleCancelRecording = () => {
+    shouldTranscribeRef.current = false;
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      mediaRecorderRef.current.stop();
+    }
+    setIsRecording(false);
+    setRecordingDuration(0);
+  };
 
   // Auto-swipe mobile story tips every 3 seconds
   useEffect(() => {
@@ -2235,6 +2400,75 @@ export default function ChatView({
       {/* Solid Fixed Bottom Input Capsule Bar Container */}
       <div className="solid-fixed-footer border-t border-neutral-800/80 p-3 md:px-8 w-full bg-neutral-950">
         <div className="max-w-4xl mx-auto w-full">
+          {/* Speech Recording & Transcribing Banner */}
+          {(isRecording || isTranscribing) && (
+            <div className="w-full bg-neutral-900/95 border border-purple-500/40 rounded-2xl p-3 px-4 mb-2 shadow-2xl flex items-center justify-between gap-3 animate-in fade-in slide-in-from-bottom-2 backdrop-blur-xl">
+              <div className="flex items-center gap-3 min-w-0">
+                {isRecording ? (
+                  <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-red-950/80 border border-red-500/50 text-red-500 shrink-0">
+                    <span className="w-3 h-3 rounded-full bg-red-500 animate-ping absolute" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 relative" />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-purple-950/80 border border-purple-500/50 flex items-center justify-center text-purple-400 shrink-0">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </div>
+                )}
+
+                <div className="min-w-0 flex flex-col">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-xs text-white">
+                      {isRecording ? "Listening & Recording..." : "Transcribing with Sarvam AI..."}
+                    </span>
+                    {isRecording && (
+                      <span className="text-[11px] font-mono font-bold px-2 py-0.5 rounded-md bg-red-950/80 border border-red-800 text-red-300">
+                        {formatDuration(recordingDuration)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-neutral-400 truncate">
+                    {isRecording ? "Speak clearly into your microphone. Tap stop when finished." : "Processing speech-to-text..."}
+                  </p>
+                </div>
+
+                {/* Soundwave equalizer bars */}
+                {isRecording && (
+                  <div className="hidden sm:flex items-center gap-1 h-5 px-2 shrink-0">
+                    <span className="w-1 bg-red-500 rounded-full h-3 animate-pulse" style={{ animationDuration: "0.5s" }} />
+                    <span className="w-1 bg-purple-400 rounded-full h-5 animate-pulse" style={{ animationDuration: "0.35s" }} />
+                    <span className="w-1 bg-cyan-400 rounded-full h-2.5 animate-pulse" style={{ animationDuration: "0.7s" }} />
+                    <span className="w-1 bg-amber-400 rounded-full h-4 animate-pulse" style={{ animationDuration: "0.45s" }} />
+                    <span className="w-1 bg-emerald-400 rounded-full h-3 animate-pulse" style={{ animationDuration: "0.6s" }} />
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                {isRecording && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={handleStopRecording}
+                      className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:opacity-90 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-red-900/40 cursor-pointer active:scale-95 transition-all"
+                      title="End recording and transcribe"
+                    >
+                      <Square className="w-3.5 h-3.5 fill-current" />
+                      <span>Stop & Transcribe</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleCancelRecording}
+                      className="p-1.5 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                      title="Cancel recording"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
           {/* Focused Keyboard Slide-Up & Slide-Down Toolbar with Smooth Ease Animation */}
           <div
             className={`w-full overflow-hidden transition-all duration-300 ease-in-out select-none ${
@@ -2501,12 +2735,36 @@ export default function ChatView({
             />
 
             <div className="flex items-center gap-1 shrink-0 mb-1">
-              <Tooltip content="Speech Voice Input" position="top" badgeIcon="🎙️">
+              <Tooltip
+                content={
+                  isRecording
+                    ? "Stop & Transcribe Voice"
+                    : isTranscribing
+                      ? "Transcribing Audio..."
+                      : "Speech Voice Input"
+                }
+                position="top"
+                badgeIcon="🎙️"
+              >
                 <button
                   type="button"
-                  className="w-8 h-8 rounded-full hover:bg-neutral-800 flex items-center justify-center text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                  disabled={isTranscribing}
+                  onClick={isRecording ? handleStopRecording : handleStartRecording}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
+                    isRecording
+                      ? "bg-red-600 hover:bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.6)] ring-2 ring-red-400/50"
+                      : isTranscribing
+                        ? "bg-purple-950 text-purple-400 opacity-80 cursor-wait"
+                        : "hover:bg-neutral-800 text-neutral-400 hover:text-white"
+                  }`}
                 >
-                  <Mic className="w-4 h-4" />
+                  {isTranscribing ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
+                  ) : isRecording ? (
+                    <Square className="w-3.5 h-3.5 fill-current" />
+                  ) : (
+                    <Mic className="w-4 h-4" />
+                  )}
                 </button>
               </Tooltip>
 
