@@ -374,7 +374,7 @@ const ChatMessageItem = memo(function ChatMessageItem({
       if (typeof window !== "undefined" && window.navigator?.vibrate) {
         try {
           window.navigator.vibrate(40);
-        } catch (e) {}
+        } catch (e) { }
       }
       if (onLongPressSelect) {
         onLongPressSelect(msg.id);
@@ -403,15 +403,12 @@ const ChatMessageItem = memo(function ChatMessageItem({
       onTouchEnd={handleTouchEnd}
       onTouchMove={handleTouchMove}
       onClick={isBatchMode ? () => onToggleSelect(msg.id) : undefined}
-      className={`flex gap-3 max-w-3xl mx-auto group transition-all duration-150 rounded-2xl p-1.5 ${
-        isUser ? "justify-end" : "justify-start"
-      } ${
-        isBatchMode ? "cursor-pointer hover:bg-neutral-900/60 select-none" : ""
-      } ${
-        isSelected
+      className={`flex gap-3 max-w-3xl mx-auto group transition-all duration-150 rounded-2xl p-1.5 ${isUser ? "justify-end" : "justify-start"
+        } ${isBatchMode ? "cursor-pointer hover:bg-neutral-900/60 select-none" : ""
+        } ${isSelected
           ? "bg-purple-950/40 border-2 border-purple-500/80 shadow-[0_0_15px_rgba(168,85,247,0.25)]"
           : "border-2 border-transparent"
-      }`}
+        }`}
     >
       {isBatchMode && (
         <div className="flex items-center justify-center shrink-0 pt-2 px-1">
@@ -1649,11 +1646,10 @@ export default function ChatView({
                     handleModelChangeInChat("gemini-3.5-flash-lite");
                     setShowMobileModelDropdown(false);
                   }}
-                  className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                    activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel
+                  className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel
                       ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
                       : "text-neutral-300 hover:bg-neutral-800"
-                  }`}
+                    }`}
                 >
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1.5">
@@ -1673,11 +1669,10 @@ export default function ChatView({
                     handleModelChangeInChat("gemini-3.1-flash-lite");
                     setShowMobileModelDropdown(false);
                   }}
-                  className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${
-                    activeChat?.selectedModel === "gemini-3.1-flash-lite"
+                  className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${activeChat?.selectedModel === "gemini-3.1-flash-lite"
                       ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
                       : "text-neutral-300 hover:bg-neutral-800"
-                  }`}
+                    }`}
                 >
                   <div className="flex flex-col">
                     <div className="flex items-center gap-1.5">
@@ -1758,8 +1753,8 @@ export default function ChatView({
                       setShowLengthDropdown(false);
                     }}
                     className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${responseLength === item.id
-                        ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
-                        : "text-neutral-300 hover:bg-neutral-800 hover:text-white"
+                      ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
+                      : "text-neutral-300 hover:bg-neutral-800 hover:text-white"
                       }`}
                   >
                     <div className="flex items-center gap-2">
@@ -2120,11 +2115,10 @@ export default function ChatView({
                     key={item.id}
                     type="button"
                     onClick={() => handleSetResponseLength(item.id)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 border shadow-sm active:scale-95 ${
-                      responseLength === item.id
+                    className={`px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 border shadow-sm active:scale-95 ${responseLength === item.id
                         ? "bg-purple-950 border-purple-500 text-purple-200 shadow-purple-500/20 shadow-md ring-1 ring-purple-500/60"
                         : "bg-neutral-900/90 border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700"
-                    }`}
+                      }`}
                   >
                     <span>{item.label}</span>
                     {responseLength === item.id && (
@@ -2153,9 +2147,8 @@ export default function ChatView({
                       key={idx}
                       type="button"
                       onClick={() => setMobileTipIndex(idx)}
-                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                        mobileTipIndex === idx ? "w-4 bg-purple-400" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
-                      }`}
+                      className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${mobileTipIndex === idx ? "w-4 bg-purple-400" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
+                        }`}
                     />
                   ))}
                 </div>
@@ -2453,7 +2446,7 @@ export default function ChatView({
                       title="End recording and transcribe"
                     >
                       <Square className="w-3.5 h-3.5 fill-current" />
-                      <span>Stop & Transcribe</span>
+                      <span>Stop </span>
                     </button>
 
                     <button
@@ -2471,11 +2464,10 @@ export default function ChatView({
           )}
           {/* Focused Keyboard Slide-Up & Slide-Down Toolbar with Smooth Ease Animation */}
           <div
-            className={`w-full overflow-hidden transition-all duration-300 ease-in-out select-none ${
-              isInputFocused
+            className={`w-full overflow-hidden transition-all duration-300 ease-in-out select-none ${isInputFocused
                 ? "max-h-16 opacity-100 py-1.5 mb-2 translate-y-0"
                 : "max-h-0 opacity-0 py-0 mb-0 translate-y-2 pointer-events-none"
-            }`}
+              }`}
           >
             <div className="w-full px-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
               <div className="flex items-center gap-1.5 shrink-0">
@@ -2750,13 +2742,12 @@ export default function ChatView({
                   type="button"
                   disabled={isTranscribing}
                   onClick={isRecording ? handleStopRecording : handleStartRecording}
-                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${
-                    isRecording
+                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${isRecording
                       ? "bg-red-600 hover:bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.6)] ring-2 ring-red-400/50"
                       : isTranscribing
                         ? "bg-purple-950 text-purple-400 opacity-80 cursor-wait"
                         : "hover:bg-neutral-800 text-neutral-400 hover:text-white"
-                  }`}
+                    }`}
                 >
                   {isTranscribing ? (
                     <Loader2 className="w-4 h-4 animate-spin text-purple-400" />
