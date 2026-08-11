@@ -598,6 +598,23 @@ export default function ChatView({
   const timerIntervalRef = useRef(null);
   const shouldTranscribeRef = useRef(true);
   const isRecordingRef = useRef(false);
+  const startIndexRef = useRef(0);
+
+  const handleTextChange = (val) => {
+    setInputPrompt(val);
+
+    if (isRecordingRef.current) {
+      initialPromptRef.current = val.trim() ? val : "";
+      if (speechRecognitionRef.current) {
+        try {
+          if (speechRecognitionRef.current.results) {
+            startIndexRef.current = speechRecognitionRef.current.results.length;
+          }
+          speechRecognitionRef.current.stop();
+        } catch (e) {}
+      }
+    }
+  };
 
   // Clean up media streams, interval timer, and speech recognition on unmount
   useEffect(() => {
@@ -609,7 +626,7 @@ export default function ChatView({
       if (speechRecognitionRef.current) {
         try {
           speechRecognitionRef.current.stop();
-        } catch (e) {}
+        } catch (e) { }
       }
     };
   }, []);
@@ -649,6 +666,7 @@ export default function ChatView({
       shouldTranscribeRef.current = true;
       setLiveTranscript("");
       initialPromptRef.current = inputPrompt;
+      startIndexRef.current = 0;
 
       // Start browser Web Speech API for real-time live transcript streaming
       const SpeechRecognition =
@@ -666,7 +684,8 @@ export default function ChatView({
             let finalTranscript = "";
             let interimTranscript = "";
 
-            for (let i = 0; i < event.results.length; ++i) {
+            const startIdx = startIndexRef.current || 0;
+            for (let i = startIdx; i < event.results.length; ++i) {
               if (event.results[i].isFinal) {
                 finalTranscript += event.results[i][0].transcript + " ";
               } else {
@@ -677,7 +696,7 @@ export default function ChatView({
             const fullLiveText = (finalTranscript + interimTranscript).trim();
             setLiveTranscript(fullLiveText);
 
-            if (autoFillLiveTranscript && fullLiveText) {
+            if (fullLiveText) {
               setInputPrompt(() => {
                 const prefix = initialPromptRef.current ? initialPromptRef.current.trim() + " " : "";
                 return prefix + fullLiveText;
@@ -693,6 +712,7 @@ export default function ChatView({
             // Keep continuous speech recognition alive if user has not explicitly stopped recording
             if (isRecordingRef.current) {
               try {
+                startIndexRef.current = 0;
                 recognition.start();
               } catch (e) {}
             }
@@ -724,7 +744,7 @@ export default function ChatView({
         if (speechRecognitionRef.current) {
           try {
             speechRecognitionRef.current.stop();
-          } catch (e) {}
+          } catch (e) { }
           speechRecognitionRef.current = null;
         }
 
@@ -849,7 +869,7 @@ export default function ChatView({
     if (speechRecognitionRef.current) {
       try {
         speechRecognitionRef.current.stop();
-      } catch (e) {}
+      } catch (e) { }
     }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
       shouldTranscribeRef.current = true;
@@ -864,7 +884,7 @@ export default function ChatView({
     if (speechRecognitionRef.current) {
       try {
         speechRecognitionRef.current.stop();
-      } catch (e) {}
+      } catch (e) { }
       speechRecognitionRef.current = null;
     }
     if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
@@ -1335,24 +1355,25 @@ export default function ChatView({
     setInputPrompt("");
     setLiveTranscript("");
     initialPromptRef.current = "";
+    startIndexRef.current = 0;
 
     // If live speech recording is active, keep recording OPEN for continuous listening across messages
     if (isRecordingRef.current && speechRecognitionRef.current) {
       try {
         speechRecognitionRef.current.stop(); // Triggers onend which restarts recognition cleanly for the next phrase
-      } catch (e) {}
+      } catch (e) { }
     } else {
       shouldTranscribeRef.current = false;
       if (speechRecognitionRef.current) {
         try {
           speechRecognitionRef.current.stop();
-        } catch (e) {}
+        } catch (e) { }
         speechRecognitionRef.current = null;
       }
       if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
         try {
           mediaRecorderRef.current.stop();
-        } catch (e) {}
+        } catch (e) { }
       }
       setIsRecording(false);
       setIsTranscribing(false);
@@ -1843,8 +1864,8 @@ export default function ChatView({
                     setShowMobileModelDropdown(false);
                   }}
                   className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${activeChat?.selectedModel === "gemini-3.5-flash-lite" || !activeChat?.selectedModel
-                      ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
-                      : "text-neutral-300 hover:bg-neutral-800"
+                    ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
+                    : "text-neutral-300 hover:bg-neutral-800"
                     }`}
                 >
                   <div className="flex flex-col">
@@ -1866,8 +1887,8 @@ export default function ChatView({
                     setShowMobileModelDropdown(false);
                   }}
                   className={`w-full px-3 py-2 rounded-xl text-left font-medium text-xs flex items-center justify-between transition-colors cursor-pointer ${activeChat?.selectedModel === "gemini-3.1-flash-lite"
-                      ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
-                      : "text-neutral-300 hover:bg-neutral-800"
+                    ? "bg-purple-950/80 border border-purple-800/80 text-purple-300 font-semibold"
+                    : "text-neutral-300 hover:bg-neutral-800"
                     }`}
                 >
                   <div className="flex flex-col">
@@ -2363,8 +2384,8 @@ export default function ChatView({
                     type="button"
                     onClick={() => handleSetResponseLength(item.id)}
                     className={`px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer flex items-center gap-1.5 border shadow-sm active:scale-95 ${responseLength === item.id
-                        ? "bg-purple-950 border-purple-500 text-purple-200 shadow-purple-500/20 shadow-md ring-1 ring-purple-500/60"
-                        : "bg-neutral-900/90 border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700"
+                      ? "bg-purple-950 border-purple-500 text-purple-200 shadow-purple-500/20 shadow-md ring-1 ring-purple-500/60"
+                      : "bg-neutral-900/90 border-neutral-800 text-neutral-400 hover:text-white hover:border-neutral-700"
                       }`}
                   >
                     <span>{item.label}</span>
@@ -2630,7 +2651,7 @@ export default function ChatView({
                     <p className="text-[11px] text-neutral-400 truncate">
                       {isRecording
                         ? liveSupported
-                          ? "Speak into your microphone. Spoken words appear live below!"
+                          ? "Speak into your microphone. Words appear live in your text area!"
                           : "Speak clearly into your microphone. Audio processing on stop."
                         : "Processing high-precision speech-to-text..."}
                     </p>
@@ -2653,20 +2674,6 @@ export default function ChatView({
                     <>
                       <button
                         type="button"
-                        onClick={() => setAutoFillLiveTranscript((prev) => !prev)}
-                        className={`hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-semibold border transition-all cursor-pointer ${
-                          autoFillLiveTranscript
-                            ? "bg-purple-950/80 border-purple-500/60 text-purple-300"
-                            : "bg-neutral-800 border-neutral-700 text-neutral-400 hover:text-white"
-                        }`}
-                        title="Toggle Auto-Fill into Chat Input"
-                      >
-                        <Sparkles className="w-3 h-3 text-amber-400" />
-                        <span>Auto-fill: {autoFillLiveTranscript ? "ON" : "OFF"}</span>
-                      </button>
-
-                      <button
-                        type="button"
                         onClick={handleStopRecording}
                         className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:opacity-90 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-red-900/40 cursor-pointer active:scale-95 transition-all"
                         title="End recording and transcribe"
@@ -2687,50 +2694,13 @@ export default function ChatView({
                   )}
                 </div>
               </div>
-
-              {/* Real-time Live Transcript Preview Box */}
-              {isRecording && (
-                <div className="w-full bg-neutral-950/90 border border-purple-900/60 rounded-xl p-2.5 px-3">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-[10px] uppercase font-bold tracking-wider text-purple-400 flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-purple-400 animate-ping inline-block" />
-                      Live Audio Stream Transcript
-                    </span>
-                    {liveTranscript && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (liveTranscript) {
-                            setInputPrompt((prev) => (prev ? `${prev.trim()} ${liveTranscript}` : liveTranscript));
-                          }
-                        }}
-                        className="text-[10px] text-emerald-400 hover:underline font-semibold cursor-pointer"
-                      >
-                        + Insert Current Text
-                      </button>
-                    )}
-                  </div>
-                  <p className="text-xs text-neutral-200 font-sans italic leading-relaxed min-h-[24px]">
-                    {liveTranscript ? (
-                      <span>
-                        "{liveTranscript}"
-                        <span className="inline-block w-1.5 h-3.5 ml-1 bg-purple-400 animate-pulse align-middle" />
-                      </span>
-                    ) : (
-                      <span className="text-neutral-500 not-italic">
-                        Listening... Speak clearly into your mic to see live transcription here.
-                      </span>
-                    )}
-                  </p>
-                </div>
-              )}
             </div>
           )}
           {/* Focused Keyboard Slide-Up & Slide-Down Toolbar with Smooth Ease Animation */}
           <div
             className={`w-full overflow-hidden transition-all duration-300 ease-in-out select-none ${isInputFocused
-                ? "max-h-16 opacity-100 py-1.5 mb-2 translate-y-0"
-                : "max-h-0 opacity-0 py-0 mb-0 translate-y-2 pointer-events-none"
+              ? "max-h-16 opacity-100 py-1.5 mb-2 translate-y-0"
+              : "max-h-0 opacity-0 py-0 mb-0 translate-y-2 pointer-events-none"
               }`}
           >
             <div className="w-full px-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
@@ -2981,7 +2951,7 @@ export default function ChatView({
               ref={textareaRef}
               rows={1}
               value={inputPrompt}
-              onChange={(e) => setInputPrompt(e.target.value)}
+              onChange={(e) => handleTextChange(e.target.value)}
               onKeyDown={handleKeyDown}
               onFocus={() => setIsInputFocused(true)}
               onBlur={() => setTimeout(() => setIsInputFocused(false), 250)}
@@ -3007,10 +2977,10 @@ export default function ChatView({
                   disabled={isTranscribing}
                   onClick={isRecording ? handleStopRecording : handleStartRecording}
                   className={`w-8 h-8 rounded-full flex items-center justify-center transition-all cursor-pointer ${isRecording
-                      ? "bg-red-600 hover:bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.6)] ring-2 ring-red-400/50"
-                      : isTranscribing
-                        ? "bg-purple-950 text-purple-400 opacity-80 cursor-wait"
-                        : "hover:bg-neutral-800 text-neutral-400 hover:text-white"
+                    ? "bg-red-600 hover:bg-red-500 text-white animate-pulse shadow-[0_0_15px_rgba(239,68,68,0.6)] ring-2 ring-red-400/50"
+                    : isTranscribing
+                      ? "bg-purple-950 text-purple-400 opacity-80 cursor-wait"
+                      : "hover:bg-neutral-800 text-neutral-400 hover:text-white"
                     }`}
                 >
                   {isTranscribing ? (
