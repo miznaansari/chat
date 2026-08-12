@@ -361,7 +361,7 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const plugin = useRef(
-    Autoplay({ delay: 4000, stopOnInteraction: true, stopOnMouseEnter: true })
+    Autoplay({ delay: 3500, stopOnInteraction: true, stopOnMouseEnter: true })
   );
 
   let baseItems = items.filter((c) => c.category === "slider");
@@ -393,6 +393,7 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
           align: "center",
           loop: true,
           skipSnaps: false,
+          containScroll: "trimSnaps",
         }}
         plugins={fetching ? [] : [plugin.current]}
         className={`w-full relative ${fetching ? "pointer-events-none" : ""}`}
@@ -409,7 +410,7 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                 <div className="h-5 w-32 bg-neutral-900/60 rounded-md animate-pulse inline-block" />
               ) : (
                 <>
-                  <span>Trending 3D Roleplays</span>
+                  <span>Trending Roleplays</span>
                   <span className="text-xs font-extrabold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white uppercase tracking-wider shadow-md">
                     GEN Z 🔥
                   </span>
@@ -418,13 +419,13 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
             </h3>
           </div>
           <div className="flex items-center gap-1.5">
-            <CarouselPrevious className="static translate-y-0 bg-neutral-900/80 hover:bg-purple-600 text-white border-neutral-700/80 hover:border-purple-400 transition-all cursor-pointer" />
-            <CarouselNext className="static translate-y-0 bg-neutral-900/80 hover:bg-purple-600 text-white border-neutral-700/80 hover:border-purple-400 transition-all cursor-pointer" />
+            <CarouselPrevious className="static translate-y-0 bg-neutral-900/80 hover:bg-purple-600 text-white border-neutral-700/80 hover:border-purple-400 transition-colors cursor-pointer" />
+            <CarouselNext className="static translate-y-0 bg-neutral-900/80 hover:bg-purple-600 text-white border-neutral-700/80 hover:border-purple-400 transition-colors cursor-pointer" />
           </div>
         </div>
 
-        {/* Carousel Content Container with 3D Overflow */}
-        <CarouselContent className={`-ml-2.5 sm:-ml-4 pt-7 pb-3 transition-opacity duration-200 overflow-visible ${!api ? "opacity-0" : "opacity-100"}`}>
+        {/* Carousel Content Container with Hardware Acceleration */}
+        <CarouselContent className={`-ml-2.5 sm:-ml-4 pt-6 pb-2 transition-opacity duration-200 overflow-visible transform-gpu ${!api ? "opacity-0" : "opacity-100"}`}>
           {displayItems.map((item, idx) => {
             const isCenter = idx === selectedIndex;
 
@@ -432,14 +433,13 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
               return (
                 <CarouselItem
                   key={`skeleton-${idx}`}
-                  className="pl-2.5 sm:pl-4 basis-[82%] sm:basis-[55%] md:basis-[42%] lg:basis-[34%] xl:basis-[28%] max-w-[340px] sm:max-w-[460px] md:max-w-[400px]"
+                  className="pl-2.5 sm:pl-4 basis-[78%] sm:basis-[50%] md:basis-[36%] lg:basis-[30%] xl:basis-[25%] max-w-[300px] sm:max-w-[420px] md:max-w-[360px]"
                 >
                   <div
-                    className={`relative rounded-[24px] sm:rounded-[32px] overflow-hidden flex flex-row h-[155px] sm:h-[220px] md:h-[195px] bg-neutral-900/40 border border-neutral-800/80 animate-pulse w-full transition-all duration-500 ease-out ${
-                      isCenter
+                    className={`relative rounded-[24px] sm:rounded-[30px] overflow-hidden flex flex-row h-[150px] sm:h-[210px] md:h-[185px] bg-neutral-900/60 border border-neutral-800/80 animate-pulse w-full transition-transform duration-300 ease-out transform-gpu ${isCenter
                         ? "scale-100 opacity-100 z-20 ring-2 ring-white/10 shadow-2xl shadow-black/50"
-                        : "scale-[0.92] opacity-75 z-10 shadow-lg"
-                    }`}
+                        : "scale-[0.93] opacity-75 z-10 shadow-lg"
+                      }`}
                   >
                     <div className="w-[56%] p-3 sm:p-5 flex flex-col justify-between shrink-0">
                       <div className="h-2.5 w-16 bg-neutral-800 rounded-md" />
@@ -452,7 +452,7 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                         <div className="h-4 w-8 bg-neutral-800 rounded-md" />
                       </div>
                     </div>
-                    <div className="w-[44%] h-full bg-neutral-800/30 shrink-0 rounded-r-[24px] sm:rounded-r-[32px]" />
+                    <div className="w-[44%] h-full bg-neutral-800/30 shrink-0 rounded-r-[24px] sm:rounded-r-[30px]" />
                   </div>
                 </CarouselItem>
               );
@@ -464,7 +464,7 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
             return (
               <CarouselItem
                 key={`${item.id || item.name}-${idx}`}
-                className="pl-2.5 sm:pl-4 basis-[82%] sm:basis-[55%] md:basis-[42%] lg:basis-[34%] xl:basis-[28%] max-w-[340px] sm:max-w-[460px] md:max-w-[400px]"
+                className="pl-2.5 sm:pl-4 basis-[78%] sm:basis-[50%] md:basis-[36%] lg:basis-[30%] xl:basis-[25%] max-w-[300px] sm:max-w-[420px] md:max-w-[360px]"
               >
                 <div
                   onClick={() => {
@@ -474,18 +474,11 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                       api.scrollTo(idx);
                     }
                   }}
-                  className={`group relative transition-all duration-500 ease-out cursor-pointer rounded-[24px] sm:rounded-[32px] h-[155px] sm:h-[220px] md:h-[195px] flex flex-row backdrop-blur-xl ${theme.bg} ${
-                    isCenter
-                      ? "scale-100 opacity-100 z-20 ring-2 ring-white/30 shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
-                      : "scale-[0.92] opacity-80 z-10 shadow-xl hover:opacity-100 hover:scale-[0.96]"
-                  }`}
+                  className={`group relative transition-transform transition-opacity duration-300 ease-out cursor-pointer rounded-[24px] sm:rounded-[30px] h-[150px] sm:h-[210px] md:h-[185px] flex flex-row transform-gpu will-change-transform ${theme.bg} ${isCenter
+                      ? "scale-100 opacity-100 z-20 ring-2 ring-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.8)]"
+                      : "scale-[0.93] opacity-80 z-10 shadow-lg hover:opacity-100 hover:scale-[0.96]"
+                    }`}
                 >
-                  {/* Ambient Glow Aura behind card */}
-                  <div
-                    className="absolute -inset-0.5 rounded-[26px] sm:rounded-[34px] blur-md opacity-40 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none -z-10"
-                    style={{ background: `radial-gradient(circle, ${theme.glow} 0%, transparent 70%)` }}
-                  />
-
                   {/* Left Content Column */}
                   <div className="w-[56%] sm:w-[56%] p-3 sm:p-5 md:p-4 flex flex-col justify-between z-10 shrink-0">
                     {/* Top Tag & Badge */}
@@ -494,13 +487,13 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                         NextAiChat
                       </span>
                       <span className="text-[8px] text-white/40 font-bold">•</span>
-                      <span className={`px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider ${theme.badge} backdrop-blur-md shadow-sm truncate max-w-[120px]`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider ${theme.badge} shadow-sm truncate max-w-[120px]`}>
                         {item.badge || "FEATURED 3D"}
                       </span>
                     </div>
 
                     {/* Title & Tagline */}
-                    <div className="space-y-1 my-auto pr-1">
+                    <div className="space-y-0.5 sm:space-y-1 my-auto pr-1">
                       <h4 className={`font-black text-[12px] sm:text-lg md:text-base leading-tight tracking-tight line-clamp-1 sm:line-clamp-2 uppercase ${theme.text}`}>
                         {cleanTitle}
                       </h4>
@@ -513,13 +506,13 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                     <div className="pt-1 flex items-center justify-between gap-1.5">
                       <button
                         type="button"
-                        className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-black text-[9px] sm:text-xs transition-all duration-300 flex items-center gap-1 cursor-pointer active:scale-95 group-hover:scale-105 ${theme.btn}`}
+                        className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-black text-[9px] sm:text-xs transition-transform duration-200 flex items-center gap-1 cursor-pointer active:scale-95 group-hover:scale-105 ${theme.btn}`}
                       >
                         <Sparkles className="w-3 h-3 text-pink-200 animate-pulse shrink-0" />
                         <span>START ⚡</span>
                       </button>
 
-                      <span className="text-[8.5px] sm:text-[10px] font-mono font-black px-2 py-0.5 rounded-lg bg-black/40 text-amber-300 backdrop-blur-md border border-amber-400/30 flex items-center gap-0.5 shadow-md">
+                      <span className="text-[8.5px] sm:text-[10px] font-mono font-black px-2 py-0.5 rounded-lg bg-black/50 text-amber-300 border border-amber-400/30 flex items-center gap-0.5 shadow-md">
                         <span>★</span>
                         <span>{item.rating || "5.0"}</span>
                       </span>
@@ -528,14 +521,16 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
 
                   {/* Right Column 3D Character Pop-Out Image */}
                   <div className="w-[44%] sm:w-[44%] h-full relative shrink-0">
-                    {/* Dark gradient blur behind character inside right container for text contrast */}
-                    <div className="absolute inset-0 bg-gradient-to-l from-black/40 via-transparent to-transparent pointer-events-none rounded-r-[24px] sm:rounded-r-[32px]" />
+                    {/* Dark gradient behind character inside right container for text contrast */}
+                    <div className="absolute inset-0 bg-gradient-to-l from-black/50 via-transparent to-transparent pointer-events-none rounded-r-[24px] sm:rounded-r-[30px]" />
 
-                    {/* 3D Character Avatar Image - Popping OUT of the card vertically & floating */}
+                    {/* 3D Character Avatar Image with Hardware-Accelerated Transforms */}
                     <img
                       src={item.avatar}
                       alt={item.name}
-                      className="absolute -top-5 -right-1 sm:-top-8 sm:-right-2 w-[115%] h-[130%] sm:h-[138%] object-cover object-top filter drop-shadow-[0_15px_25px_rgba(0,0,0,0.9)] group-hover:scale-110 group-hover:-translate-y-1.5 transition-all duration-500 ease-out z-20 pointer-events-none rounded-t-[20px] sm:rounded-t-[28px]"
+                      loading="eager"
+                      decoding="async"
+                      className="absolute -top-4 -right-1 sm:-top-7 sm:-right-2 w-[115%] h-[128%] sm:h-[135%] object-cover object-top filter drop-shadow-[0_10px_15px_rgba(0,0,0,0.8)] group-hover:scale-105 group-hover:-translate-y-1 transition-transform duration-300 ease-out z-20 pointer-events-none rounded-t-[20px] sm:rounded-t-[28px] transform-gpu will-change-transform"
                     />
                   </div>
                 </div>
@@ -552,11 +547,10 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                 key={idx}
                 type="button"
                 onClick={() => api?.scrollTo(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
-                  idx === selectedIndex
-                    ? "w-7 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 shadow-[0_0_12px_rgba(236,72,153,0.8)]"
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === selectedIndex
+                    ? "w-7 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 shadow-[0_0_10px_rgba(236,72,153,0.7)]"
                     : "w-2 bg-neutral-700 hover:bg-neutral-500"
-                }`}
+                  }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
