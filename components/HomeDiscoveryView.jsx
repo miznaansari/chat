@@ -411,9 +411,7 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
               ) : (
                 <>
                   <span>Trending Roleplays</span>
-                  <span className="text-xs font-extrabold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white uppercase tracking-wider shadow-md">
-                    GEN Z 🔥
-                  </span>
+
                 </>
               )}
             </h3>
@@ -437,8 +435,8 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                 >
                   <div
                     className={`relative rounded-[24px] sm:rounded-[30px] overflow-hidden flex flex-row h-[150px] sm:h-[210px] md:h-[185px] bg-neutral-900/60 border border-neutral-800/80 animate-pulse w-full transition-transform duration-300 ease-out transform-gpu ${isCenter
-                        ? "scale-100 opacity-100 z-20 ring-2 ring-white/10 shadow-2xl shadow-black/50"
-                        : "scale-[0.93] opacity-75 z-10 shadow-lg"
+                      ? "scale-100 opacity-100 z-20 ring-2 ring-white/10 shadow-2xl shadow-black/50"
+                      : "scale-[0.93] opacity-75 z-10 shadow-lg"
                       }`}
                   >
                     <div className="w-[56%] p-3 sm:p-5 flex flex-col justify-between shrink-0">
@@ -475,8 +473,8 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                     }
                   }}
                   className={`group relative transition-transform transition-opacity duration-300 ease-out cursor-pointer rounded-[24px] sm:rounded-[30px] h-[150px] sm:h-[210px] md:h-[185px] flex flex-row transform-gpu will-change-transform ${theme.bg} ${isCenter
-                      ? "scale-100 opacity-100 z-20 ring-2 ring-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.8)]"
-                      : "scale-[0.93] opacity-80 z-10 shadow-lg hover:opacity-100 hover:scale-[0.96]"
+                    ? "scale-100 opacity-100 z-20 ring-2 ring-white/30 shadow-[0_15px_35px_rgba(0,0,0,0.8)]"
+                    : "scale-[0.93] opacity-80 z-10 shadow-lg hover:opacity-100 hover:scale-[0.96]"
                     }`}
                 >
                   {/* Left Content Column */}
@@ -548,8 +546,8 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                 type="button"
                 onClick={() => api?.scrollTo(idx)}
                 className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === selectedIndex
-                    ? "w-7 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 shadow-[0_0_10px_rgba(236,72,153,0.7)]"
-                    : "w-2 bg-neutral-700 hover:bg-neutral-500"
+                  ? "w-7 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 shadow-[0_0_10px_rgba(236,72,153,0.7)]"
+                  : "w-2 bg-neutral-700 hover:bg-neutral-500"
                   }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
