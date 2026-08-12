@@ -30,6 +30,102 @@ import {
 
 const DEFAULT_CHARACTERS = [
   {
+    id: "slider-zoya-gym",
+    name: "Zoya - Gym & Fitness Bestie",
+    tagline: "Late Night Workout Banter & Motivation",
+    badge: "🔥 TRENDING #1",
+    badgeBg: "bg-gradient-to-r from-pink-600 to-purple-600 text-white font-extrabold",
+    avatar: "/avatars/slider_gym_zoya.png",
+    category: "slider",
+    filterGroup: "assistants",
+    chatsCount: 4890,
+    rating: "5.0",
+    story: "Chat with Zoya after her gym session! Get fitness tips, late-night high-energy banter, diet motivation, and fun casual roleplay.",
+    characters: [
+      { name: "Zoya", persona: "Energetic, fitness-loving bestie who loves gym challenges, healthy lifestyle chats, and playful late night conversations." }
+    ]
+  },
+  {
+    id: "slider-study-gf",
+    name: "Ayesha - Late Night Study Companion",
+    tagline: "Late Night Study Calls & Chai Breaks",
+    badge: "⚡ HOT ROLEPLAY",
+    badgeBg: "bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-extrabold",
+    avatar: "/avatars/slider_gf_self_study.png",
+    category: "slider",
+    filterGroup: "assistants",
+    chatsCount: 3950,
+    rating: "4.9",
+    story: "Late night exam prep? Ayesha stays up on call with you to keep you focused, quiz you on topics, share coffee breaks and cozy study vibes.",
+    characters: [
+      { name: "Ayesha", persona: "Sweet, supportive late-night study partner who keeps you motivated through long study marathons and exam stress." }
+    ]
+  },
+  {
+    id: "slider-delhi-shanaya",
+    name: "Shanaya - Delhi Campus Queen",
+    tagline: "South Delhi Gossip & College Parties",
+    badge: "💅 GEN Z FAVORITE",
+    badgeBg: "bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-extrabold",
+    avatar: "/avatars/slider_college_girl.png",
+    category: "slider",
+    filterGroup: "assistants",
+    chatsCount: 5120,
+    rating: "5.0",
+    story: "Spill the tea with Shanaya! Discuss campus relationships, Delhi party spots, college fashion, and Hinglish banter.",
+    characters: [
+      { name: "Shanaya", persona: "Ultra-stylish, outspoken Delhi college girl who knows all the campus drama and loves unfiltered Hinglish chats." }
+    ]
+  },
+  {
+    id: "slider-night-party",
+    name: "Zara - Night Out & Party Squad",
+    tagline: "Weekend Vibe Check & Late Night Talks",
+    badge: "✨ VIP 3D",
+    badgeBg: "bg-gradient-to-r from-amber-500 to-rose-600 text-white font-extrabold",
+    avatar: "/avatars/slider_night_out.png",
+    category: "slider",
+    filterGroup: "assistants",
+    chatsCount: 3410,
+    rating: "4.9",
+    story: "Unwind after a long week with Zara. Talk music playlists, late-night drives, party stories, and secret confessions.",
+    characters: [
+      { name: "Zara", persona: "Cool music-loving party host who brings infectious weekend vibes and deep late-night chat energy." }
+    ]
+  },
+  {
+    id: "slider-lucknow-shahana",
+    name: "Shahana - Royal Lucknow Romance",
+    tagline: "Tehzeeb, Shayari & Romantic Conversations",
+    badge: "👑 ROYAL VIBES",
+    badgeBg: "bg-gradient-to-r from-rose-600 to-pink-600 text-white font-extrabold",
+    avatar: "/avatars/slider_lucknow_shahana.png",
+    category: "slider",
+    filterGroup: "assistants",
+    chatsCount: 2980,
+    rating: "5.0",
+    story: "Experience poetic charm and royal Lucknawi tehzeeb with Shahana. Deep heartfelt roleplay, Ghazals, and sweet conversations.",
+    characters: [
+      { name: "Shahana", persona: "Elegant and soulful Lucknawi romantic who speaks soft Urdu-infused Hinglish and loves poetic storytelling." }
+    ]
+  },
+  {
+    id: "slider-balcony-diya",
+    name: "Diya - Rainy Balcony Chai & Deep Talks",
+    tagline: "Monsoon Vibe, Lo-Fi Music & Heart-to-Hearts",
+    badge: "☕ DEEP TALKS",
+    badgeBg: "bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-extrabold",
+    avatar: "/avatars/slider_rainy_balcony.png",
+    category: "slider",
+    filterGroup: "assistants",
+    chatsCount: 4190,
+    rating: "5.0",
+    story: "Sit on a rain-soaked balcony with Diya sipping hot chai, listening to lo-fi beats, and sharing life's deepest thoughts.",
+    characters: [
+      { name: "Diya", persona: "Thoughtful lo-fi aesthetic enthusiast who loves cozy rainy days, deep psychological talks, and soul connections." }
+    ]
+  },
+  {
     id: "default-ananya",
     name: "Prof. Ananya / Sarah",
     tagline: "Subject & Exam Prep Tutor",
@@ -204,16 +300,60 @@ function getSpeakerChipStyle(charName) {
 }
 
 const SLIDER_CARD_THEMES = [
-  { bg: "bg-[#f2efe9]", text: "text-neutral-900", subText: "text-neutral-600", btn: "bg-[#27272a] text-white hover:bg-black", brand: "text-neutral-800" },
-  { bg: "bg-[#b8802a]", text: "text-white", subText: "text-amber-100", btn: "bg-white text-neutral-900 hover:bg-amber-50", brand: "text-amber-100" },
-  { bg: "bg-[#8c1d24]", text: "text-white", subText: "text-rose-100", btn: "bg-white text-neutral-900 hover:bg-rose-50", brand: "text-rose-100" },
-  { bg: "bg-[#1e293b]", text: "text-white", subText: "text-slate-300", btn: "bg-white text-neutral-900 hover:bg-slate-100", brand: "text-slate-300" },
-  { bg: "bg-[#14532d]", text: "text-white", subText: "text-emerald-100", btn: "bg-white text-neutral-900 hover:bg-emerald-50", brand: "text-emerald-100" },
-  { bg: "bg-[#e5e0d8]", text: "text-neutral-900", subText: "text-neutral-600", btn: "bg-[#18181b] text-white hover:bg-black", brand: "text-neutral-800" },
-  { bg: "bg-[#581c87]", text: "text-white", subText: "text-purple-200", btn: "bg-white text-neutral-900 hover:bg-purple-50", brand: "text-purple-200" },
-  { bg: "bg-[#0f766e]", text: "text-white", subText: "text-teal-100", btn: "bg-white text-neutral-900 hover:bg-teal-50", brand: "text-teal-100" },
-  { bg: "bg-[#c2410c]", text: "text-white", subText: "text-orange-100", btn: "bg-white text-neutral-900 hover:bg-orange-50", brand: "text-orange-100" },
-  { bg: "bg-[#334155]", text: "text-white", subText: "text-slate-200", btn: "bg-white text-neutral-900 hover:bg-slate-50", brand: "text-slate-200" },
+  {
+    bg: "bg-gradient-to-br from-[#1d002c]/95 via-[#3a0647]/90 to-[#12001c]/95 border border-pink-500/40 shadow-[0_10px_35px_rgba(236,72,153,0.3)]",
+    text: "text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]",
+    subText: "text-pink-200/90",
+    btn: "bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 text-white hover:brightness-125 shadow-[0_0_20px_rgba(236,72,153,0.5)] border border-white/20",
+    brand: "text-pink-400 font-black tracking-widest",
+    glow: "rgba(236,72,153,0.5)",
+    badge: "bg-pink-500/20 text-pink-300 border border-pink-500/50"
+  },
+  {
+    bg: "bg-gradient-to-br from-[#021b2b]/95 via-[#063852]/90 to-[#01101d]/95 border border-cyan-400/40 shadow-[0_10px_35px_rgba(6,182,212,0.3)]",
+    text: "text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]",
+    subText: "text-cyan-200/90",
+    btn: "bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white hover:brightness-125 shadow-[0_0_20px_rgba(6,182,212,0.5)] border border-white/20",
+    brand: "text-cyan-400 font-black tracking-widest",
+    glow: "rgba(6,182,212,0.5)",
+    badge: "bg-cyan-500/20 text-cyan-300 border border-cyan-500/50"
+  },
+  {
+    bg: "bg-gradient-to-br from-[#2a040b]/95 via-[#500816]/90 to-[#1a0105]/95 border border-rose-500/40 shadow-[0_10px_35px_rgba(244,63,94,0.3)]",
+    text: "text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]",
+    subText: "text-rose-200/90",
+    btn: "bg-gradient-to-r from-rose-500 via-red-500 to-pink-500 text-white hover:brightness-125 shadow-[0_0_20px_rgba(244,63,94,0.5)] border border-white/20",
+    brand: "text-rose-400 font-black tracking-widest",
+    glow: "rgba(244,63,94,0.5)",
+    badge: "bg-rose-500/20 text-rose-300 border border-rose-500/50"
+  },
+  {
+    bg: "bg-gradient-to-br from-[#2b1402]/95 via-[#522906]/90 to-[#1b0a01]/95 border border-amber-400/40 shadow-[0_10px_35px_rgba(245,158,11,0.3)]",
+    text: "text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]",
+    subText: "text-amber-200/90",
+    btn: "bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 text-white hover:brightness-125 shadow-[0_0_20px_rgba(245,158,11,0.5)] border border-white/20",
+    brand: "text-amber-400 font-black tracking-widest",
+    glow: "rgba(245,158,11,0.5)",
+    badge: "bg-amber-500/20 text-amber-300 border border-amber-500/50"
+  },
+  {
+    bg: "bg-gradient-to-br from-[#022415]/95 via-[#06472b]/90 to-[#01140b]/95 border border-emerald-400/40 shadow-[0_10px_35px_rgba(16,185,129,0.3)]",
+    text: "text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]",
+    subText: "text-emerald-200/90",
+    btn: "bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-500 text-white hover:brightness-125 shadow-[0_0_20px_rgba(16,185,129,0.5)] border border-white/20",
+    brand: "text-emerald-400 font-black tracking-widest",
+    glow: "rgba(16,185,129,0.5)",
+    badge: "bg-emerald-500/20 text-emerald-300 border border-emerald-500/50"
+  },
+  {
+    bg: "bg-gradient-to-br from-[#170538]/95 via-[#2e0b6b]/90 to-[#0c0221]/95 border border-purple-400/40 shadow-[0_10px_35px_rgba(168,85,247,0.3)]",
+    text: "text-white drop-shadow-[0_2px_10px_rgba(255,255,255,0.3)]",
+    subText: "text-purple-200/90",
+    btn: "bg-gradient-to-r from-purple-500 via-indigo-500 to-violet-500 text-white hover:brightness-125 shadow-[0_0_20px_rgba(168,85,247,0.5)] border border-white/20",
+    brand: "text-purple-400 font-black tracking-widest",
+    glow: "rgba(168,85,247,0.5)",
+    badge: "bg-purple-500/20 text-purple-300 border border-purple-500/50"
+  },
 ];
 
 function SliderCarouselSection({ items, onSelectPreview, fetching }) {
@@ -243,10 +383,10 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
     };
   }, [api]);
 
-  const displayItems = fetching ? [0, 1, 2, 3, 4, 5, 6, 7] : baseItems;
+  const displayItems = fetching ? [0, 1, 2, 3, 4, 5] : baseItems;
 
   return (
-    <div className="space-y-3 my-2 font-sans select-none overflow-hidden -mx-4 px-4 sm:mx-0 sm:px-0">
+    <div className="space-y-2 my-2 font-sans select-none overflow-visible -mx-4 px-4 sm:mx-0 sm:px-0">
       <Carousel
         setApi={setApi}
         opts={{
@@ -258,25 +398,33 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
         className={`w-full relative ${fetching ? "pointer-events-none" : ""}`}
       >
         {/* Header Row */}
-        <div className="flex items-center justify-between px-4 sm:px-1 mb-2">
+        <div className="flex items-center justify-between px-4 sm:px-1 mb-1">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-pink-400 animate-pulse" />
-            <h3 className="text-base md:text-lg font-black text-white tracking-wide">
+            <span className="flex h-2.5 w-2.5 relative">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-pink-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-pink-500"></span>
+            </span>
+            <h3 className="text-base md:text-lg font-black text-white tracking-wide flex items-center gap-1.5">
               {fetching ? (
                 <div className="h-5 w-32 bg-neutral-900/60 rounded-md animate-pulse inline-block" />
               ) : (
-                "Trending Stories 🔥"
+                <>
+                  <span>Trending 3D Roleplays</span>
+                  <span className="text-xs font-extrabold px-2 py-0.5 rounded-full bg-gradient-to-r from-pink-500 to-purple-600 text-white uppercase tracking-wider shadow-md">
+                    GEN Z 🔥
+                  </span>
+                </>
               )}
             </h3>
           </div>
           <div className="flex items-center gap-1.5">
-            <CarouselPrevious className="static translate-y-0" />
-            <CarouselNext className="static translate-y-0" />
+            <CarouselPrevious className="static translate-y-0 bg-neutral-900/80 hover:bg-purple-600 text-white border-neutral-700/80 hover:border-purple-400 transition-all cursor-pointer" />
+            <CarouselNext className="static translate-y-0 bg-neutral-900/80 hover:bg-purple-600 text-white border-neutral-700/80 hover:border-purple-400 transition-all cursor-pointer" />
           </div>
         </div>
 
-        {/* Carousel Content */}
-        <CarouselContent className={`-ml-2.5 sm:-ml-4 transition-opacity duration-200 ${!api ? "opacity-0" : "opacity-100"}`}>
+        {/* Carousel Content Container with 3D Overflow */}
+        <CarouselContent className={`-ml-2.5 sm:-ml-4 pt-7 pb-3 transition-opacity duration-200 overflow-visible ${!api ? "opacity-0" : "opacity-100"}`}>
           {displayItems.map((item, idx) => {
             const isCenter = idx === selectedIndex;
 
@@ -284,29 +432,27 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
               return (
                 <CarouselItem
                   key={`skeleton-${idx}`}
-                  className="pl-2.5 sm:pl-4 basis-[70%] sm:basis-[52%] md:basis-[38%] lg:basis-[30%] xl:basis-[25%] max-w-[290px] sm:max-w-[500px] md:max-w-[340px]"
+                  className="pl-2.5 sm:pl-4 basis-[82%] sm:basis-[55%] md:basis-[42%] lg:basis-[34%] xl:basis-[28%] max-w-[340px] sm:max-w-[460px] md:max-w-[400px]"
                 >
                   <div
-                    className={`relative rounded-[24px] sm:rounded-[32px] overflow-hidden flex flex-row h-[145px] sm:h-[220px] md:h-[180px] bg-neutral-900/40 border border-neutral-800/80 animate-pulse w-full transition-all duration-500 ease-out ${
+                    className={`relative rounded-[24px] sm:rounded-[32px] overflow-hidden flex flex-row h-[155px] sm:h-[220px] md:h-[195px] bg-neutral-900/40 border border-neutral-800/80 animate-pulse w-full transition-all duration-500 ease-out ${
                       isCenter
                         ? "scale-100 opacity-100 z-20 ring-2 ring-white/10 shadow-2xl shadow-black/50"
-                        : "scale-[0.90] opacity-75 z-10 shadow-lg"
+                        : "scale-[0.92] opacity-75 z-10 shadow-lg"
                     }`}
                   >
-                    {/* Left Content Column */}
-                    <div className="w-[58%] p-2.5 sm:p-6 md:p-4 flex flex-col justify-between shrink-0">
+                    <div className="w-[56%] p-3 sm:p-5 flex flex-col justify-between shrink-0">
                       <div className="h-2.5 w-16 bg-neutral-800 rounded-md" />
                       <div className="space-y-1.5 my-auto">
-                        <div className="h-3.5 sm:h-5 bg-neutral-800 rounded-md w-3/4" />
+                        <div className="h-4 bg-neutral-800 rounded-md w-3/4" />
                         <div className="h-2.5 bg-neutral-800/50 rounded-md w-full" />
                       </div>
                       <div className="pt-0.5 flex items-center justify-between gap-1">
-                        <div className="h-5 sm:h-7 w-16 sm:w-20 bg-neutral-800 rounded-lg" />
-                        <div className="h-3.5 w-8 bg-neutral-800 rounded-md" />
+                        <div className="h-6 w-20 bg-neutral-800 rounded-lg" />
+                        <div className="h-4 w-8 bg-neutral-800 rounded-md" />
                       </div>
                     </div>
-                    {/* Right Image Column */}
-                    <div className="w-[42%] h-full bg-neutral-800/30 shrink-0 rounded-r-[24px] sm:rounded-r-[32px]" />
+                    <div className="w-[44%] h-full bg-neutral-800/30 shrink-0 rounded-r-[24px] sm:rounded-r-[32px]" />
                   </div>
                 </CarouselItem>
               );
@@ -318,7 +464,7 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
             return (
               <CarouselItem
                 key={`${item.id || item.name}-${idx}`}
-                className="pl-2.5 sm:pl-4 basis-[70%] sm:basis-[52%] md:basis-[38%] lg:basis-[30%] xl:basis-[25%] max-w-[290px] sm:max-w-[500px] md:max-w-[340px]"
+                className="pl-2.5 sm:pl-4 basis-[82%] sm:basis-[55%] md:basis-[42%] lg:basis-[34%] xl:basis-[28%] max-w-[340px] sm:max-w-[460px] md:max-w-[400px]"
               >
                 <div
                   onClick={() => {
@@ -328,55 +474,69 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                       api.scrollTo(idx);
                     }
                   }}
-                  style={{
-                    borderRadius: "24px",
-                    WebkitMaskImage: "-webkit-radial-gradient(white, black)",
-                    isolation: "isolate",
-                  }}
-                  className={`group relative transition-all duration-500 ease-out cursor-pointer rounded-[24px] sm:rounded-[32px] overflow-hidden flex flex-row h-[145px] sm:h-[220px] md:h-[180px] ${theme.bg} ${isCenter
-                    ? "scale-100 opacity-100 z-20 ring-2 ring-white/20 shadow-2xl shadow-black/50"
-                    : "scale-[0.90] opacity-75 z-10 shadow-lg"
-                    }`}
+                  className={`group relative transition-all duration-500 ease-out cursor-pointer rounded-[24px] sm:rounded-[32px] h-[155px] sm:h-[220px] md:h-[195px] flex flex-row backdrop-blur-xl ${theme.bg} ${
+                    isCenter
+                      ? "scale-100 opacity-100 z-20 ring-2 ring-white/30 shadow-[0_20px_50px_rgba(0,0,0,0.85)]"
+                      : "scale-[0.92] opacity-80 z-10 shadow-xl hover:opacity-100 hover:scale-[0.96]"
+                  }`}
                 >
+                  {/* Ambient Glow Aura behind card */}
+                  <div
+                    className="absolute -inset-0.5 rounded-[26px] sm:rounded-[34px] blur-md opacity-40 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none -z-10"
+                    style={{ background: `radial-gradient(circle, ${theme.glow} 0%, transparent 70%)` }}
+                  />
+
                   {/* Left Content Column */}
-                  <div className="w-[58%] sm:w-[58%] p-2.5 sm:p-6 md:p-4 flex flex-col justify-between z-10 shrink-0">
-                    <div className="flex items-center gap-1">
-                      <span className={`text-[8px] sm:text-xs font-black uppercase tracking-wider truncate ${theme.brand}`}>
-                        NextAiChat <span className="opacity-40">|</span> {item.badge || "Story"}
+                  <div className="w-[56%] sm:w-[56%] p-3 sm:p-5 md:p-4 flex flex-col justify-between z-10 shrink-0">
+                    {/* Top Tag & Badge */}
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`text-[8px] sm:text-[10px] uppercase font-black tracking-wider truncate ${theme.brand}`}>
+                        NextAiChat
+                      </span>
+                      <span className="text-[8px] text-white/40 font-bold">•</span>
+                      <span className={`px-2 py-0.5 rounded-full text-[8px] sm:text-[9px] font-black uppercase tracking-wider ${theme.badge} backdrop-blur-md shadow-sm truncate max-w-[120px]`}>
+                        {item.badge || "FEATURED 3D"}
                       </span>
                     </div>
 
-                    <div className="space-y-0.5 my-auto">
-                      <h4 className={`font-black text-[11px] sm:text-lg md:text-base leading-tight tracking-tight uppercase line-clamp-1 sm:line-clamp-2 ${theme.text}`}>
+                    {/* Title & Tagline */}
+                    <div className="space-y-1 my-auto pr-1">
+                      <h4 className={`font-black text-[12px] sm:text-lg md:text-base leading-tight tracking-tight line-clamp-1 sm:line-clamp-2 uppercase ${theme.text}`}>
                         {cleanTitle}
                       </h4>
-                      <p className={`text-[9px] sm:text-xs font-medium line-clamp-1 sm:line-clamp-2 leading-tight ${theme.subText}`}>
+                      <p className={`text-[9.5px] sm:text-xs font-semibold line-clamp-2 leading-snug ${theme.subText}`}>
                         {item.tagline}
                       </p>
                     </div>
 
-                    <div className="pt-0.5 flex items-center justify-between gap-1">
+                    {/* Action CTA & Rating */}
+                    <div className="pt-1 flex items-center justify-between gap-1.5">
                       <button
                         type="button"
-                        className={`px-2.5 sm:px-5 py-0.5 sm:py-2 md:px-3.5 md:py-1 rounded-lg sm:rounded-2xl font-black text-[9px] sm:text-xs transition-all shadow-md active:scale-95 flex items-center gap-1 cursor-pointer ${theme.btn}`}
+                        className={`px-3 sm:px-4 py-1 sm:py-2 rounded-xl font-black text-[9px] sm:text-xs transition-all duration-300 flex items-center gap-1 cursor-pointer active:scale-95 group-hover:scale-105 ${theme.btn}`}
                       >
-                        <span>Start now</span>
+                        <Sparkles className="w-3 h-3 text-pink-200 animate-pulse shrink-0" />
+                        <span>START ⚡</span>
                       </button>
 
-                      <span className="text-[8px] sm:text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-black/20 text-white/90 backdrop-blur-sm">
-                        ★ {item.rating || "4.9"}
+                      <span className="text-[8.5px] sm:text-[10px] font-mono font-black px-2 py-0.5 rounded-lg bg-black/40 text-amber-300 backdrop-blur-md border border-amber-400/30 flex items-center gap-0.5 shadow-md">
+                        <span>★</span>
+                        <span>{item.rating || "5.0"}</span>
                       </span>
                     </div>
                   </div>
 
-                  {/* Right Image Column (Fills width and height of container) */}
-                  <div className="w-[42%] sm:w-[42%] h-full relative overflow-hidden shrink-0 rounded-r-[24px] sm:rounded-r-[32px]">
+                  {/* Right Column 3D Character Pop-Out Image */}
+                  <div className="w-[44%] sm:w-[44%] h-full relative shrink-0">
+                    {/* Dark gradient blur behind character inside right container for text contrast */}
+                    <div className="absolute inset-0 bg-gradient-to-l from-black/40 via-transparent to-transparent pointer-events-none rounded-r-[24px] sm:rounded-r-[32px]" />
+
+                    {/* 3D Character Avatar Image - Popping OUT of the card vertically & floating */}
                     <img
                       src={item.avatar}
                       alt={item.name}
-                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 rounded-r-[24px] sm:rounded-r-[32px]"
+                      className="absolute -top-5 -right-1 sm:-top-8 sm:-right-2 w-[115%] h-[130%] sm:h-[138%] object-cover object-top filter drop-shadow-[0_15px_25px_rgba(0,0,0,0.9)] group-hover:scale-110 group-hover:-translate-y-1.5 transition-all duration-500 ease-out z-20 pointer-events-none rounded-t-[20px] sm:rounded-t-[28px]"
                     />
-                    <div className="absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-black/25 via-black/10 to-transparent pointer-events-none" />
                   </div>
                 </div>
               </CarouselItem>
@@ -386,14 +546,17 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
 
         {/* Carousel Pagination Dots */}
         {!fetching && (
-          <div className="flex items-center justify-center gap-1.5 mt-3">
+          <div className="flex items-center justify-center gap-1.5 mt-2">
             {baseItems.map((_, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => api?.scrollTo(idx)}
-                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${idx === selectedIndex ? "w-6 bg-pink-500" : "w-1.5 bg-neutral-700 hover:bg-neutral-500"
-                  }`}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                  idx === selectedIndex
+                    ? "w-7 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 shadow-[0_0_12px_rgba(236,72,153,0.8)]"
+                    : "w-2 bg-neutral-700 hover:bg-neutral-500"
+                }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
