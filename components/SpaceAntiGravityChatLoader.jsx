@@ -18,7 +18,7 @@ export default function SpaceAntiGravityChatLoader({
 
   useEffect(() => {
     if (currentKey) {
-      // Trigger animation on key change or initial open
+      // Trigger quick transition pulse on key change or initial open
       if (currentKey !== prevKeyRef.current) {
         prevKeyRef.current = currentKey;
         setIsVisible(true);
@@ -26,13 +26,13 @@ export default function SpaceAntiGravityChatLoader({
 
         const fadeTimer = setTimeout(() => {
           setIsFadingOut(true);
-        }, 950);
+        }, 1500);
 
         const hideTimer = setTimeout(() => {
           setIsVisible(false);
           setIsFadingOut(false);
           if (onComplete) onComplete();
-        }, 1200);
+        }, 2000);
 
         return () => {
           clearTimeout(fadeTimer);
@@ -62,11 +62,11 @@ export default function SpaceAntiGravityChatLoader({
     setCanvasSize();
 
     // Create zero-gravity floating particles moving upwards against gravity
-    const particleCount = 55;
+    const particleCount = 35;
     const particles = Array.from({ length: particleCount }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      radius: Math.random() * 2.4 + 0.6,
+      radius: Math.random() * 2.2 + 0.6,
       speedY: -(Math.random() * 1.8 + 0.6), // Anti-gravity float direction
       speedX: (Math.random() - 0.5) * 0.7,
       alpha: Math.random() * 0.85 + 0.15,
@@ -102,8 +102,6 @@ export default function SpaceAntiGravityChatLoader({
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fillStyle = p.color;
         ctx.globalAlpha = Math.max(0, Math.min(1, p.alpha));
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = p.color;
         ctx.fill();
       });
 
@@ -132,13 +130,13 @@ export default function SpaceAntiGravityChatLoader({
   return (
     <div
       onClick={() => setIsVisible(false)}
-      className={`absolute inset-0 z-50 flex flex-col items-center justify-center overflow-hidden select-none transition-all duration-300 ease-out cursor-pointer ${isFadingOut ? "opacity-0 scale-105 pointer-events-none" : "opacity-100 scale-100"
+      className={`fixed inset-0 z-[9999] pointer-events-auto cursor-pointer flex flex-col items-center justify-center overflow-hidden select-none transition-all duration-500 ease-out ${isFadingOut ? "opacity-0 scale-105 pointer-events-none" : "opacity-100 scale-100"
         }`}
       style={{
         background:
-          "radial-gradient(ellipse at center, rgba(15, 23, 42, 0.96) 0%, rgba(3, 7, 18, 0.98) 75%, #030712 100%)",
-        backdropFilter: "blur(24px)",
-        WebkitBackdropFilter: "blur(24px)",
+          "radial-gradient(ellipse at center, rgba(15, 23, 42, 0.94) 0%, rgba(3, 7, 18, 0.97) 75%, #030712 100%)",
+        backdropFilter: "blur(16px)",
+        WebkitBackdropFilter: "blur(16px)",
       }}
     >
       {/* Zero-G Floating Particle Canvas */}
@@ -212,8 +210,8 @@ export default function SpaceAntiGravityChatLoader({
           {activeChat?.character?.tagline
             ? `"${activeChat.character.tagline}"`
             : activeChat?.userPersonaName
-            ? `Playing as ${activeChat.userPersonaName} • Ready to roleplay`
-            : "💡 Tip: Customize your 'Me Persona' in Settings for tailored responses"}
+              ? `Playing as ${activeChat.userPersonaName} • Ready to roleplay`
+              : "💡 Tip: Customize your 'Me Persona' in Settings for tailored responses"}
         </p>
 
         {/* Neon Progress Bar */}
@@ -221,7 +219,7 @@ export default function SpaceAntiGravityChatLoader({
           <div
             className="h-full bg-gradient-to-r from-cyan-400 via-purple-400 to-emerald-400 rounded-full"
             style={{
-              animation: "spaceBarFill 1.1s cubic-bezier(0.16, 1, 0.3, 1) forwards"
+              animation: "spaceBarFill 4.8s cubic-bezier(0.16, 1, 0.3, 1) forwards"
             }}
           />
         </div>

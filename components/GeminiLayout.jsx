@@ -267,19 +267,20 @@ export default function GeminiLayout({
         </div>
       )}
 
-      {/* ANTIGRAVITY FLOATING ORBS & ORBITAL RINGS (EXACT SAME AS /LOGIN) */}
-      <div className="fixed top-[-10%] left-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-purple-900/30 via-indigo-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
-      <div className="fixed bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-gradient-to-tr from-blue-900/30 via-cyan-900/20 to-transparent rounded-full animate-pulse-glow pointer-events-none z-0" />
+      {/* GENZ / ALPHA VIBRANT AMBIENT MESH GLOWS (MATCHING HOME DISCOVERY VIEW) */}
+      <div className="fixed top-[-10%] left-[-5%] w-[650px] h-[650px] bg-gradient-to-tr from-purple-600/30 via-pink-600/20 to-transparent rounded-full blur-3xl opacity-50 transform-gpu animate-pulse-glow pointer-events-none z-0" />
+      <div className="fixed bottom-[-10%] right-[-5%] w-[700px] h-[700px] bg-gradient-to-tr from-cyan-600/30 via-indigo-600/20 to-transparent rounded-full blur-3xl opacity-50 transform-gpu animate-pulse-glow pointer-events-none z-0" />
+      <div className="fixed top-[35%] right-[10%] w-[450px] h-[450px] bg-gradient-to-tr from-rose-600/20 via-purple-900/10 to-transparent rounded-full blur-3xl opacity-40 transform-gpu pointer-events-none z-0" />
 
       {/* Floating Physics Particles */}
-      <div className="fixed top-1/4 left-10 w-24 h-24 rounded-full border border-purple-500/20 bg-purple-500/5 backdrop-blur-sm animate-float-slow pointer-events-none hidden md:block z-0" />
-      <div className="fixed bottom-1/4 right-12 w-32 h-32 rounded-full border border-cyan-500/20 bg-cyan-500/5 backdrop-blur-sm animate-float-reverse pointer-events-none hidden md:block z-0" />
+      <div className="fixed top-1/4 left-10 w-28 h-28 rounded-full border border-purple-500/30 bg-purple-500/10 backdrop-blur-md animate-float-slow pointer-events-none hidden md:block z-0 shadow-[0_0_30px_rgba(168,85,247,0.2)]" />
+      <div className="fixed bottom-1/4 right-12 w-36 h-36 rounded-full border border-cyan-500/30 bg-cyan-500/10 backdrop-blur-md animate-float-reverse pointer-events-none hidden md:block z-0 shadow-[0_0_30px_rgba(6,182,212,0.2)]" />
 
       {/* Orbit Rings Centered */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] rounded-full border border-neutral-800/40 animate-orbit pointer-events-none hidden lg:block z-0">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] rounded-full border border-purple-500/20 animate-orbit pointer-events-none hidden lg:block z-0">
         <div className="absolute top-0 left-1/2 w-3 h-3 bg-purple-500 rounded-full shadow-[0_0_15px_#a855f7]" />
       </div>
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full border border-purple-900/30 animate-orbit-reverse pointer-events-none hidden lg:block z-0">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full border border-cyan-500/20 animate-orbit-reverse pointer-events-none hidden lg:block z-0">
         <div className="absolute bottom-0 right-1/2 w-2.5 h-2.5 bg-cyan-400 rounded-full shadow-[0_0_15px_#22d3ee]" />
       </div>
 
@@ -761,7 +762,7 @@ export default function GeminiLayout({
         </header>
 
         {/* Content View */}
-        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative">{children}</main>
+        <main className="flex-1 flex flex-col min-h-0 overflow-hidden relative z-10">{children}</main>
 
         {/* Native Clean Mobile Bottom Navigation Bar (hidden when chat is active) */}
         {viewMode !== "chat" && (
