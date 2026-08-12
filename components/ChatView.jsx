@@ -38,6 +38,7 @@ import {
   Check,
   Copy,
   Radio,
+  RotateCcw,
 } from "lucide-react";
 
 // Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
@@ -1677,6 +1678,7 @@ export default function ChatView({
   };
 
   const [optimizingFieldEdit, setOptimizingFieldEdit] = useState(null);
+  const [fieldUndoHistory, setFieldUndoHistory] = useState({});
 
   const handleOptimizeTextEdit = async (target, text, type = "persona") => {
     if (!text || !text.trim()) return;
@@ -1691,6 +1693,12 @@ export default function ChatView({
 
       const data = await res.json();
       if (res.ok && data.optimizedText) {
+        // Save current original text in undo history state before applying AI improvement
+        setFieldUndoHistory((prev) => ({
+          ...prev,
+          [target]: text,
+        }));
+
         if (target === "story") {
           setStoryEdit(data.optimizedText);
         } else {
@@ -1704,6 +1712,23 @@ export default function ChatView({
     } finally {
       setOptimizingFieldEdit(null);
     }
+  };
+
+  const handleUndoTextEdit = (target) => {
+    const previousText = fieldUndoHistory[target];
+    if (previousText === undefined) return;
+
+    if (target === "story") {
+      setStoryEdit(previousText);
+    } else {
+      handleCharacterEditChange(target, "persona", previousText);
+    }
+
+    setFieldUndoHistory((prev) => {
+      const next = { ...prev };
+      delete next[target];
+      return next;
+    });
   };
 
   const handleAddCharacterEdit = () => {
@@ -3020,69 +3045,99 @@ export default function ChatView({
 
       {/* Edit Story & Characters Modal */}
       {showStoryModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="w-full max-w-2xl bg-neutral-900 border border-neutral-800 rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
+          <div className="w-full max-w-3xl bg-neutral-900 border border-neutral-800 rounded-2xl sm:rounded-3xl p-3.5 sm:p-6 shadow-2xl space-y-4 max-h-[94vh] sm:max-h-[90vh] flex flex-col animate-in fade-in zoom-in-95 duration-200">
+            {/* Header */}
             <div className="flex items-center justify-between pb-3 border-b border-neutral-800 shrink-0">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-blue-400" />
-                <h3 className="font-semibold text-white text-base">Edit Scenario Story & Characters</h3>
+              <div className="flex items-center gap-2 sm:gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                  <Users className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-white text-sm sm:text-base leading-tight">Edit Scenario Story & Characters</h3>
+                  <p className="text-[11px] text-neutral-400 hidden sm:block">Update world setting, character personas, and roleplay rules</p>
+                </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowStoryModal(false)}
-                className="text-neutral-400 hover:text-white p-1 rounded hover:bg-neutral-800 transition-colors"
+                className="text-neutral-400 hover:text-white p-1.5 rounded-xl hover:bg-neutral-800 transition-colors cursor-pointer"
+                title="Close"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto space-y-5 pr-1 sm:pr-2 scrollbar-thin">
               {/* Story Scenario Setting */}
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-medium text-neutral-400 uppercase tracking-wider">
-                    Story / Scenario Setting Background
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <label className="block text-xs font-bold text-neutral-300 uppercase tracking-wider flex items-center gap-1.5">
+                    <BookOpen className="w-3.5 h-3.5 text-purple-400" />
+                    <span>Story / Scenario Setting Background</span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => handleOptimizeTextEdit("story", storyEdit, "story")}
-                    disabled={!storyEdit?.trim() || optimizingFieldEdit === "story"}
-                    className="text-[11px] font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 px-2 py-0.5 rounded-lg transition-all disabled:opacity-40"
-                    title="Improve spelling, grammar & enhance story setting with Gemini"
-                  >
-                    {optimizingFieldEdit === "story" ? (
-                      <>
-                        <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
-                        <span>Improving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-3 h-3 text-purple-400" />
-                        <span>✨ Improve with AI</span>
-                      </>
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    {fieldUndoHistory["story"] !== undefined && (
+                      <button
+                        type="button"
+                        onClick={() => handleUndoTextEdit("story")}
+                        className="text-[11px] font-semibold text-amber-300 hover:text-amber-200 flex items-center gap-1 bg-amber-950/60 hover:bg-amber-900/80 border border-amber-700/60 px-2.5 py-1 rounded-lg transition-all shadow-xs cursor-pointer active:scale-95"
+                        title="Undo AI changes & revert to original text"
+                      >
+                        <RotateCcw className="w-3 h-3 text-amber-400" />
+                        <span>Undo AI</span>
+                      </button>
                     )}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => handleOptimizeTextEdit("story", storyEdit, "story")}
+                      disabled={!storyEdit?.trim() || optimizingFieldEdit === "story"}
+                      className="text-[11px] font-semibold text-purple-300 hover:text-purple-200 flex items-center gap-1 bg-purple-950/60 hover:bg-purple-900/80 border border-purple-800/60 px-2.5 py-1 rounded-lg transition-all disabled:opacity-40 cursor-pointer active:scale-95"
+                      title="Improve spelling, grammar & enhance story setting with Gemini AI"
+                    >
+                      {optimizingFieldEdit === "story" ? (
+                        <>
+                          <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+                          <span>Improving...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3 h-3 text-purple-400" />
+                          <span>✨ Improve with AI</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
                 <textarea
-                  rows={2}
+                  rows={4}
                   value={storyEdit}
                   onChange={(e) => setStoryEdit(e.target.value)}
-                  className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-blue-500 resize-none transition-colors"
-                  placeholder="Describe scenario setting or world context..."
+                  className="w-full bg-neutral-950 border border-neutral-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-sm text-neutral-100 placeholder-neutral-500 resize-y transition-colors leading-relaxed font-medium min-h-[100px] sm:min-h-[120px]"
+                  placeholder="Describe scenario setting, world rules, or plot background context..."
                 />
+                <div className="flex justify-end">
+                  <span className="text-[10px] text-neutral-500 font-mono">
+                    {storyEdit?.length || 0} characters
+                  </span>
+                </div>
               </div>
 
               {/* Edit Session Characters */}
-              <div className="space-y-3 pt-2 border-t border-neutral-800">
+              <div className="space-y-3.5 pt-3 border-t border-neutral-800">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-blue-400 uppercase tracking-wider">
-                    Session Characters ({charactersEdit.length})
-                  </label>
+                  <div className="flex items-center gap-2">
+                    <label className="block text-xs font-extrabold text-blue-400 uppercase tracking-wider">
+                      Session Characters ({charactersEdit.length})
+                    </label>
+                  </div>
                   <button
                     type="button"
                     onClick={handleAddCharacterEdit}
-                    className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded-lg text-xs font-medium flex items-center gap-1 transition-colors"
+                    className="px-3 py-1.5 bg-neutral-800 hover:bg-neutral-700 text-white rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shadow-sm active:scale-95"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3.5 h-3.5 text-blue-400" />
                     <span>Add Character</span>
                   </button>
                 </div>
@@ -3092,17 +3147,22 @@ export default function ChatView({
                   return (
                     <div
                       key={charKey}
-                      className="bg-neutral-950 border border-neutral-800/80 rounded-2xl p-4 space-y-3 relative group"
+                      className="bg-neutral-950/90 border border-neutral-800/90 hover:border-neutral-700/90 rounded-2xl p-3.5 sm:p-4 space-y-3.5 relative group transition-all"
                     >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-neutral-300">
-                          Character #{index + 1}
-                        </span>
+                      <div className="flex items-center justify-between pb-2 border-b border-neutral-800/60">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-lg bg-blue-950/80 border border-blue-800/80 text-blue-300 flex items-center justify-center text-xs font-extrabold">
+                            #{index + 1}
+                          </span>
+                          <span className="text-xs font-bold text-neutral-200">
+                            {char.name ? char.name : `Character #${index + 1}`}
+                          </span>
+                        </div>
                         {charactersEdit.length > 1 && (
                           <button
                             type="button"
                             onClick={() => handleRemoveCharacterEdit(charKey)}
-                            className="text-neutral-500 hover:text-red-400 p-1 transition-colors"
+                            className="text-neutral-500 hover:text-red-400 p-1.5 rounded-lg hover:bg-neutral-900 transition-colors cursor-pointer"
                             title="Remove Character"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -3110,9 +3170,9 @@ export default function ChatView({
                         )}
                       </div>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
                         <div>
-                          <label className="block text-[11px] font-medium text-neutral-400 mb-1">
+                          <label className="block text-xs font-semibold text-neutral-300 mb-1">
                             Character Tag Name
                           </label>
                           <input
@@ -3123,44 +3183,57 @@ export default function ChatView({
                             onChange={(e) =>
                               handleCharacterEditChange(charKey, "name", e.target.value)
                             }
-                            className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500"
+                            className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2.5 px-3.5 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 font-medium"
                           />
                         </div>
 
-                        <div className="md:col-span-2">
-                          <div className="flex items-center justify-between mb-1">
-                            <label className="block text-[11px] font-medium text-neutral-400">
+                        <div className="md:col-span-2 space-y-1">
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
+                            <label className="block text-xs font-semibold text-neutral-300">
                               Character Persona & Speaking Style
                             </label>
-                            <button
-                              type="button"
-                              onClick={() => handleOptimizeTextEdit(charKey, char.persona, "persona")}
-                              disabled={!char.persona?.trim() || optimizingFieldEdit === charKey}
-                              className="text-[11px] font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/60 px-2 py-0.5 rounded-lg transition-all disabled:opacity-40"
-                              title="Improve spelling, grammar & expand persona with Gemini"
-                            >
-                              {optimizingFieldEdit === charKey ? (
-                                <>
-                                  <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
-                                  <span>Improving...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Sparkles className="w-3 h-3 text-purple-400" />
-                                  <span>✨ Improve with AI</span>
-                                </>
+                            <div className="flex items-center gap-1.5 ml-auto">
+                              {fieldUndoHistory[charKey] !== undefined && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUndoTextEdit(charKey)}
+                                  className="text-[11px] font-semibold text-amber-300 hover:text-amber-200 flex items-center gap-1 bg-amber-950/60 hover:bg-amber-900/80 border border-amber-700/60 px-2 py-0.5 rounded-lg transition-all shadow-xs cursor-pointer active:scale-95"
+                                  title="Undo AI changes & revert to original text"
+                                >
+                                  <RotateCcw className="w-3 h-3 text-amber-400" />
+                                  <span>Undo AI</span>
+                                </button>
                               )}
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() => handleOptimizeTextEdit(charKey, char.persona, "persona")}
+                                disabled={!char.persona?.trim() || optimizingFieldEdit === charKey}
+                                className="text-[11px] font-semibold text-purple-300 hover:text-purple-200 flex items-center gap-1 bg-purple-950/60 hover:bg-purple-900/80 border border-purple-800/60 px-2 py-0.5 rounded-lg transition-all disabled:opacity-40 cursor-pointer active:scale-95"
+                                title="Improve spelling, grammar & expand persona with Gemini AI"
+                              >
+                                {optimizingFieldEdit === charKey ? (
+                                  <>
+                                    <Loader2 className="w-3 h-3 animate-spin text-purple-400" />
+                                    <span>Improving...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles className="w-3 h-3 text-purple-400" />
+                                    <span>✨ Improve with AI</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
                           </div>
                           <textarea
-                            rows={2}
+                            rows={3}
                             required
                             placeholder="e.g. Smart, observational detective who speaks formally."
                             value={char.persona || ""}
                             onChange={(e) =>
                               handleCharacterEditChange(charKey, "persona", e.target.value)
                             }
-                            className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 resize-none"
+                            className="w-full bg-neutral-900 border border-neutral-700/80 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 rounded-xl py-2.5 px-3.5 text-sm text-white placeholder-neutral-500 resize-y font-medium leading-relaxed min-h-[95px] sm:min-h-[110px]"
                           />
                         </div>
                       </div>
@@ -3170,21 +3243,27 @@ export default function ChatView({
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-neutral-800 shrink-0">
-              <button
-                type="button"
-                onClick={() => setShowStoryModal(false)}
-                className="px-4 py-2 rounded-xl text-xs text-neutral-400 hover:bg-neutral-800 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleSaveStoryAndCharacters}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 text-white hover:bg-blue-500 transition-colors"
-              >
-                Save Changes
-              </button>
+            {/* Footer */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-neutral-800 shrink-0">
+              <span className="text-[11px] text-neutral-500 hidden sm:inline font-medium">
+                Press <kbd className="px-1.5 py-0.5 bg-neutral-800 rounded text-neutral-300 font-mono text-[10px]">Esc</kbd> to exit
+              </span>
+              <div className="flex items-center justify-end gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => setShowStoryModal(false)}
+                  className="px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSaveStoryAndCharacters}
+                  className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-600/25 cursor-pointer active:scale-95"
+                >
+                  Save Changes
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -15,6 +15,7 @@ import {
   Star,
   UserPlus,
   AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 
 export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
@@ -41,6 +42,7 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [optimizingField, setOptimizingField] = useState(null); // 'story' | charId | 'inlinePersona'
+  const [fieldUndoHistory, setFieldUndoHistory] = useState({});
 
   useEffect(() => {
     if (isOpen) {
@@ -113,6 +115,11 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
 
       const data = await res.json();
       if (res.ok && data.optimizedText) {
+        setFieldUndoHistory((prev) => ({
+          ...prev,
+          [target]: text,
+        }));
+
         if (target === "story") {
           setStory(data.optimizedText);
         } else if (target === "inlinePersona") {
@@ -128,6 +135,25 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
     } finally {
       setOptimizingField(null);
     }
+  };
+
+  const handleUndoText = (target) => {
+    const previousText = fieldUndoHistory[target];
+    if (previousText === undefined) return;
+
+    if (target === "story") {
+      setStory(previousText);
+    } else if (target === "inlinePersona") {
+      setInlinePersona(previousText);
+    } else {
+      handleCharacterChange(target, "persona", previousText);
+    }
+
+    setFieldUndoHistory((prev) => {
+      const next = { ...prev };
+      delete next[target];
+      return next;
+    });
   };
 
   const handleAddCharacter = () => {
@@ -386,36 +412,49 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
           </div>
 
           <div className="space-y-1">
-            <div className="flex items-center justify-between mb-1">
+            <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
               <label className="block text-xs sm:text-sm font-bold text-neutral-300 uppercase tracking-wider">
                 Scenario / Story Setting Background
               </label>
-              <button
-                type="button"
-                onClick={() => handleOptimizeText("story", story, "story")}
-                disabled={!story?.trim() || optimizingField === "story"}
-                className="text-xs font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 bg-purple-950/60 hover:bg-purple-900/80 border border-purple-800/60 px-2.5 py-1 rounded-lg transition-all disabled:opacity-40 cursor-pointer"
-                title="Improve spelling, grammar & enhance story setting with Gemini"
-              >
-                {optimizingField === "story" ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
-                    <span>Improving...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                    <span>✨ Improve with Gemini</span>
-                  </>
+              <div className="flex items-center gap-1.5 ml-auto">
+                {fieldUndoHistory["story"] !== undefined && (
+                  <button
+                    type="button"
+                    onClick={() => handleUndoText("story")}
+                    className="text-xs font-semibold text-amber-300 hover:text-amber-200 flex items-center gap-1 bg-amber-950/60 hover:bg-amber-900/80 border border-amber-700/60 px-2.5 py-1 rounded-lg transition-all shadow-xs cursor-pointer active:scale-95"
+                    title="Undo AI changes & revert to original text"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Undo AI</span>
+                  </button>
                 )}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => handleOptimizeText("story", story, "story")}
+                  disabled={!story?.trim() || optimizingField === "story"}
+                  className="text-xs font-semibold text-purple-300 hover:text-purple-200 flex items-center gap-1 bg-purple-950/60 hover:bg-purple-900/80 border border-purple-800/60 px-2.5 py-1 rounded-lg transition-all disabled:opacity-40 cursor-pointer active:scale-95"
+                  title="Improve spelling, grammar & enhance story setting with Gemini"
+                >
+                  {optimizingField === "story" ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
+                      <span>Improving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                      <span>✨ Improve with Gemini</span>
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
             <textarea
-              rows={3}
+              rows={4}
               placeholder="Describe the setting, plot context, or world rules for all characters..."
               value={story}
               onChange={(e) => setStory(e.target.value)}
-              className="w-full bg-neutral-950 border border-neutral-800 rounded-xl p-3 text-xs sm:text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 transition-colors resize-none leading-relaxed font-medium"
+              className="w-full bg-neutral-950 border border-neutral-800 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 rounded-xl p-3 text-sm text-neutral-100 placeholder-neutral-500 transition-colors resize-y leading-relaxed font-medium min-h-[100px]"
             />
           </div>
 
@@ -469,44 +508,57 @@ export default function NewSessionModal({ isOpen, onClose, onSessionCreated }) {
                       onChange={(e) =>
                         handleCharacterChange(char.id, "name", e.target.value)
                       }
-                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2.5 px-3 text-xs sm:text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 font-medium"
+                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2.5 px-3 text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 font-medium"
                     />
                   </div>
 
                   <div className="md:col-span-2">
-                    <div className="flex items-center justify-between mb-1">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1">
                       <label className="block text-xs font-semibold text-neutral-300">
                         Character Persona & Speaking Style
                       </label>
-                      <button
-                        type="button"
-                        onClick={() => handleOptimizeText(char.id, char.persona, "persona")}
-                        disabled={!char.persona?.trim() || optimizingField === char.id}
-                        className="text-xs font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1 bg-purple-950/60 hover:bg-purple-900/80 border border-purple-800/60 px-2 py-0.5 rounded-lg transition-all disabled:opacity-40 cursor-pointer"
-                        title="Improve spelling, grammar & expand persona with Gemini"
-                      >
-                        {optimizingField === char.id ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
-                            <span>Improving...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles className="w-3.5 h-3.5 text-purple-400" />
-                            <span>✨ Improve with Gemini</span>
-                          </>
+                      <div className="flex items-center gap-1.5 ml-auto">
+                        {fieldUndoHistory[char.id] !== undefined && (
+                          <button
+                            type="button"
+                            onClick={() => handleUndoText(char.id)}
+                            className="text-xs font-semibold text-amber-300 hover:text-amber-200 flex items-center gap-1 bg-amber-950/60 hover:bg-amber-900/80 border border-amber-700/60 px-2 py-0.5 rounded-lg transition-all shadow-xs cursor-pointer active:scale-95"
+                            title="Undo AI changes & revert to original text"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
+                            <span>Undo AI</span>
+                          </button>
                         )}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOptimizeText(char.id, char.persona, "persona")}
+                          disabled={!char.persona?.trim() || optimizingField === char.id}
+                          className="text-xs font-semibold text-purple-300 hover:text-purple-200 flex items-center gap-1 bg-purple-950/60 hover:bg-purple-900/80 border border-purple-800/60 px-2 py-0.5 rounded-lg transition-all disabled:opacity-40 cursor-pointer active:scale-95"
+                          title="Improve spelling, grammar & expand persona with Gemini"
+                        >
+                          {optimizingField === char.id ? (
+                            <>
+                              <Loader2 className="w-3.5 h-3.5 animate-spin text-purple-400" />
+                              <span>Improving...</span>
+                            </>
+                          ) : (
+                            <>
+                              <Sparkles className="w-3.5 h-3.5 text-purple-400" />
+                              <span>✨ Improve with Gemini</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
                     </div>
                     <textarea
-                      rows={2}
+                      rows={3}
                       required
                       placeholder="e.g. Smart, observational detective who speaks formally."
                       value={char.persona}
                       onChange={(e) =>
                         handleCharacterChange(char.id, "persona", e.target.value)
                       }
-                      className="w-full bg-neutral-900 border border-neutral-700/80 rounded-xl py-2 px-3 text-xs sm:text-sm text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 resize-none font-medium leading-relaxed"
+                      className="w-full bg-neutral-900 border border-neutral-700/80 focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 rounded-xl py-2.5 px-3.5 text-sm text-white placeholder-neutral-500 resize-y font-medium leading-relaxed min-h-[95px]"
                     />
                   </div>
                 </div>
