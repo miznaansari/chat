@@ -27,6 +27,7 @@ import {
   RotateCcw,
   History
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 const DEFAULT_CHARACTERS = [
   {
@@ -356,7 +357,25 @@ const SLIDER_CARD_THEMES = [
   },
 ];
 
+export function getLocalizedContent(item, language = "en") {
+  if (!item) return { tagline: "", story: "" };
+  const langKey = language === "en" ? "en" : "hinglish";
+
+  const tagline = (item.translationsJson && item.translationsJson[langKey]?.tagline)
+    || (language === "en" && item.tagline_en ? item.tagline_en : null)
+    || item.tagline 
+    || "";
+
+  const story = (item.translationsJson && item.translationsJson[langKey]?.story)
+    || (language === "en" && item.story_en ? item.story_en : null)
+    || item.story 
+    || "";
+
+  return { tagline, story };
+}
+
 function SliderCarouselSection({ items, onSelectPreview, fetching }) {
+  const { language = "en" } = useLanguage() || {};
   const [api, setApi] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -496,7 +515,7 @@ function SliderCarouselSection({ items, onSelectPreview, fetching }) {
                         {cleanTitle}
                       </h4>
                       <p className={`text-[9.5px] sm:text-xs font-semibold line-clamp-2 leading-snug ${theme.subText}`}>
-                        {item.tagline}
+                        {getLocalizedContent(item, language).tagline}
                       </p>
                     </div>
 
@@ -566,6 +585,7 @@ export default function HomeDiscoveryView({
   onOpenNewModal,
   onSwitchToChatView
 }) {
+  const { language = "en", translate } = useLanguage() || {};
   const [displayCharacters, setDisplayCharacters] = useState(DEFAULT_CHARACTERS);
   const [fetching, setFetching] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -573,6 +593,9 @@ export default function HomeDiscoveryView({
   const [loadingCharId, setLoadingCharId] = useState(null);
   const [bannerTab, setBannerTab] = useState("Characters");
   const [selectedCharPreview, setSelectedCharPreview] = useState(null);
+
+  // Multi-Language Localized Content Resolver
+  const getContent = (item) => getLocalizedContent(item, language);
 
   // User Persona State
   const [userPersonas, setUserPersonas] = useState([]);
@@ -794,7 +817,7 @@ export default function HomeDiscoveryView({
       <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
         <div className="space-y-0.5">
           <h4 className="font-extrabold text-xs sm:text-sm text-white truncate group-hover:text-purple-300 transition-colors">{char.name}</h4>
-          <p className="text-[10px] sm:text-xs text-purple-300 font-medium truncate">{char.tagline}</p>
+          <p className="text-[10px] sm:text-xs text-purple-300 font-medium truncate">{getContent(char).tagline}</p>
         </div>
 
         <div className="pt-2 border-t border-neutral-800/60 flex items-center justify-between text-[10px] text-neutral-400">
@@ -1059,7 +1082,7 @@ export default function HomeDiscoveryView({
                       </span>
                     </div>
                     <p className="text-xs sm:text-sm text-purple-200/90 font-medium leading-relaxed drop-shadow">
-                      {selectedCharPreview.tagline}
+                      {getContent(selectedCharPreview).tagline}
                     </p>
                   </div>
                 </div>
@@ -1082,7 +1105,7 @@ export default function HomeDiscoveryView({
                         </span>
                       </div>
                       <p className="text-[10px] text-purple-300 truncate hidden sm:block">
-                        {selectedCharPreview.tagline}
+                        {getContent(selectedCharPreview).tagline}
                       </p>
                     </div>
                   </div>
@@ -1111,7 +1134,7 @@ export default function HomeDiscoveryView({
                       <span>Roleplay Storyline & Scenario</span>
                     </h4>
                     <div className="p-3.5 sm:p-4 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 text-xs sm:text-sm text-neutral-200 leading-relaxed font-normal shadow-inner">
-                      {selectedCharPreview.story}
+                      {getContent(selectedCharPreview).story}
                     </div>
                   </div>
 

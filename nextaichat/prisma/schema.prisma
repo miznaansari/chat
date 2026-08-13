@@ -186,6 +186,7 @@ model DiscoverCharacter {
   story       String   @db.Text
   characters  String   @db.LongText
   isPublic    Boolean  @default(true)
+  translationsJson Json?
   chatSessions ChatSession[]
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
