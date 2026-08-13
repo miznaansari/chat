@@ -142,12 +142,23 @@ ${userPersonaDetails}
 
 * CRITICAL PERSONA DIRECTIVE: All characters in this roleplay scene are interacting with "${userPersonaName}". The characters MUST address the user by their name ("${userPersonaName}") and tailor their dialogue, tone, actions, and relationship dynamics to match the user's defined persona and background details.`;
 
+    const isHinglish = user.language === "hinglish";
     let languageInstruction = "";
-    if (user.language === "hinglish") {
+    if (isHinglish) {
       languageInstruction = `\n=== MANDATORY LANGUAGE DIRECTIVE (HINGLISH MODE) ===\nCRITICAL LANGUAGE MANDATE: The user has selected HINGLISH mode. All characters MUST generate their dialogue, physical actions, and inner thoughts strictly in natural HINGLISH (a natural blend of Hindi and English written in Latin/English script, e.g. "Main abhi busy hoon, tum batao kya chal raha hai?"). Use natural Indian conversational tone written in English script!`;
     } else {
-      languageInstruction = `\n=== LANGUAGE DIRECTIVE (ENGLISH MODE) ===\nRespond in standard English unless character backstory specifies otherwise.`;
+      languageInstruction = `\n=== MANDATORY LANGUAGE DIRECTIVE (ENGLISH MODE) ===\nCRITICAL LANGUAGE MANDATE: The user has selected ENGLISH mode. All characters MUST generate ALL dialogue, physical actions, narrative notes, and inner thoughts strictly in 100% clean, natural ENGLISH. Absolutely NO Hinglish, Hindi, or non-English slang allowed in dialogue or actions, regardless of character backstories or scenario text!`;
     }
+
+    const exConsecutive = isHinglish
+      ? `[Character 1]: Mujhe na bahar jana hai... 🚶‍♂️\n\n     [Character 1]: Kyunki outdoor me bohot sara kaam baki hai! 🏢\n\n     [Character 2]: Okay, dhyan se jana! 👍`
+      : `[Character 1]: I think we should head outside... 🚶‍♂️\n\n     [Character 1]: Because there is still so much work to finish! 🏢\n\n     [Character 2]: Okay, stay safe out there! 👍`;
+
+    const exSpoken = isHinglish ? `"P-pucho... kya puchna hai?"` : `"A-ask me... what do you want to ask?"`;
+    const exAction = isHinglish ? `(Apni notebook band karke Shan ki taraf dekhti hai)` : `(Closes her notebook and looks toward Shan)`;
+    const exThought = isHinglish ? `(thought: 'Haye Allah, yeh achanak kya poochne wala hai?')` : `(thought: 'Oh goodness, what is he suddenly going to ask?')`;
+    const exHook = isHinglish ? `(Ab dekhte hai aage Shan is naye hukm par kaise react karta hai...)` : `(Let's see how Shan reacts to this new instruction...)`;
+    const exHook2 = isHinglish ? `(Ab dekhte hai aage kya hota hai...)` : `(Let's see what happens next...)`;
 
     const systemInstruction = `You are roleplaying a scene with MULTIPLE CHARACTERS in the following roleplay story scenario:
 
@@ -172,11 +183,7 @@ ${languageInstruction}
    - A single character is NOT restricted to only 1 message block per turn.
    - A character can send 2, 3, or more consecutive message blocks if their thought or sentence naturally spans across multiple parts!
    - Example format for a character sending consecutive messages:
-     [Character 1]: Mujhe na bahar jana hai... 🚶‍♂️
-
-     [Character 1]: Kyunki outdoor me bohot sara kaam baki hai! 🏢
-
-     [Character 2]: Okay, dhyan se jana! 👍
+     ${exConsecutive}
 
 3. FORMATTING & TAGGING RULES:
    - EVERY character speech block MUST start on a new line with their exact tag:
@@ -184,10 +191,10 @@ ${languageInstruction}
    - Always put a double line break (blank line) between consecutive character tags or speech blocks.
 
 4. CHARACTER.AI STANDARD ROLEPLAY FORMATTING RULES:
-   - SPOKEN DIALOGUE (CRITICAL): Put all spoken dialogue inside double quotes "...". Example: "P-pucho... kya puchna hai?"
-   - CHARACTER ACTIONS & BODY LANGUAGE: Put physical actions, expressions, gestures, or voice tone inside parentheses (...) or asterisks *...*. Example: (Apni notebook band karke Shan ki taraf dekhti hai) or (Nervous voice)
-   - CHARACTER INNER THOUGHTS: Put inner thoughts strictly inside (thought: '...'). Example: (thought: 'Haye Allah, yeh achanak kya poochne wala hai?')
-   - STORY SCENE HOOKS: Put dramatic scene transitions on standalone lines in parentheses. Example: (Ab dekhte hai aage Shan is naye hukm par kaise react karta hai...)
+   - SPOKEN DIALOGUE (CRITICAL): Put all spoken dialogue inside double quotes "...". Example: ${exSpoken}
+   - CHARACTER ACTIONS & BODY LANGUAGE: Put physical actions, expressions, gestures, or voice tone inside parentheses (...) or asterisks *...*. Example: ${exAction} or (Nervous voice)
+   - CHARACTER INNER THOUGHTS: Put inner thoughts strictly inside (thought: '...'). Example: ${exThought}
+   - STORY SCENE HOOKS: Put dramatic scene transitions on standalone lines in parentheses. Example: ${exHook}
    - When asked for a topic breakdown, syllabus list, or multi-step explanation, the character MUST deliver the COMPLETE response (including Markdown tables and detailed topic points) before stopping!
    - Use Markdown tables when presenting structured choices, syllabi, or topic lists.
 
@@ -195,7 +202,7 @@ ${languageInstruction}
    - Each character MUST strictly adhere to their persona, tone, and active status in the ongoing scene history.
 
 6. CINEMATIC NARRATIVE HOOKS:
-   - At dramatic scene transitions or turn endings, naturally include story notes in parentheses like (Ab dekhte hai aage kya hota hai...) to build suspense!`;
+   - At dramatic scene transitions or turn endings, naturally include story notes in parentheses like ${exHook2} to build suspense!`;
 
     // Map recent 25 context messages to Gemini contents format
     const recentContextMessages = contextMessages.slice(-25);
