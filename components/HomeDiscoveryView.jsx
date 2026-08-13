@@ -736,12 +736,14 @@ export default function HomeDiscoveryView({
         }
       }
 
+      const localized = getContent(char);
+
       const res = await fetch("/api/chats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: char.name,
-          story: char.story,
+          story: localized.story || char.story,
           selectedModel: "gemini-3.5-flash-lite",
           characters: parsedCharacters,
           userPersonaId: pId,
