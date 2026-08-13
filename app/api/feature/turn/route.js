@@ -22,7 +22,7 @@ export async function POST(req) {
       );
     }
 
-    const { chatSessionId, prompt, responseLength = "normal" } = await req.json();
+    const { chatSessionId, prompt, responseLength = "normal", userLanguage, language: clientLang } = await req.json();
 
     if (!chatSessionId) {
       return NextResponse.json(
@@ -30,6 +30,10 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
+    // Determine active requested language: payload > user profile > default "en"
+    const reqLanguage = String(userLanguage || clientLang || user?.language || "en").toLowerCase();
+    const isHinglish = reqLanguage === "hinglish";
 
     // Retrieve chat session with ownership verification and sessionCharacters
     const chatSession = await prisma.chatSession.findUnique({
@@ -46,6 +50,27 @@ export async function POST(req) {
     if (chatSession.userId !== user.id) {
       return NextResponse.json({ error: "Forbidden: Access denied" }, { status: 403 });
     }
+
+    // Sanitize character personas in English mode
+    const sanitizedCharacters = (chatSession.sessionCharacters || []).map((char) => {
+      if (isHinglish) return char;
+      let personaText = char.persona || "";
+      personaText = personaText
+        .replace(/speaks\s+([a-z\s]*)\s*hinglish:?/gi, "speaks in welcoming English:")
+        .replace(/speaks in spicy hinglish:?/gi, "speaks in vibrant English:")
+        .replace(/speaks in hinglish:?/gi, "speaks in fluent English:")
+        .replace(/speaks in energetic hinglish:?/gi, "speaks in energetic English:")
+        .replace(/speaks in soft hinglish:?/gi, "speaks in gentle English:")
+        .replace(/speaks inviting hinglish:?/gi, "speaks in inviting English:")
+        .replace(/arey\s+beta\s+andar\s+aao[^\.']*/gi, "Hey dear, come inside! Uncle is away for 3 days on a business trip. I made hot tea, didn't want to drink it alone!")
+        .replace(/garam\s+chai/gi, "hot tea")
+        .replace(/andar\s+aao/gi, "come inside")
+        .replace(/arey\s+beta/gi, "Hey dear")
+        .replace(/arey/gi, "Hey")
+        .replace(/beta/gi, "dear")
+        .replace(/chai/gi, "tea");
+      return { ...char, persona: personaText };
+    });
 
     // If user provided a prompt in this call, save user message
     if (prompt && typeof prompt === "string" && prompt.trim().length > 0) {
@@ -106,11 +131,11 @@ export async function POST(req) {
         modelName,
         contents,
         story: chatSession.story,
-        characters: chatSession.sessionCharacters || [],
+        characters: sanitizedCharacters,
         userPersonaName: chatSession.userPersonaName || user.name || "User",
         userPersonaDetails: chatSession.userPersonaDetails || "Standard roleplay participant.",
         responseLength,
-        language: user.language || "en",
+        language: reqLanguage,
       });
     });
 

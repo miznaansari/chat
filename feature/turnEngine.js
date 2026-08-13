@@ -52,12 +52,26 @@ export async function executeSingleCharacterTurn({
     lengthDirective = "=== RESPONSE LENGTH DIRECTIVE (NORMAL) ===\nKeep character dialogue natural, engaging, and balanced (around 2-3 sentences).";
   }
 
+  const isHinglish = String(language).toLowerCase() === "hinglish";
   let languageDirective = "";
-  if (language === "hinglish") {
+  if (isHinglish) {
     languageDirective = "=== MANDATORY LANGUAGE DIRECTIVE (HINGLISH MODE) ===\nCRITICAL LANGUAGE MANDATE: The user has selected HINGLISH mode. The speaking character MUST generate dialogue, physical actions, and inner thoughts strictly in natural HINGLISH (a natural blend of Hindi and English written in Latin/English script, e.g. 'Main abhi busy hoon, tum batao kya chal raha hai?'). Use natural Indian conversational tone written in English script!";
   } else {
-    languageDirective = "=== LANGUAGE DIRECTIVE (ENGLISH MODE) ===\nRespond in standard English unless character backstory specifies otherwise.";
+    languageDirective = `=== MANDATORY LANGUAGE DIRECTIVE (ENGLISH MODE) ===
+CRITICAL ENGLISH LANGUAGE MANDATE:
+1. The user has selected ENGLISH mode. The speaking character MUST generate 100% of their dialogue, physical actions, inner thoughts, and scene hooks strictly in pure, natural ENGLISH.
+2. ABSOLUTELY NO HINGLISH OR HINDI WORDS ALLOWED IN DIALOGUE! Do NOT use words like "Arey", "beta", "andar aao", "chai", "yaar", "kaise ho", "batao", "na", "toh", "gaye hain", "banayi hai".
+3. TRANSLATE ALL GREETINGS & QUOTED BACKSTORY EXAMPLES TO PURE ENGLISH:
+   - Convert "Arey Sareeb beta, andar aao na!" -> "Hey Sareeb dear, come inside!"
+   - Convert "Garam chai banayi hai" -> "I've made hot tea for us!"
+   - Convert "Uncle 3 din ke liye business tour pe gaye hain" -> "Uncle has gone on a 3-day business trip!"
+4. Even if character backstories, scenario descriptions, or previous context contain Hinglish words, IGNORE the Hinglish words and generate 100% pure ENGLISH!`;
   }
+
+  const exSpoken = isHinglish ? `"P-pucho... kya puchna hai?"` : `"A-ask me... what do you want to ask?"`;
+  const exAction = isHinglish ? `(Apni notebook band karke Shan ki taraf dekhti hai)` : `(Closes her notebook and looks toward Shan)`;
+  const exThought = isHinglish ? `(thought: 'Haye Allah, yeh achanak kya poochne wala hai?')` : `(thought: 'Oh goodness, what is he suddenly going to ask?')`;
+  const exHook = isHinglish ? `(Ab dekhte hai aage Shan is naye hukm par kaise react karta hai...)` : `(Let's see how Shan reacts to this new instruction...)`;
 
   const uName = userPersonaName || "User";
   const uDetails = userPersonaDetails || "Standard roleplay participant.";
@@ -85,10 +99,10 @@ ${characterListFormatted}
 === CHARACTER.AI STANDARD ROLEPLAY FORMATTING RULES ===
 1. You MUST generate the response for ONLY ONE character per API call.
 2. Select the character who naturally should speak next based on conversation flow, scene context, and previous dialogue.
-3. SPOKEN DIALOGUE (CRITICAL): Put all spoken dialogue inside double quotes "...". Example: "P-pucho... kya puchna hai?" Never put spoken dialogue in single quotes or inside thoughts!
-4. CHARACTER ACTIONS & BODY LANGUAGE: Put physical actions, expressions, gestures, or voice tone inside parentheses (...) or asterisks *...*. Example: (Apni notebook band karke Shan ki taraf dekhti hai) or (Nervous voice)
-5. CHARACTER INNER THOUGHTS: Put inner thoughts strictly inside (thought: '...'). Example: (thought: 'Haye Allah, yeh achanak kya poochne wala hai?')
-6. STORY SCENE HOOKS: Put dramatic scene transitions on standalone lines in parentheses. Example: (Ab dekhte hai aage Shan is naye hukm par kaise react karta hai...)
+3. SPOKEN DIALOGUE (CRITICAL): Put all spoken dialogue inside double quotes "...". Example: ${exSpoken} Never put spoken dialogue in single quotes or inside thoughts!
+4. CHARACTER ACTIONS & BODY LANGUAGE: Put physical actions, expressions, gestures, or voice tone inside parentheses (...) or asterisks *...*. Example: ${exAction} or (Nervous voice)
+5. CHARACTER INNER THOUGHTS: Put inner thoughts strictly inside (thought: '...'). Example: ${exThought}
+6. STORY SCENE HOOKS: Put dramatic scene transitions on standalone lines in parentheses. Example: ${exHook}
 7. RESPECT THE RESPONSE LENGTH DIRECTIVE AT THE TOP OF THIS INSTRUCTION STRICTLY.
 8. MULTI-PART & COMPLETE EXPLANATIONS (CRITICAL):
    - When answering a user's question, syllabus request, or topic explanation (e.g. HLD topics, exam prep, rules), the character MUST NOT stop mid-way!

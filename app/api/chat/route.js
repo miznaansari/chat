@@ -64,7 +64,7 @@ export async function POST(req) {
       );
     }
 
-    const { chatSessionId, prompt, responseLength = "normal" } = await req.json();
+    const { chatSessionId, prompt, responseLength = "normal", userLanguage, language: clientLang } = await req.json();
 
     if (!chatSessionId || !prompt || !prompt.trim()) {
       return NextResponse.json(
@@ -72,6 +72,17 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
+    // Determine active requested language: payload > user profile > default "en"
+    const reqLanguage = String(userLanguage || clientLang || user?.language || "en").toLowerCase();
+    const isHinglish = reqLanguage === "hinglish";
+
+    console.log("\n=======================================================");
+    console.log("🌐 [AI Chat Route Debug Log]");
+    console.log(`👤 User ID: ${user.id} | User DB Language: "${user.language}"`);
+    console.log(`📩 Payload userLanguage: "${userLanguage}" | clientLang: "${clientLang}"`);
+    console.log(`🎯 Resolved reqLanguage: "${reqLanguage}" | isHinglish Mode: ${isHinglish}`);
+    console.log("=======================================================\n");
 
     // Retrieve chat session with ownership verification and sessionCharacters
     const chatSession = await prisma.chatSession.findUnique({
@@ -114,10 +125,30 @@ export async function POST(req) {
     const charactersList =
       chatSession.sessionCharacters && chatSession.sessionCharacters.length > 0
         ? chatSession.sessionCharacters
-          .map(
-            (char, idx) =>
-              `${idx + 1}. [${char.name}]\nPersona & Backstory: ${char.persona}`
-          )
+          .map((char, idx) => {
+            let personaText = char.persona || "";
+            if (!isHinglish) {
+              // 1. Scrub Hinglish language mandates from persona text
+              personaText = personaText
+                .replace(/speaks\s+([a-z\s]*)\s*hinglish:?/gi, "speaks in welcoming English:")
+                .replace(/speaks in spicy hinglish:?/gi, "speaks in vibrant English:")
+                .replace(/speaks in hinglish:?/gi, "speaks in fluent English:")
+                .replace(/speaks in energetic hinglish:?/gi, "speaks in energetic English:")
+                .replace(/speaks in soft hinglish:?/gi, "speaks in gentle English:")
+                .replace(/speaks inviting hinglish:?/gi, "speaks in inviting English:");
+
+              // 2. Translate common Hinglish quote fragments in backstories to English
+              personaText = personaText
+                .replace(/arey\s+beta\s+andar\s+aao[^\.']*/gi, "Hey dear, come inside! Uncle is away for 3 days on a business trip. I made hot tea, didn't want to drink it alone!")
+                .replace(/garam\s+chai/gi, "hot tea")
+                .replace(/andar\s+aao/gi, "come inside")
+                .replace(/arey\s+beta/gi, "Hey dear")
+                .replace(/arey/gi, "Hey")
+                .replace(/beta/gi, "dear")
+                .replace(/chai/gi, "tea");
+            }
+            return `${idx + 1}. [${char.name}]\nPersona & Backstory: ${personaText}`;
+          })
           .join("\n\n")
         : "No character profiles defined.";
 
@@ -142,12 +173,19 @@ ${userPersonaDetails}
 
 * CRITICAL PERSONA DIRECTIVE: All characters in this roleplay scene are interacting with "${userPersonaName}". The characters MUST address the user by their name ("${userPersonaName}") and tailor their dialogue, tone, actions, and relationship dynamics to match the user's defined persona and background details.`;
 
-    const isHinglish = user.language === "hinglish";
     let languageInstruction = "";
     if (isHinglish) {
       languageInstruction = `\n=== MANDATORY LANGUAGE DIRECTIVE (HINGLISH MODE) ===\nCRITICAL LANGUAGE MANDATE: The user has selected HINGLISH mode. All characters MUST generate their dialogue, physical actions, and inner thoughts strictly in natural HINGLISH (a natural blend of Hindi and English written in Latin/English script, e.g. "Main abhi busy hoon, tum batao kya chal raha hai?"). Use natural Indian conversational tone written in English script!`;
     } else {
-      languageInstruction = `\n=== MANDATORY LANGUAGE DIRECTIVE (ENGLISH MODE) ===\nCRITICAL LANGUAGE MANDATE: The user has selected ENGLISH mode. All characters MUST generate ALL dialogue, physical actions, narrative notes, and inner thoughts strictly in 100% clean, natural ENGLISH. Absolutely NO Hinglish, Hindi, or non-English slang allowed in dialogue or actions, regardless of character backstories or scenario text!`;
+      languageInstruction = `\n=== MANDATORY LANGUAGE DIRECTIVE (ENGLISH MODE) ===
+CRITICAL ENGLISH LANGUAGE MANDATE:
+1. The user has selected ENGLISH mode. All characters MUST generate 100% of their spoken dialogue, physical actions, inner thoughts, and narrative hooks strictly in pure, natural ENGLISH.
+2. ABSOLUTELY NO HINGLISH OR HINDI WORDS ALLOWED IN DIALOGUE! Do NOT use words like "Arey", "beta", "andar aao", "chai", "yaar", "kaise ho", "batao", "na", "toh", "gaye hain", "banayi hai".
+3. TRANSLATE ALL GREETINGS & QUOTED BACKSTORY EXAMPLES TO PURE ENGLISH:
+   - Convert "Arey Sareeb beta, andar aao na!" -> "Hey Sareeb dear, come inside!"
+   - Convert "Garam chai banayi hai" -> "I've made hot tea for us!"
+   - Convert "Uncle 3 din ke liye business tour pe gaye hain" -> "Uncle has gone on a 3-day business trip!"
+4. Even if character backstories, scenario descriptions, or past message history contain Hinglish phrases, IGNORE the Hinglish words and respond 100% strictly in pure ENGLISH!`;
     }
 
     const exConsecutive = isHinglish
@@ -203,6 +241,12 @@ ${languageInstruction}
 
 6. CINEMATIC NARRATIVE HOOKS:
    - At dramatic scene transitions or turn endings, naturally include story notes in parentheses like ${exHook2} to build suspense!`;
+
+    console.log("-------------------------------------------------------");
+    console.log(`📖 [Session Scenario]: "${chatSession.story}"`);
+    console.log(`🎭 [Session Characters List]:\n${charactersList}`);
+    console.log(`📜 [Language Directive Sent]:\n${languageInstruction}`);
+    console.log("-------------------------------------------------------\n");
 
     // Map recent 25 context messages to Gemini contents format
     const recentContextMessages = contextMessages.slice(-25);

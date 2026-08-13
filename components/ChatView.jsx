@@ -40,6 +40,7 @@ import {
   Radio,
   RotateCcw,
 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 // Helper to parse multi-character dialogue blocks like [rahul]: ... [raj]: ...
 function parseCharacterSpeechBlocks(rawText) {
@@ -569,6 +570,7 @@ export default function ChatView({
   onDeleteChat,
   onOpenNewModal,
 }) {
+  const { language = "en" } = useLanguage() || {};
   const [inputPrompt, setInputPrompt] = useState("");
   const [messages, setMessages] = useState(activeChat?.messages || []);
   const [fetchingMessages, setFetchingMessages] = useState(false);
@@ -1410,6 +1412,7 @@ export default function ChatView({
             chatSessionId: activeChat.id,
             prompt: currentPrompt,
             responseLength,
+            userLanguage: language,
           }),
         });
 
@@ -1473,6 +1476,7 @@ export default function ChatView({
               chatSessionId: activeChat.id,
               prompt: null,
               responseLength,
+              userLanguage: language,
             }),
           });
 
@@ -1517,6 +1521,7 @@ export default function ChatView({
             chatSessionId: activeChat.id,
             prompt: currentPrompt,
             responseLength,
+            userLanguage: language,
           }),
         });
 
