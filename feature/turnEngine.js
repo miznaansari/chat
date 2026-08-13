@@ -176,7 +176,15 @@ Note: Set "isUserTurn": true ONLY if the character's explanation or dialogue is 
       const candidate = response?.candidates?.[0];
       const finishReason = candidate?.finishReason;
 
-      console.log(`🤖 [TurnEngine] Raw Gemini API Response (${label}) [FinishReason: ${finishReason || "NORMAL"}]:\n`, responseText);
+      console.log(`\n==================== GEMINI RAW API RESPONSE (${label}) ====================`);
+      console.log(`🤖 [TurnEngine] Model: ${modelName} | FinishReason: ${finishReason || "NORMAL"}`);
+      console.log(`🤖 [TurnEngine] Raw Response Text:\n${responseText}`);
+      try {
+        console.log(`🤖 [TurnEngine] Full Gemini Raw Response Object:\n`, JSON.stringify(response, null, 2));
+      } catch (e) {
+        console.log(`🤖 [TurnEngine] Full Gemini Raw Response Object:\n`, response);
+      }
+      console.log(`===========================================================================\n`);
 
       // Robust JSON Extraction & Parsing
       let parsed = null;
